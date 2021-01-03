@@ -9,22 +9,22 @@ The GUI file per se uses functions from those files in order to link buttons
 in the gui to functions that control the experiment. 
 
 # Folder structure :
+Planned arborescence for the project:
 
 ```
-project
+GUI_main 
 │   README.md
-│   file001.txt    
+│   main_GUI.py
 │
-└───folder1
-│   │   file011.txt
-│   │   file012.txt
-│   │
-│   └───subfolder1
-│       │   file111.txt
-│       │   file112.txt
-│       │   ...
-│   
-└───folder2
-    │   file021.txt
-    │   file022.txt
+└───Functions (not related to GUI, run experiment etc'. Probably one per 'tab')
+│   │   Temperature.py
+│   │   PGC.py
+│   │   OD.py
+│   │   Simulate.py (contains the functions used for runing the code on a 
+│   │                computed that is not connected to the experimental setup)
+│
+└───Widgets (GUI related code. Probably one per 'tab')
+    │   Temperature.py
+    │   PGC.py
+    │   OD.py
 ```
