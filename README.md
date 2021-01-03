@@ -9,6 +9,13 @@ The GUI file per se uses functions from those files in order to link buttons
 in the gui to functions that control the experiment. 
 
 # Folder structure :
+main_GUI.py's only purpose will be to import and instanciate other modules.
+
+The classes defined in Widgets will define a widget that can then be imported
+by main_GUI.py. Upon instanciation, main_GUI.py will open a new tab in the main
+window and place said widget into it. 
+
+
 Planned arborescence for the project:
 
 ```
