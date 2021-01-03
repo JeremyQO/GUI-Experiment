@@ -22,7 +22,7 @@ GUI_main
 │   README.md
 │   main_GUI.py (used to run main GUI window)
 │
-└─── Functions (not related to GUI, run experiment etc'. Probably one per 'tab')
+└─── Functions (not related to GUI. Runs experiment etc'. Probably one per 'tab')
 │    │   Simulate.py (contains the functions used for runing the code on a 
 │    │                computed that is not connected to the experimental setup)
 │    │   Temperature
