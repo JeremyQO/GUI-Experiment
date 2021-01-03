@@ -14,17 +14,17 @@ Planned arborescence for the project:
 ```
 GUI_main 
 │   README.md
-│   main_GUI.py
+│   main_GUI.py (used to run main GUI window)
 │
-└───Functions (not related to GUI, run experiment etc'. Probably one per 'tab')
-│   │   Temperature.py
-│   │   PGC.py
-│   │   OD.py
-│   │   Simulate.py (contains the functions used for runing the code on a 
-│   │                computed that is not connected to the experimental setup)
+└─── Functions (not related to GUI, run experiment etc'. Probably one per 'tab')
+│    │   Temperature.py
+│    │   PGC.py
+│    │   OD.py
+│    │   Simulate.py (contains the functions used for runing the code on a 
+│    │                computed that is not connected to the experimental setup)
 │
-└───Widgets (GUI related code. Probably one per 'tab')
-    │   Temperature.py
-    │   PGC.py
-    │   OD.py
+└─── Widgets (GUI related code. Probably one per 'tab')
+     │   Temperature.py
+     │   PGC.py
+     │   OD.py
 ```
