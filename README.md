@@ -24,7 +24,7 @@ GUI_main
 │
 └─── Functions (not related to GUI. Runs experiment etc'. Probably one per 'tab')
 │    │    Simulate.py (contains the functions used for runing the code on a 
-│    │                computed that is not connected to the experimental setup)
+│    │                   computed that is not connected to the experimental setup)
 │    │    Temperature
 │    │    │  file1.py (For functions that can be used from anywhere)
 │    │    │  file2.py (For functions that are specific to use with GUI)
