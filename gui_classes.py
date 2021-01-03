@@ -21,56 +21,7 @@ import numpy as np
 def gaussian(x, amplitude, mean, stddev):
     return amplitude * np.exp(-((x - mean)**2 / 2 / stddev**2))
 
-class PlotWindowOld(QDialog):
-    def __init__(self, parent=None):
-        super(PlotWindow, self).__init__(parent)
-        self.xdata = [0,0]
-        self.ydata = [0,0]
-        # a figure instance to plot on
-        plt.ioff()
-        self.figure = plt.figure()
 
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
-        ax = self.figure.add_subplot(111)
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        # self.canvas.draw()
-        # Just some button connected to `plot` method
-        # self.button = QPushButton('Plot')
-        # self.button.clicked.connect(self.plot)
-
-        # set the layout
-        
-        layout = QVBoxLayout()
-        layout.addWidget(self.toolbar)
-        layout.addWidget(self.canvas)
-        # layout.addWidget(self.button)
-        widget = QtWidgets.QWidget()
-        widget.setLayout(layout)
-        # self.setLayout(layout) # is what was here in example
-        self.widgetPlot = widget
-        
-    
-    def plotData(self,x,y):
-
-        # print(self.xdata)
-        self.figure.clear()
-
-        # create an axis
-        ax = self.figure.add_subplot(111)
-
-        # discards the old graph
-        # ax.hold(False) # deprecated, see above
-
-        # plot data
-        ax.plot(x,y,'.')
-        
-
-        # refresh canvas
-        self.canvas.draw()
 
 class PlotWindow(QDialog):
     def __init__(self, parent=None):
@@ -78,7 +29,7 @@ class PlotWindow(QDialog):
 
         # a figure instance to plot on
         plt.ioff()
-        self.figure = plt.figure()
+        self.figure = plt.figure(1)
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
@@ -110,9 +61,28 @@ class PlotWindow(QDialog):
         # widget.setObjectName("mpl_widget_plot")
         # self.setLayout(layout) # is what was here in example
         self.widgetPlot = widget
-        
+
+        # For temperature tab:
+        # self.figure_temp = plt.figure(2)
+        # self.canvas_temp = FigureCanvas(self.figure_temp)
+        # ax1t = plt.subplot2grid((2, 2), (1, 1),  colspan=2, rowspan=2)
+        # ax2t = plt.subplot2grid((2,2),(0,1), colspan=2, rowspan=1)
+        # ax3t = plt.subplot2grid((2,2),(1,0), colspan=1, rowspan=2)
+        # ax4t = plt.subplot2grid((2, 2), (0,0),  colspan=1, rowspan=1)
+        # plt.tight_layout()
+        # self.toolbar_temp = NavigationToolbar(self.canvas_temp, self)
+        # layout_temp = QVBoxLayout()
+        # layout_temp.addWidget(self.toolbar_temp)
+        # layout_temp.addWidget(self.canvas_temp)
+        # # layout.addWidget(self.button)
+        # widget_temp = QtWidgets.QWidget()
+        # widget_temp.setLayout(layout_temp)
+        # widget_temp.setContentsMargins(0, 0, 0, 0)
+        # # widget.setObjectName("mpl_widget_plot")
+        # # self.setLayout(layout) # is what was here in example
+        # self.widgetPlot_temp = widget_temp
     
-    def plotData(self,im, aoe=None):
+    def plotData(self,im, axSigma = None, aoe=None):
 
         # print(self.xdata)
         self.figure.clear()
@@ -144,10 +114,14 @@ class PlotWindow(QDialog):
         ax3.plot(im.yaxis, gaussian(im.yaxis, *im.popt_y),label='STD=%.0f'%(im.std_y))
         ax3.legend()
         
-        ax4.text(0.2,0.6, '$\sigma_x=%.0f$'%(im.std_x), fontsize=55,  color='black')
-        ax4.text(0.2,0.2, '$\sigma_y=%.0f$'%(im.std_y), fontsize=55,  color='black')
-        
+        # ax4.text(0.2,0.6, '$\sigma_x=%.0f$'%(im.std_x), fontsize=55,  color='black')
+        # ax4.text(0.2,0.2, '$\sigma_y=%.0f$'%(im.std_y), fontsize=55,  color='black')
+        if hasattr(self, 'sigmax'):
+            ax4.plot(self.sigmax, '-o', label="$\sigma_x$")
+            ax4.plot(self.sigmay, '-o', label="$\sigma_y$")
+            ax4.legend(loc="upper right")
         plt.tight_layout()
+
         # refresh canvas
         self.canvas.draw()        
 

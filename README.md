@@ -8,6 +8,3 @@ Several files are related to controlling the experiment.
 The GUI file per se uses functions from those files in order to link buttons 
 in the gui to functions that control the experiment. 
 
-* One
-* Two 
-* Three

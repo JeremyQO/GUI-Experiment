@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1308</width>
-    <height>753</height>
+    <height>755</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -46,7 +46,7 @@
       </property>
       <widget class="QWidget" name="PGC">
        <attribute name="title">
-        <string>PGC</string>
+        <string>Temperature</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
@@ -95,9 +95,9 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QCheckBox" name="checkBox_plotContinuous">
+               <widget class="QPushButton" name="pushButton_PGC_PlotContinuous">
                 <property name="text">
-                 <string>Plot Continuous </string>
+                 <string>Plot Continuous</string>
                 </property>
                </widget>
               </item>
@@ -138,7 +138,7 @@
                     <string>Substract Background</string>
                    </property>
                    <property name="checked">
-                    <bool>false</bool>
+                    <bool>true</bool>
                    </property>
                   </widget>
                  </item>
@@ -321,6 +321,152 @@
             </widget>
            </item>
            <item>
+            <widget class="QFrame" name="frame_5">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>290</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>290</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::WinPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_6">
+              <property name="leftMargin">
+               <number>9</number>
+              </property>
+              <property name="topMargin">
+               <number>4</number>
+              </property>
+              <property name="rightMargin">
+               <number>9</number>
+              </property>
+              <property name="bottomMargin">
+               <number>4</number>
+              </property>
+              <property name="horizontalSpacing">
+               <number>6</number>
+              </property>
+              <item row="1" column="2">
+               <widget class="QSpinBox" name="spinBox_N_temp">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>30</number>
+                </property>
+                <property name="value">
+                 <number>14</number>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_start_temp">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="value">
+                 <double>1.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>End (ms)</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_4">
+                <property name="text">
+                 <string>Start (ms)</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_end_temp">
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="value">
+                 <double>15.000000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>N points</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="3">
+               <widget class="QLabel" name="label_7">
+                <property name="toolTip">
+                 <string>Pixel/length calibration in pixels per milimiter</string>
+                </property>
+                <property name="text">
+                 <string>Cal (pixel/mm)</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QLineEdit" name="lineEdit"/>
+              </item>
+              <item row="2" column="0" colspan="4">
+               <widget class="QPushButton" name="pushButton_measure_temperature">
+                <property name="minimumSize">
+                 <size>
+                  <width>79</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Measure Temperature</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
             <widget class="QFrame" name="frame_4">
              <property name="minimumSize">
               <size>
@@ -383,287 +529,9 @@
       </widget>
       <widget class="QWidget" name="tab">
        <attribute name="title">
-        <string>Temperature</string>
+        <string>Another tab</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="1">
-         <widget class="QWidget" name="widget_3" native="true">
-          <layout class="QHBoxLayout" name="horizontalLayout_4">
-           <item>
-            <widget class="QFrame" name="frame_7">
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_8">
-              <item row="0" column="0">
-               <layout class="QVBoxLayout" name="verticalLayout_mpl_temperature"/>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item>
-            <widget class="QFrame" name="frame_5">
-             <property name="minimumSize">
-              <size>
-               <width>290</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>0</width>
-               <height>16777215</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_7">
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-              <item row="0" column="0">
-               <widget class="QFrame" name="frame_temperature">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>290</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>290</width>
-                  <height>85</height>
-                 </size>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::WinPanel</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_6">
-                 <property name="leftMargin">
-                  <number>9</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>9</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>4</number>
-                 </property>
-                 <property name="horizontalSpacing">
-                  <number>6</number>
-                 </property>
-                 <item row="0" column="2">
-                  <widget class="QLabel" name="label_6">
-                   <property name="text">
-                    <string>N points</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="3">
-                  <widget class="QLineEdit" name="lineEdit"/>
-                 </item>
-                 <item row="2" column="0" colspan="4">
-                  <widget class="QPushButton" name="pushButton_measure_temperature">
-                   <property name="minimumSize">
-                    <size>
-                     <width>79</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Measure Temperature</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="label_5">
-                   <property name="text">
-                    <string>End (ms)</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QSpinBox" name="spinBox_N_temp">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="minimum">
-                    <number>1</number>
-                   </property>
-                   <property name="maximum">
-                    <number>30</number>
-                   </property>
-                   <property name="value">
-                    <number>14</number>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="0">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_start_temp">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="value">
-                    <double>1.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <widget class="QLabel" name="label_4">
-                   <property name="text">
-                    <string>Start (ms)</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_end_temp">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="value">
-                    <double>15.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="3">
-                  <widget class="QLabel" name="label_7">
-                   <property name="toolTip">
-                    <string>Pixel/length calibration in pixels per milimiter</string>
-                   </property>
-                   <property name="text">
-                    <string>Cal (pixel/mm)</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QFrame" name="frame_9">
-                <property name="frameShape">
-                 <enum>QFrame::StyledPanel</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_10">
-                 <property name="leftMargin">
-                  <number>0</number>
-                 </property>
-                 <item row="0" column="0">
-                  <widget class="QFrame" name="frame_8">
-                   <property name="minimumSize">
-                    <size>
-                     <width>290</width>
-                     <height>0</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>290</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="frameShape">
-                    <enum>QFrame::WinPanel</enum>
-                   </property>
-                   <property name="frameShadow">
-                    <enum>QFrame::Sunken</enum>
-                   </property>
-                   <layout class="QGridLayout" name="gridLayout_9">
-                    <property name="leftMargin">
-                     <number>9</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>9</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>2</number>
-                    </property>
-                    <property name="horizontalSpacing">
-                     <number>6</number>
-                    </property>
-                    <item row="1" column="0">
-                     <widget class="QPushButton" name="pushButton_temperature_Connect">
-                      <property name="text">
-                       <string>Connect</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="0">
-                     <widget class="QListWidget" name="listWidget_temp">
-                      <property name="cursor" stdset="0">
-                       <cursorShape>ArrowCursor</cursorShape>
-                      </property>
-                      <property name="frameShape">
-                       <enum>QFrame::NoFrame</enum>
-                      </property>
-                      <property name="autoScrollMargin">
-                       <number>16</number>
-                      </property>
-                      <property name="dragEnabled">
-                       <bool>false</bool>
-                      </property>
-                      <property name="alternatingRowColors">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-        </item>
-       </layout>
+       <layout class="QHBoxLayout" name="horizontalLayout_4"/>
       </widget>
      </widget>
     </item>
