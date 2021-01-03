@@ -23,14 +23,22 @@ GUI_main
 │   main_GUI.py (used to run main GUI window)
 │
 └─── Functions (not related to GUI, run experiment etc'. Probably one per 'tab')
-│    │   Temperature.py
-│    │   PGC.py
-│    │   OD.py
 │    │   Simulate.py (contains the functions used for runing the code on a 
 │    │                computed that is not connected to the experimental setup)
+│    │   Temperature
+│    │    │  file1.py (typically, for functions that can be used from anywhere)
+│    │    │  file2.py (typically, for functions that are specific to use with GUI)
+│    │   
+│    │   PGC
+│    │    │  file1.py
+│    │    │  file2.py
+│    │   OD
+│    │    │  file1.py
+│    │    │  file2.py
 │
 └─── Widgets (GUI related code. Probably one per 'tab')
      │   Temperature.py
      │   PGC.py
      │   OD.py
+     │   usefull_dataplotting_functions.py 
 ```
