@@ -26,8 +26,8 @@ GUI_main
 │    │    Simulate.py (contains the functions used for runing the code on a 
 │    │                computed that is not connected to the experimental setup)
 │    │    Temperature
-│    │    │  file1.py (typically, for functions that can be used from anywhere)
-│    │    │  file2.py (typically, for functions that are specific to use with GUI)
+│    │    │  file1.py (For functions that can be used from anywhere)
+│    │    │  file2.py (For functions that are specific to use with GUI)
 │    │   
 │    │    PGC
 │    │    │  file1.py
