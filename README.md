@@ -35,10 +35,18 @@ GUI_main
 │    └─── OD
 │    │       file1.py
 │    │       file2.py
+│    └─── Homodyne
+│    │       file1.py
+│    │       file2.py
 │
 └─── Widgets (GUI related code. Probably one per 'tab')
      │   Temperature.py
+     │   Temperature.ui
      │   PGC.py
+     │   PGC.ui
      │   OD.py
+     │   OD.ui
+     │   Homodyne.ui
+     │   Homodyne.ui
      │   usefull_dataplotting_functions.py 
 ```
