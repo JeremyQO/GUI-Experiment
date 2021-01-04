@@ -46,7 +46,7 @@ GUI_main
      │   PGC.ui
      │   OD.py
      │   OD.ui
-     │   Homodyne.ui
+     │   Homodyne.py 
      │   Homodyne.ui
      │   usefull_dataplotting_functions.py 
 ```
