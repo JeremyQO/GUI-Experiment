@@ -56,4 +56,4 @@ GUI_main
 * Split single .ui file into multiple .ui files, one for each experiment or 'tab'
 * Make sure the various objects all have acccess to the same pcg() object
 * Code related to QUA and the OPX should be reorganized, object names should be made more general (for example, 
-main OPX object shouldn't be named pgc()...) 
+main OPX object shouldn't be named pgc()...)
