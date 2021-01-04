@@ -1,6 +1,6 @@
 # GUI-Experiment
 
-This code contains the ellement of the GUI for the the quantum optics
+This code contains the element of the GUI for the the quantum optics
 experiment run in the group of Barak Dayan at the weizmann institute. 
 
 Several files are related to controlling the experiment. 
@@ -11,7 +11,7 @@ in the gui to functions that control the experiment.
 # Folder structure :
 
 The classes defined in Widgets will define a widget that can then be imported
-by main_GUI.py. Upon instanciation, main_GUI.py will open a new tab in the main
+by main_GUI.py. Upon instantiation, main_GUI.py will open a new tab in the main
 window and place said widget into it. 
 
 
