@@ -18,9 +18,10 @@ window and place said widget into it.
 Planned arborescence for the project:
 
 ```
-GUI_main 
+GUI-Experiment 
 │   README.md
 │   main_GUI.py (used to run main GUI window)
+|   main_GUI.ui
 │
 └─── Functions (not related to GUI. Runs experiment etc'. Probably one per 'tab')
 │    │    Simulate.py (contains the functions used for runing the code on a 

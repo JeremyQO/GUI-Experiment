@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-@author: Jeremy Raskop
+Created on Mon Jan  4 18:36:39 2021
+
+@author: Jeremy
 """
+
 
 from PIL import Image
 import os 
@@ -117,18 +120,24 @@ class images:
         means_x = [el.mean_x for el in self.images]
         stds_y = [el.std_y for el in self.images]
         means_y = [el.mean_y for el in self.images]
-        fig, axs = plt.subplots(2, 2, figsize=[10, 6.0])
-        axs[0,0].plot(times,stds_x, 'or')
-        axs[0,0].set(ylabel='Standard deviation (pixels)')
-        axs[0,0].set_title("Along X")
-        axs[1,0].plot(times, means_x, 'og')
-        axs[1,0].set(ylabel='Average (pixels)', xlabel='Time (ms)')
-        axs[0,1].plot(times,stds_y, 'or')
-        axs[0,1].set_title("Along Y")
-        axs[1,1].plot(times, means_y, 'og')
-        axs[1,1].set(xlabel='Time (ms)')
+        
+        ax1 = plt.subplot2grid((2, 2), (0, 0),  colspan=1, rowspan=1)
+        ax2 = plt.subplot2grid((2, 2), (1, 0),  colspan=1, rowspan=1)
+        ax3 = plt.subplot2grid((2, 2), (0, 1),  colspan=1, rowspan=1)
+        ax4 = plt.subplot2grid((2, 2), (1, 1),  colspan=1, rowspan=1)
+        
+        ax1.plot(times,stds_x, 'or')
+        ax1.set(ylabel='Standard deviation (pixels)')
+        ax1.set_title("Along X")
+        
+        ax2.plot(times, means_x, 'og')
+        ax2.set(ylabel='Average (pixels)', xlabel='Time (ms)')
+        ax3.plot(times,stds_y, 'or')
+        ax3.set_title("Along Y")
+        ax4.plot(times, means_y, 'og')
+        ax4.set(xlabel='Time (ms)')
         # plt.tight_layout()
-        # return fig, axs 
+        return ax1, ax2, ax3, ax4
 
         
         
