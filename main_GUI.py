@@ -3,8 +3,6 @@
 @author: Jeremy Raskop
 Created on Fri Dec 25 14:16:30 2020
 
-To convert *.ui file to *.py:
-!C:\\Users\\Jeremy\\anaconda3\\pkgs\\pyqt-impl-5.12.3-py38h885f38d_6\\Library\\bin\\pyuic5.bat -x .\\experiment.ui -o experiment.py
 """
 
 from PyQt5 import uic
@@ -13,6 +11,7 @@ from PyQt5.QtCore import QThreadPool
 import os
 from widgets.pgc import pgcWidget
 from widgets.temperature import temperatureWidget
+
 
 class experiment_gui(QMainWindow):
     def __init__(self, simulation=True):
@@ -41,7 +40,6 @@ class experiment_gui(QMainWindow):
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
     def pgc_open_tab(self):
-        # if not hasattr(self, 'pgc_tab'):
         self.pgc_tab = pgcWidget.Pgc_gui(simulation=simulation)
         self.pgc_tab.threadpool = self.threadpool
         self.tabwidget.addTab(self.pgc_tab, "PGC")
@@ -58,9 +56,10 @@ class experiment_gui(QMainWindow):
         self.tabwidget.removeTab(index)
   
 if __name__=="__main__":
+    import sys
     app = QApplication([])
     simulation = False if os.getlogin()=='orelb' else True
-    window = experiment_gui(simulation=simulation)
+    window = experiment_gui(simulation=True)
     window.show()
     # app.exec_()
-    # sys.exit(app.exec_())
+    sys.exit(app.exec_())

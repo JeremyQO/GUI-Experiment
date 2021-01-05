@@ -10,14 +10,12 @@ To convert *.ui file to *.py:
 """
 
 import numpy as np
-# from temperature_functions import images
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 import matplotlib
-matplotlib.use('Qt5Agg')
+if matplotlib.get_backend()!='Qt5Agg':
+    matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import QThreadPool
-# from gui_classes import Worker
-import time
 from datetime import datetime
 try:
     import MvCamera
@@ -27,7 +25,6 @@ except:
 import os
 
 from functions.temperature.data_analysis import images
-# import functions.pgc.control
 import widgets.temperature.dataplot as dataplot
 from widgets.worker import Worker 
 

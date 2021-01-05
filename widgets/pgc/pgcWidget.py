@@ -14,14 +14,15 @@ import numpy as np
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 import matplotlib
-matplotlib.use('Qt5Agg')
+if matplotlib.get_backend()!='Qt5Agg':
+    matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import QThreadPool
 # from gui_classes import Worker
 import time
 from datetime import datetime
 try:
     import MvCamera
-    import temperature
+    # import temperature
     from pgc_macro_with_OD import pgc
 except:
     pass
@@ -132,7 +133,6 @@ class Pgc_gui (QWidget):
         self.listWidget_dialogue.addItem(dt_string+" - "+s)
         print(dt_string+" - "+s)
         self.listWidget_dialogue.scrollToBottom()
-
 
     def take_continuous_pictures_worker(self):
         if self.checkBox_plotContinuous.isChecked():

@@ -8,7 +8,8 @@ Created on Mon Dec 28 16:52:30 2020
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QVBoxLayout
 import matplotlib
-matplotlib.use('Qt5Agg')
+if matplotlib.get_backend()!='Qt5Agg':
+    matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt

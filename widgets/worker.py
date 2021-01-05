@@ -7,10 +7,8 @@ Created on Mon Dec 28 16:52:30 2020
 
 import sys
 import matplotlib
-matplotlib.use('Qt5Agg')
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
+if matplotlib.get_backend()!='Qt5Agg':
+    matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import QRunnable, pyqtSlot, QObject, pyqtSignal
 import traceback
 
