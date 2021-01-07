@@ -148,6 +148,85 @@
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
+          <widget class="QFrame" name="frame_4">
+           <property name="frameShape">
+            <enum>QFrame::StyledPanel</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QGridLayout" name="gridLayout_2">
+            <property name="leftMargin">
+             <number>3</number>
+            </property>
+            <property name="topMargin">
+             <number>9</number>
+            </property>
+            <property name="rightMargin">
+             <number>3</number>
+            </property>
+            <property name="bottomMargin">
+             <number>9</number>
+            </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Folder name</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1">
+             <widget class="QLineEdit" name="lineEdit_Folder"/>
+            </item>
+            <item row="0" column="2">
+             <widget class="QPushButton" name="pushButtonBrowse">
+              <property name="text">
+               <string>Browse</string>
+              </property>
+              <property name="checkable">
+               <bool>false</bool>
+              </property>
+              <property name="autoDefault">
+               <bool>false</bool>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0" colspan="3">
+             <widget class="QPushButton" name="pushButton_get_temperature_fromFolder">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Get Temperature</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QLabel" name="label_7">
+              <property name="toolTip">
+               <string>Pixel/length calibration in pixels per milimiter</string>
+              </property>
+              <property name="text">
+               <string>Cal (pixel/mm)</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="1">
+             <widget class="QLineEdit" name="lineEdit_3"/>
+            </item>
+           </layout>
+          </widget>
+         </item>
+         <item>
           <widget class="QFrame" name="frame_temperature">
            <property name="enabled">
             <bool>false</bool>
@@ -161,7 +240,7 @@
            <property name="maximumSize">
             <size>
              <width>290</width>
-             <height>85</height>
+             <height>126</height>
             </size>
            </property>
            <property name="frameShape">
@@ -170,59 +249,47 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QGridLayout" name="gridLayout_6">
-            <property name="leftMargin">
-             <number>9</number>
-            </property>
-            <property name="topMargin">
-             <number>4</number>
-            </property>
-            <property name="rightMargin">
-             <number>9</number>
-            </property>
-            <property name="bottomMargin">
-             <number>4</number>
-            </property>
-            <property name="horizontalSpacing">
-             <number>6</number>
-            </property>
-            <item row="0" column="2">
-             <widget class="QLabel" name="label_6">
-              <property name="text">
-               <string>N points</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="3">
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="2" column="3">
              <widget class="QLineEdit" name="lineEdit"/>
             </item>
-            <item row="2" column="0" colspan="4">
-             <widget class="QPushButton" name="pushButton_measure_temperature">
-              <property name="minimumSize">
-               <size>
-                <width>79</width>
-                <height>0</height>
-               </size>
-              </property>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
               <property name="text">
-               <string>Measure Temperature</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_5">
-              <property name="text">
-               <string>End (ms)</string>
+               <string>Start (ms)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
+            <item row="2" column="0">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_start_temp">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_end_temp">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="value">
+               <double>15.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="2">
              <widget class="QSpinBox" name="spinBox_N_temp">
               <property name="maximumSize">
                <size>
@@ -241,44 +308,31 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_start_temp">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="value">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_4">
+            <item row="0" column="1">
+             <widget class="QLabel" name="label_5">
               <property name="text">
-               <string>Start (ms)</string>
+               <string>End (ms)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_end_temp">
-              <property name="maximumSize">
+            <item row="3" column="0" colspan="4">
+             <widget class="QPushButton" name="pushButton_measure_temperature">
+              <property name="minimumSize">
                <size>
-                <width>16777215</width>
-                <height>16777215</height>
+                <width>79</width>
+                <height>0</height>
                </size>
               </property>
-              <property name="value">
-               <double>15.000000000000000</double>
+              <property name="text">
+               <string>Measure Temperature</string>
               </property>
              </widget>
             </item>
             <item row="0" column="3">
-             <widget class="QLabel" name="label_7">
+             <widget class="QLabel" name="label_8">
               <property name="toolTip">
                <string>Pixel/length calibration in pixels per milimiter</string>
               </property>
@@ -287,6 +341,26 @@
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_6">
+              <property name="text">
+               <string>N points</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0" colspan="4">
+             <widget class="QProgressBar" name="progressBar">
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="textVisible">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
@@ -328,5 +402,42 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>pushButtonBrowse</sender>
+   <signal>clicked()</signal>
+   <receiver>Form</receiver>
+   <slot>browseSlot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1276</x>
+     <y>38</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1312</x>
+     <y>57</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>lineEdit_Folder</sender>
+   <signal>returnPressed()</signal>
+   <receiver>Form</receiver>
+   <slot>returnPressedSlot()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1128</x>
+     <y>36</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>1312</x>
+     <y>263</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>browseSlot()</slot>
+  <slot>returnPressedSlot()</slot>
+ </slots>
 </ui>

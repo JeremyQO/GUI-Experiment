@@ -61,5 +61,5 @@ if __name__=="__main__":
     simulation = False if os.getlogin()=='orelb' else True
     window = experiment_gui(simulation=simulation)
     window.show()
-    app.exec_()
+    # app.exec_()
     # sys.exit(app.exec_())

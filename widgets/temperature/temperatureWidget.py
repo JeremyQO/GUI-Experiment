@@ -15,7 +15,7 @@ from PyQt5.QtWidgets import *
 import matplotlib
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
-from PyQt5.QtCore import QThreadPool
+from PyQt5.QtCore import QThreadPool, pyqtSlot
 from datetime import datetime
 try:
     import MvCamera
@@ -38,6 +38,7 @@ class Temperature_gui (QWidget):
         self.widgetPlot = dataplot.PlotWindow()
         self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
         self.simulation = simulation
+        self.picturesDirName = None
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -45,6 +46,9 @@ class Temperature_gui (QWidget):
         # Connects:
         self.pushButton_temperature_Connect.clicked.connect(self.temperature_connect)
         self.pushButton_measure_temperature.clicked.connect(self.get_temperature_worker)
+        self.pushButton_get_temperature_fromFolder.clicked.connect(self.get_temperature_from_dir)
+        # self.pushButtonBrowse.clicked.connect(self.browseSlot)
+        # self.lineEdit_Folder.returnPressed.connect(self.returnPressedSlot)
 
     def enable_interface(self,v=True):
         self.frame.setEnabled(v)
@@ -86,7 +90,8 @@ class Temperature_gui (QWidget):
     def get_temperature(self, progress_callback):
         if self.simulation:
             N_snap = self.spinBox_N_temp.value()
-            dirname = 'C:\\Pycharm\\Expriements\\Instruments\\mvIMPACT_cam\\Images'
+            dirname = 'C:\\Pycharm\\Expriements\\Instruments\\mvIMPACT_cam\\Images' if os.getlogin() == 'orelb' else \
+                'c:\\users\\jeremy\\desktop\\mot_pgc_fall\\images'
             self.ims = images(dirname)
             # _, *axs = self.ims.plot()
             self.widgetPlot.plotData(self.ims)
@@ -127,14 +132,42 @@ class Temperature_gui (QWidget):
         print(dt_string+" - "+s)
         self.listWidget_dialogue.scrollToBottom()
 
+    @pyqtSlot()
+    def returnPressedSlot(self):
+        dirname =  self.lineEdit_Folder.text()
+        print(dirname)
+        print(os.path.isdir(dirname))
+        if os.path.isdir(dirname):
+            self.picturesDirName = dirname
+        else:
+            m = QMessageBox()
+            m.setText("Invalid folder name!\n" + dirname)
+            m.setIcon(QMessageBox.Warning)
+            m.setStandardButtons(QMessageBox.Ok)
+            m.setDefaultButton(QMessageBox.Cancel)
+            ret = m.exec_()
+            self.lineEdit.setText("")
+            self.refreshAll()
+            self.debugPrint("Invalid file specified: " + fileName)
+
+    @pyqtSlot()
+    def browseSlot(self):
+        dirname = QFileDialog().getExistingDirectory()
+        self.lineEdit_Folder.setText(dirname)
+        if os.path.isdir(dirname):
+            self.picturesDirName = dirname
+            self.pushButton_get_temperature_fromFolder.setEnabled(True)
+            
+    def get_temperature_from_dir(self):
+        dirname = self.picturesDirName
+        if os.path.isdir(dirname):
+            self.ims = images(dirname)
+            self.widgetPlot.plotData(self.ims)
+        
+
 if __name__=="__main__":
     app = QApplication([])
-    # ui_dir = "C:\\Users\\Jeremy\\Dropbox\\python_postdoc\\temperature\\GUI_qtdesigner.ui"
-    if os.getlogin()=='orelb':
-        ui_dir = "C:\\Pycharm\\Expriements\\QM\\temperature\\GUI_qtdesigner.ui"
-        simulation = False
-    elif os.getlogin()=='Jeremy':
-        simulation = True
+    simulation = False if os.getlogin() == 'orelb' else True
     window = Temperature_gui(simulation=simulation)
     window.show()
     # window.temperature_connect()
