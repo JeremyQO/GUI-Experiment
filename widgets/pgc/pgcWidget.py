@@ -77,8 +77,9 @@ class Pgc_gui (QWidget):
         try:
             self.camera = MvCamera.MvCamera()
             self.print_to_dialogue("Connected to camera")
-        except:
-            self.print_to_dialogue("Camera already connected")
+        except Exception as e:
+            # self.print_to_dialogue("Camera already connected")
+            self.print_to_dialogue(str(e))
 
         self.enable_interface(True)
         self.pushButton_PGC_Connect.setEnabled(True)
@@ -167,15 +168,19 @@ class Pgc_gui (QWidget):
                     imnp = np.asarray(im.convert(mode='L'), dtype=float)-self.background
                 else:
                     imnp = np.asarray(im.convert(mode='L'), dtype=float)
-                imim = image(imnp)
-                ax, sx, sy = imim.optimizing([500,1300,500,1100])
-                if sx >0:
-                    self.sigmay.append(sy)
-                    self.sigmax.append(sx)
-                    if len(self.sigmax)>30:
-                        self.sigmay.pop(0)
-                        self.sigmax.pop(0)
-                self.widgetPlot.plotData(imim)
+                try:
+                    imim = image(imnp)
+                    ax, sx, sy = imim.optimizing([500,1300,500,1100])
+                    if sx >0:
+                        self.sigmay.append(sy)
+                        self.sigmax.append(sx)
+                        if len(self.sigmax)>30:
+                            self.sigmay.pop(0)
+                            self.sigmax.pop(0)
+                    self.widgetPlot.plotData(imim)
+                except RuntimeError as e:
+                    print(e)
+
                 # except Exception as e:
                 #     print("Failed capturing image")
                 #     print(e)

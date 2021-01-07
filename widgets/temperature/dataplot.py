@@ -61,3 +61,45 @@ class PlotWindow(QDialog):
         ims.plot()
         plt.tight_layout()
         self.canvas.draw()
+
+    def plotImages(self, im, axSigma = None, aoe=None):
+        # print(self.xdata)
+        self.figure.clear()
+
+        # create an axis
+        ax1 = plt.subplot2grid((2, 2), (1, 1), colspan=2, rowspan=2)
+        ax2 = plt.subplot2grid((2, 2), (0, 1), colspan=2, rowspan=1)
+        ax3 = plt.subplot2grid((2, 2), (1, 0), colspan=1, rowspan=2)
+        ax4 = plt.subplot2grid((2, 2), (0, 0), colspan=1, rowspan=1)
+
+        # discards the old graph
+        # ax.hold(False) # deprecated, see above
+
+        # plot data
+        if aoe is not None:
+            xa, xb, ya, yb = aoe
+            m = im.npimage[ya:yb, xa:xb]
+            ax1.axvline(x=im.c_x - xa, color='red')
+            ax1.axhline(y=im.c_y - ya, color='red')
+        else:
+            m = im.npimage
+            ax1.axvline(x=im.c_x, color='red')
+            ax1.axhline(y=im.c_y, color='red')
+        ax1.imshow(m, interpolation='none')
+        ax2.plot(im.xaxis, im.line_x, label='x axis')
+        ax2.plot(im.xaxis, gaussian(im.xaxis, *im.popt_x), label='STD=%.0f' % (im.std_x))
+        ax2.legend()
+        ax3.plot(im.yaxis, im.line_y, label='y axis')
+        ax3.plot(im.yaxis, gaussian(im.yaxis, *im.popt_y), label='STD=%.0f' % (im.std_y))
+        ax3.legend()
+
+        # ax4.text(0.2,0.6, '$\sigma_x=%.0f$'%(im.std_x), fontsize=55,  color='black')
+        # ax4.text(0.2,0.2, '$\sigma_y=%.0f$'%(im.std_y), fontsize=55,  color='black')
+        if hasattr(self, 'sigmax'):
+            ax4.plot(self.sigmax, '-o', label="$\sigma_x$")
+            ax4.plot(self.sigmay, '-o', label="$\sigma_y$")
+            ax4.legend(loc="upper right")
+        plt.tight_layout()
+
+        # refresh canvas
+        self.canvas.draw()

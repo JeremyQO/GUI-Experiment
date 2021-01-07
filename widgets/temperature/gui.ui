@@ -85,7 +85,7 @@
           </font>
          </property>
          <property name="text">
-          <string>Termerature:</string>
+          <string>Temperature:</string>
          </property>
         </widget>
        </widget>

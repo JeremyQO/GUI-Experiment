@@ -19,28 +19,29 @@ from PyQt5.QtCore import QThreadPool
 from datetime import datetime
 try:
     import MvCamera
-    from pgc_macro_with_OD import pgc
+    from old.pgc_macro_Dor import pgc
+    # from pgc_macro_with_OD import pgc
 except:
     pass
 import os
 
-from functions.temperature.data_analysis import images
+from functions.temperature.data_analysis import images, image
 import widgets.temperature.dataplot as dataplot
-from widgets.worker import Worker 
+from widgets.worker import Worker
 
 class Temperature_gui (QWidget):
     def __init__(self, simulation=True):
         super(Temperature_gui, self).__init__()
         ui = os.path.join(os.path.dirname(__file__), "gui.ui")
         uic.loadUi(ui, self)
-        
+
         self.widgetPlot = dataplot.PlotWindow()
         self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
         self.simulation = simulation
-        if __name__=="__main__":
+        if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
-        
+
         # Connects:
         self.pushButton_temperature_Connect.clicked.connect(self.temperature_connect)
         self.pushButton_measure_temperature.clicked.connect(self.get_temperature_worker)
@@ -50,31 +51,32 @@ class Temperature_gui (QWidget):
         self.listWidget_dialogue.setEnabled(v)
         self.frame_temperature.setEnabled(v)
         self.frame_temperature.setEnabled(v)
-        
+
     def temperature_connect(self):
-        # print("Success")
+        # print("success")
         self.pushButton_temperature_Connect.setDisabled(True)
         self.enable_interface(False)
         if self.simulation:
-            dirname = 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\images'
-            self.ims = images(dirname)  #, imrange=[0,5])
-            self.print_to_dialogue("Images loaded successfully")
+            dirname = "c:\\users\\orelb\\desktop\\mot_pgc_fall\\images" if os.getlogin() == 'orelb' else \
+                'c:\\users\\jeremy\\desktop\\mot_pgc_fall\\images'
+            self.ims = images(dirname)
+            self.print_to_dialogue("images loaded successfully")
             self.enable_interface(True)
             self.pushButton_temperature_Connect.setEnabled(True)
             return
 
-        self.print_to_dialogue("Connecting to OPX...")
+        self.print_to_dialogue("connecting to opx...")
         self.pgc_experiment = pgc()
-        self.print_to_dialogue("Connected to OPX")
-        self.print_to_dialogue("Connecting to Camera...")
+        self.print_to_dialogue("connected to opx")
+        self.print_to_dialogue("connecting to camera...")
         try:
             self.camera = MvCamera.MvCamera()
-            self.print_to_dialogue("Connected to camera")
+            self.print_to_dialogue("connected to camera")
         except:
-            self.print_to_dialogue("Camera already connected")
+            self.print_to_dialogue("camera already connected")
 
         self.enable_interface(True)
-        self.pushButton_PGC_Connect.setEnabled(True)
+        self.pushButton_pgc_connect.setEnabled(True)
 
     def get_temperature_worker(self):
         worker = Worker(self.get_temperature)
@@ -84,47 +86,39 @@ class Temperature_gui (QWidget):
     def get_temperature(self, progress_callback):
         if self.simulation:
             N_snap = self.spinBox_N_temp.value()
-            dirname = 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\images'
+            dirname = 'C:\\Pycharm\\Expriements\\Instruments\\mvIMPACT_cam\\Images'
             self.ims = images(dirname)
             # _, *axs = self.ims.plot()
             self.widgetPlot.plotData(self.ims)
-        else:
-            self.camera.clear_folder()
-            self.plot_continuous = False
-            # self.set_enable(False)
-            N_snap = self.spinBox_N_temp.value()
-            self.sigmay = []
-            self.sigmax = []
-            self.pgc_experiment.measure_temperature(N_snap)
-            for i in range(1, N_snap + 1):
-                self.print_to_dialogue("Snap at %.2f ms" % (i))
-                im, _ = self.camera.CaptureImage()
-                imnp = np.asarray(im.convert(mode='L'), dtype=float)
-                imim = temperature.image(imnp)
-                ax, sx, sy = imim.optimizer([500, 1300, 500, 1100])
-                self.sigmay.append(sy)
-                self.sigmax.append(sx)
-                self.plotData(imim)
-                self.camera.SaveImageT(im, "%.2f" % (i))
-    
-            print("Taking background")
-            self.pgc_experiment.Background()
-            backgroundim, _ = self.camera.CaptureImage()
-            self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
-            self.camera.SaveImageT(backgroundim, 0, background=True)
-    
-            dirname = 'C:\Pycharm\Expriements\Instruments\mvIMPACT_cam\Images'
-            self.ims = images(dirname)
-        
-        
+            return
 
-        # self.set_enable(True)
-        # plt.figure()
-        # self.ims.plot()
-        # plt.show()
-        # self.plot_continuous = True
-        # return ims
+        self.camera.clear_folder()
+        self.plot_continuous = False
+        # self.set_enable(False)
+        N_snap = self.spinBox_N_temp.value()
+        self.sigmay = []
+        self.sigmax = []
+        self.pgc_experiment.measure_temperature(N_snap)
+        for i in range(1, N_snap + 1):
+            self.print_to_dialogue("Snap at %.2f ms" % (i))
+            im, _ = self.camera.CaptureImage()
+            imnp = np.asarray(im.convert(mode='L'), dtype=float)
+            imim = image(imnp)
+            ax, sx, sy = imim.optimizing([500, 1300, 500, 1100])
+            self.sigmay.append(sy)
+            self.sigmax.append(sx)
+            self.widgetPlot.plotImages(imim)
+            self.camera.SaveImageT(im, "%.2f" % (i))
 
+        print("Taking background")
+        self.pgc_experiment.Background()
+        backgroundim, _ = self.camera.CaptureImage()
+        self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
+        self.camera.SaveImageT(backgroundim, 0, background=True)
+
+        dirname = 'C:\Pycharm\Expriements\Instruments\mvIMPACT_cam\Images'
+        self.ims = images(dirname)
+        self.widgetPlot.plotData(self.ims)
 
     def print_to_dialogue (self, s):
         now = datetime.now()
@@ -132,7 +126,7 @@ class Temperature_gui (QWidget):
         self.listWidget_dialogue.addItem(dt_string+" - "+s)
         print(dt_string+" - "+s)
         self.listWidget_dialogue.scrollToBottom()
-  
+
 if __name__=="__main__":
     app = QApplication([])
     # ui_dir = "C:\\Users\\Jeremy\\Dropbox\\python_postdoc\\temperature\\GUI_qtdesigner.ui"
@@ -143,7 +137,7 @@ if __name__=="__main__":
         simulation = True
     window = Temperature_gui(simulation=simulation)
     window.show()
-    window.temperature_connect()
-    window.get_temperature(1)
+    # window.temperature_connect()
+    # window.get_temperature(1)
     # app.exec_()
     # sys.exit(app.exec_())
