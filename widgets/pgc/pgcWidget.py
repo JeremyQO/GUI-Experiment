@@ -66,7 +66,8 @@ class Pgc_gui (QWidget):
         self.pushButton_PGC_Connect.setDisabled(True)
         self.enable_interface(False)
         if self.simulation:
-            dirname = 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\images'
+            dirname = "C:\\Users\\orelb\\Desktop\\MOT_PGC_Fall\\Images" if os.getlogin()=='orelb' else\
+                'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\images'
             self.ims = images(dirname)  #, imrange=[0,5])
             self.print_to_dialogue("Images loaded successfully")
             self.enable_interface(True)
@@ -117,7 +118,7 @@ class Pgc_gui (QWidget):
 
     def take_new_background(self, progress_callback):
         # todo: get background. what happens if camera roll is true when clicked ?
-        if self.simulation :
+        if self.simulation:
             self.checkBox_substractBackground.setEnabled(True)
             return
 
@@ -170,7 +171,7 @@ class Pgc_gui (QWidget):
                         imnp = np.asarray(im.convert(mode='L'), dtype=float)-self.background
                     else:
                         imnp = np.asarray(im.convert(mode='L'), dtype=float)
-                    imim = temperature.image(imnp)
+                    imim = image(imnp)
                     ax, sx, sy = imim.optimizer([500,1300,500,1100])
                     if sx >0:
                         self.sigmay.append(sy)
@@ -184,13 +185,9 @@ class Pgc_gui (QWidget):
   
 if __name__=="__main__":
     app = QApplication([])
-    # ui_dir = "C:\\Users\\Jeremy\\Dropbox\\python_postdoc\\temperature\\GUI_qtdesigner.ui"
-    if os.getlogin()=='orelb':
-        ui_dir = "C:\\Pycharm\\Expriements\\QM\\temperature\\GUI_qtdesigner.ui"
-        simulation = False
-    elif os.getlogin()=='Jeremy':
-        simulation = True
+    simulation = False if os.getlogin() == 'orelb' else True
     window = Pgc_gui(simulation=simulation)
     window.show()
-    # app.exec_()
+    app.exec_()
+    # import sys
     # sys.exit(app.exec_())

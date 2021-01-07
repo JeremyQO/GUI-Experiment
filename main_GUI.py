@@ -6,7 +6,7 @@ Created on Fri Dec 25 14:16:30 2020
 """
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QTabWidget, QGridLayout, QMainWindow, QApplication, QLabel
+from PyQt5.QtWidgets import QTabWidget, QGridLayout, QMainWindow, QApplication
 from PyQt5.QtCore import QThreadPool
 import os
 from widgets.pgc import pgcWidget
@@ -40,12 +40,12 @@ class experiment_gui(QMainWindow):
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
     def pgc_open_tab(self):
-        self.pgc_tab = pgcWidget.Pgc_gui(simulation=simulation)
+        self.pgc_tab = pgcWidget.Pgc_gui(simulation=self.simulation)
         self.pgc_tab.threadpool = self.threadpool
         self.tabwidget.addTab(self.pgc_tab, "PGC")
             
     def temperature_open_tab(self):
-        self.temperature_tab = temperatureWidget.Temperature_gui(simulation=simulation)
+        self.temperature_tab = temperatureWidget.Temperature_gui(simulation=self.simulation)
         self.temperature_tab.threadpool = self.threadpool
         self.tabwidget.addTab(self.temperature_tab,"Temperature")
         
@@ -59,7 +59,7 @@ if __name__=="__main__":
     import sys
     app = QApplication([])
     simulation = False if os.getlogin()=='orelb' else True
-    window = experiment_gui(simulation=True)
+    window = experiment_gui(simulation=simulation)
     window.show()
-    # app.exec_()
-    sys.exit(app.exec_())
+    app.exec_()
+    # sys.exit(app.exec_())

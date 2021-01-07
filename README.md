@@ -58,3 +58,5 @@ GUI-Experiment
 * Make sure the various objects all have acccess to the same pcg() object
 * Code related to QUA and the OPX could be reorganized. Object names could be more general (for example, 
 main OPX object shouldn't be named pgc()...)
+* Here is an equation : $a/\pi^2$  
+
