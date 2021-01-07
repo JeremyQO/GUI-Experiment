@@ -90,7 +90,10 @@ class image:
         ax4.text(0.2,0.6, '$\sigma_x=%.0f$'%(self.std_x), fontsize=55,  color='black')
         ax4.text(0.2,0.2, '$\sigma_y=%.0f$'%(self.std_y), fontsize=55,  color='black')
         # plt.tight_layout()
-        return ax1, ax2, ax3, ax4
+        ax = [ax1, ax2, ax3, ax4]
+        sx = self.std_x
+        sy = self.std_y
+        return ax, sx, sy
 
 class images:
     def __init__(self, dirname, imrange=None, aoe=None):

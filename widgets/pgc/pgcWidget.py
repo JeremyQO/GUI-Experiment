@@ -10,26 +10,22 @@ To convert *.ui file to *.py:
 """
 
 import numpy as np
-# from temperature_functions import images
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 import matplotlib
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import QThreadPool
-# from gui_classes import Worker
 import time
 from datetime import datetime
 try:
     import MvCamera
-    # import temperature
-    from pgc_macro_with_OD import pgc
+    from old.pgc_macro_Dor import pgc
 except:
     pass
 import os
 
-from functions.pgc.data_analysis import images
-import functions.pgc.control
+from functions.pgc.data_analysis import image, images
 import widgets.pgc.dataplot as dataplot
 from widgets.worker import Worker 
 
@@ -150,13 +146,13 @@ class Pgc_gui (QWidget):
         self.print_to_dialogue("Plot Continuous")
         if self.simulation:
             for i in range(5):
-                for image in self.ims.images:
+                for im in self.ims.images:
                     if self.checkBox_plotContinuous.isChecked()== False:
                         break
                     time.sleep(0.01)
                     # progress_callback.emit(int(image.std_x))
                     # self.plotData([i for i in range(len(image.line_x))], image.line_x)
-                    self.widgetPlot.plotData(image)
+                    self.widgetPlot.plotData(im)
             return
         # backgroundim = pil.Image.open('background_23-12-2020.png')
         # background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
@@ -165,23 +161,24 @@ class Pgc_gui (QWidget):
             self.sigmay = []
             self.sigmax = []
             while self.checkBox_plotContinuous.isChecked():
-                try:
-                    im, _ = self.camera.CaptureImage()
-                    if self.checkBox_substractBackground.isChecked():
-                        imnp = np.asarray(im.convert(mode='L'), dtype=float)-self.background
-                    else:
-                        imnp = np.asarray(im.convert(mode='L'), dtype=float)
-                    imim = image(imnp)
-                    ax, sx, sy = imim.optimizer([500,1300,500,1100])
-                    if sx >0:
-                        self.sigmay.append(sy)
-                        self.sigmax.append(sx)
-                        if len(self.sigmax)>30:
-                            self.sigmay.pop(0)
-                            self.sigmax.pop(0)
-                    self.plotData(imim)
-                except:
-                    print("Failed capturing image")
+                # try:
+                im, _ = self.camera.CaptureImage()
+                if self.checkBox_substractBackground.isChecked() and hasattr(self, "background"):
+                    imnp = np.asarray(im.convert(mode='L'), dtype=float)-self.background
+                else:
+                    imnp = np.asarray(im.convert(mode='L'), dtype=float)
+                imim = image(imnp)
+                ax, sx, sy = imim.optimizing([500,1300,500,1100])
+                if sx >0:
+                    self.sigmay.append(sy)
+                    self.sigmax.append(sx)
+                    if len(self.sigmax)>30:
+                        self.sigmay.pop(0)
+                        self.sigmax.pop(0)
+                self.widgetPlot.plotData(imim)
+                # except Exception as e:
+                #     print("Failed capturing image")
+                #     print(e)
   
 if __name__=="__main__":
     app = QApplication([])
