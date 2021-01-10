@@ -11,11 +11,13 @@ from PyQt5.QtCore import QThreadPool
 import os
 from widgets.pgc import pgcWidget
 from widgets.temperature import temperatureWidget
+from widgets.od import ODWidget
+import logging 
 
 
-class experiment_gui(QMainWindow):
+class Experiment_gui(QMainWindow):
     def __init__(self, simulation=True):
-        super(experiment_gui, self).__init__()
+        super(Experiment_gui, self).__init__()
         ui = os.path.join(os.path.dirname(__file__), "main_GUI.ui")
         uic.loadUi(ui, self)
         
@@ -33,11 +35,13 @@ class experiment_gui(QMainWindow):
         # Open widgets upon called action:
         self.actionPGC.triggered.connect(self.pgc_open_tab)
         self.actionTemperature.triggered.connect(self.temperature_open_tab)
+        self.actionOD.triggered.connect(self.OD_open_tab)
 
         # Start Threadpool for multi-threading 
         self.simulation = simulation
-        self.threadpool = QThreadPool()
-        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        if __name__ == "__main__":
+            self.threadpool = QThreadPool()
+            print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
     def pgc_open_tab(self):
         self.pgc_tab = pgcWidget.Pgc_gui(simulation=self.simulation)
@@ -49,6 +53,11 @@ class experiment_gui(QMainWindow):
         self.temperature_tab.threadpool = self.threadpool
         self.tabwidget.addTab(self.temperature_tab,"Temperature")
         
+    def OD_open_tab(self):
+        self.OD_tab = ODWidget.OD_gui(simulation=self.simulation)
+        self.OD_tab.threadpool = self.threadpool
+        self.tabwidget.addTab(self.OD_tab,"OD")
+        
     def removeTab(self, index):
         widget = self.tabwidget.widget(index)
         if widget is not None:
@@ -59,7 +68,7 @@ if __name__=="__main__":
     import sys
     app = QApplication([])
     simulation = False if os.getlogin()=='orelb' else True
-    window = experiment_gui(simulation=simulation)
+    window = Experiment_gui(simulation=simulation)
     window.show()
     # app.exec_()
     # sys.exit(app.exec_())

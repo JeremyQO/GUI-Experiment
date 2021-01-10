@@ -7,6 +7,7 @@ Created on Fri Dec 25 14:16:30 2020
 
 To convert *.ui file to *.py:
 !C:\\Users\\Jeremy\\anaconda3\\pkgs\\pyqt-impl-5.12.3-py38h885f38d_6\\Library\\bin\\pyuic5.bat -x .\\experiment.ui -o experiment.py
+!C:\\Users\\Jeremy\\anaconda3\\pkgs\\pyqt-5.9.2-py38ha925a31_4\\Library\\bin\\pyuic5.bat -x .\gui.ui -o experiment.py
 """
 
 import numpy as np

@@ -39,6 +39,7 @@ class Temperature_gui (QWidget):
         self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
         self.simulation = simulation
         self.picturesDirName = None
+        self.pixelCal = float(self.LineEdit_CalPixMM.text())
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -49,6 +50,23 @@ class Temperature_gui (QWidget):
         self.pushButton_get_temperature_fromFolder.clicked.connect(self.get_temperature_from_dir)
         # self.pushButtonBrowse.clicked.connect(self.browseSlot)
         # self.lineEdit_Folder.returnPressed.connect(self.returnPressedSlot)
+        self.LineEdit_CalPixMM.returnPressed.connect(self.updateCal)
+        
+    def updateCal(self):
+        calibration =  self.LineEdit_CalPixMM.text()
+        try:
+            self.pixelCal = float(calibration)
+            self.print_to_dialogue("Pixels per mm: %.1f"%(float(calibration)))
+        except ValueError:
+            m = QMessageBox()
+            m.setText("Calibration must be float")
+            m.setIcon(QMessageBox.Warning)
+            m.setStandardButtons(QMessageBox.Ok)
+            m.setDefaultButton(QMessageBox.Cancel)
+            ret = m.exec_()
+            self.lineEdit.setText("")
+            self.refreshAll()
+            self.debugPrint("Calibration must be float")
 
     def enable_interface(self,v=True):
         self.frame.setEnabled(v)
@@ -162,7 +180,9 @@ class Temperature_gui (QWidget):
         dirname = self.picturesDirName
         if os.path.isdir(dirname):
             self.ims = images(dirname)
+            self.ims.pixelCal = self.pixelCal
             self.widgetPlot.plotData(self.ims)
+            self.print_to_dialogue("Tx = %.2f uK, Ty = %.2f uK"%(self.ims.Tx*1e6, self.ims.Ty*1e6))
         
 
 if __name__=="__main__":

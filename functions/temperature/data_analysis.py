@@ -17,6 +17,14 @@ import time
 def gaussian(x, amplitude, mean, stddev):
     return amplitude * np.exp(-((x - mean)**2 / 2 / stddev**2))
 
+def fit_TOF(t, t0, s_0, T):
+    kb = 1.3806504E-23
+    # m = 2.206230502536E-25
+    #m = 2.20694657E-25
+    m = 86.9091835 * 1.660538782e-27 # Rubidium 87
+    a=kb*T/m 
+    return np.sqrt(s_0**2+a*(t-t0)**2)
+
 class image:
     def __init__(self, npimage):
         self.npimage = npimage
@@ -95,10 +103,15 @@ class image:
         return ax, sx, sy
 
 class images:
-    def __init__(self, dirname, imrange=None, aoe=None):
+    def __init__(self, dirname, pixelCal = None, imrange=None, aoe=None):
         self.dirname = dirname
         self.npimages, self.background, self.times = self.get_images(imrange)
         self.images = [image(im) for im in self.npimages]
+        self.pixelCal = pixelCal
+        self.stds_x = [el.std_x for el in self.images]
+        self.means_x = [el.mean_x for el in self.images]
+        self.stds_y = [el.std_y for el in self.images]
+        self.means_y = [el.mean_y for el in self.images]
         
     def get_images(self, imrange):
         '''
@@ -115,28 +128,59 @@ class images:
             b = imrange[1]
             return npimages[a:b], background, times[a:b]
         return npimages, background, times
-
-    def plot(self):
-        times = self.times
-        stds_x = [el.std_x for el in self.images]
-        means_x = [el.mean_x for el in self.images]
-        stds_y = [el.std_y for el in self.images]
-        means_y = [el.mean_y for el in self.images]
+    
+    def get_temperature(self):
+        self.popt_Tx, _ = optimize.curve_fit(fit_TOF, self.times, self.stds_x, p0=[1,60,3])
+        self.popt_Ty, _ = optimize.curve_fit(fit_TOF, self.times, self.stds_y, p0=[1,60,3])
+        if self.pixelCal is not None:
+            pxc = self.pixelCal
+            print(self.popt_Tx[2])
+            print(self.popt_Tx[2]/(pxc**2))
+            print(pxc)
+            self.Tx = self.popt_Tx[2]/(pxc**2)
+            self.Ty = self.popt_Ty[2]/(pxc**2)
+        else:
+            self.Tx = self.popt_Tx[2] # Result depends on pixel calibration 
+            self.Ty = self.popt_Ty[2] 
+    
+    def plot(self):        
+        self.get_temperature()
+        t = np.linspace(self.times[0]-1, self.times[-1],100)
         
         ax1 = plt.subplot2grid((2, 2), (0, 0),  colspan=1, rowspan=1)
         ax2 = plt.subplot2grid((2, 2), (1, 0),  colspan=1, rowspan=1)
         ax3 = plt.subplot2grid((2, 2), (0, 1),  colspan=1, rowspan=1)
         ax4 = plt.subplot2grid((2, 2), (1, 1),  colspan=1, rowspan=1)
         
-        ax1.plot(times,stds_x, 'or')
-        ax1.set(ylabel='Standard deviation (pixels)')
+        if self.pixelCal is None:
+            stds_x = self.stds_x
+            means_x = self.means_x
+            stds_y = self.stds_y
+            means_y = self.means_y
+            fit_sigmaX = fit_TOF(t, *self.popt_Tx)
+            fit_sigmaY = fit_TOF(t, *self.popt_Ty)
+            unit = 'pixels'
+        
+        else:
+            stds_x = np.array(self.stds_x)/self.pixelCal
+            means_x = np.array(self.means_x)/self.pixelCal
+            stds_y = np.array(self.stds_y)/self.pixelCal
+            means_y = np.array(self.means_y)/self.pixelCal
+            fit_sigmaX = fit_TOF(t, *self.popt_Tx)/self.pixelCal
+            fit_sigmaY = fit_TOF(t, *self.popt_Ty)/self.pixelCal
+            unit = 'mm'
+        
+        ax1.plot(self.times, stds_x, 'or')
+        ax1.plot(t, fit_sigmaX)
+        ax1.set(ylabel='Standard deviation (%s)'%(unit))
         ax1.set_title("Along X")
         
-        ax2.plot(times, means_x, 'og')
-        ax2.set(ylabel='Average (pixels)', xlabel='Time (ms)')
-        ax3.plot(times,stds_y, 'or')
+        ax2.plot(self.times, means_x, 'og')
+        ax2.set(ylabel='Average (%s)'%(unit), xlabel='Time (ms)')
+        ax3.plot(self.times,stds_y, 'or')
+        ax3.plot(t, fit_sigmaY)
         ax3.set_title("Along Y")
-        ax4.plot(times, means_y, 'og')
+        ax4.plot(self.times, means_y, 'og')
         ax4.set(xlabel='Time (ms)')
         # plt.tight_layout()
         return ax1, ax2, ax3, ax4
@@ -157,9 +201,11 @@ def run_exp():
 
 if __name__=="__main__":
     dirname = 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\23-12-2020'
-    ims = images(dirname, imrange=[0,19])
+    ims = images(dirname, imrange=[0,19], pixelCal = 124.6)
     # ims.images[0].optimizing()
+    plt.figure()
     ims.plot()
+    plt.show()
     # plt.figure(figsize=[12.4, 8.0])
     # plt.clf()
     # ax = ims.images[0].optimizing()#[500,1300,500,1100])
