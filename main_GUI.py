@@ -12,7 +12,15 @@ import os
 from widgets.pgc import pgcWidget
 from widgets.temperature import temperatureWidget
 from widgets.od import ODWidget
-import logging 
+import logging
+import sys
+sys._excepthook = sys.excepthook
+def exception_hook(exctype, value, traceback):
+    print(exctype, value, traceback)
+    sys._excepthook(exctype, value, traceback)
+    sys.exit(1)
+sys.excepthook = exception_hook
+
 
 
 class Experiment_gui(QMainWindow):
@@ -70,5 +78,5 @@ if __name__=="__main__":
     simulation = False if os.getlogin()=='orelb' else True
     window = Experiment_gui(simulation=simulation)
     window.show()
-    # app.exec_()
+    app.exec_()
     # sys.exit(app.exec_())

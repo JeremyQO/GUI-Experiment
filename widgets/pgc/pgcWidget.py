@@ -22,6 +22,7 @@ from datetime import datetime
 try:
     import MvCamera
     from old.pgc_macro_Dor import pgc
+    from mvIMPACT import acquire
 except:
     pass
 import os
@@ -77,10 +78,9 @@ class Pgc_gui (QWidget):
         self.print_to_dialogue("Connecting to Camera...")
         try:
             self.camera = MvCamera.MvCamera()
-            self.print_to_dialogue("Connected to camera")
-        except Exception as e:
-            # self.print_to_dialogue("Camera already connected")
-            self.print_to_dialogue(str(e))
+            self.print_to_dialogue("connected to camera")
+        except acquire.EDeviceManager:
+            self.print_to_dialogue("Camera was already connected")
 
         self.enable_interface(True)
         self.pushButton_PGC_Connect.setEnabled(True)
@@ -137,10 +137,15 @@ class Pgc_gui (QWidget):
         if self.checkBox_plotContinuous.isChecked():
             worker = Worker(self.take_continuous_pictures) # Any other args, kwargs are passed to the run function
             # worker.signals.result.connect(self.print_output)
-            # worker.signals.finished.connect(self.thread_complete)
+            worker.signals.finished.connect(self.thread_complete)
             # worker.signals.progress.connect(self.progress_fn)
             # Execute
             self.threadpool.start(worker)
+        else:
+            self.pgc_experiment.toggle_camera_roll(False)
+
+    def thread_complete(self):
+        self.print_to_dialogue("Acquisition stopped")
 
     def take_continuous_pictures(self, progress_callback):
         # self.plot_continuous = True
@@ -160,8 +165,8 @@ class Pgc_gui (QWidget):
         # background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
         else:
             self.pgc_experiment.toggle_camera_roll(True)
-            self.sigmay = []
-            self.sigmax = []
+            self.widgetPlot.sigmay = []
+            self.widgetPlot.sigmax = []
             while self.checkBox_plotContinuous.isChecked():
                 # try:
                 im, _ = self.camera.CaptureImage()
@@ -173,11 +178,11 @@ class Pgc_gui (QWidget):
                     imim = image(imnp)
                     ax, sx, sy = imim.optimizing([500,1300,500,1100])
                     if sx >0:
-                        self.sigmay.append(sy)
-                        self.sigmax.append(sx)
-                        if len(self.sigmax)>30:
-                            self.sigmay.pop(0)
-                            self.sigmax.pop(0)
+                        self.widgetPlot.sigmay.append(sy)
+                        self.widgetPlot.sigmax.append(sx)
+                        if len(self.widgetPlot.sigmax)>30:
+                            self.widgetPlot.sigmay.pop(0)
+                            self.widgetPlot.sigmax.pop(0)
                     self.widgetPlot.plotData(imim)
                 except RuntimeError as e:
                     print(e)
@@ -185,8 +190,9 @@ class Pgc_gui (QWidget):
                 # except Exception as e:
                 #     print("Failed capturing image")
                 #     print(e)
-  
-if __name__=="__main__":
+
+
+if __name__ == "__main__":
     app = QApplication([])
     simulation = False if os.getlogin() == 'orelb' else True
     window = Pgc_gui(simulation=simulation)

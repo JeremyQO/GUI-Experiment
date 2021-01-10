@@ -5,20 +5,19 @@ Created on Fri Dec 25 14:16:30 2020
 
 * Use JSON for keeping data fed into gui
 
-To convert *.ui file to *.py:
-!C:\\Users\\Jeremy\\anaconda3\\pkgs\\pyqt-impl-5.12.3-py38h885f38d_6\\Library\\bin\\pyuic5.bat -x .\\experiment.ui -o experiment.py
 """
 
 import numpy as np
 from PyQt5 import uic
 from PyQt5.QtWidgets import *
 import matplotlib
-if matplotlib.get_backend()!='Qt5Agg':
+if matplotlib.get_backend() != 'Qt5Agg':
     matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import QThreadPool, pyqtSlot
 from datetime import datetime
 try:
     import MvCamera
+    from mvIMPACT import acquire
     from old.pgc_macro_Dor import pgc
     # from pgc_macro_with_OD import pgc
 except:
@@ -88,17 +87,17 @@ class Temperature_gui (QWidget):
             return
 
         self.print_to_dialogue("connecting to opx...")
-        self.pgc_experiment = pgc()
+        self.OPX = pgc()
         self.print_to_dialogue("connected to opx")
         self.print_to_dialogue("connecting to camera...")
         try:
             self.camera = MvCamera.MvCamera()
             self.print_to_dialogue("connected to camera")
-        except:
-            self.print_to_dialogue("camera already connected")
+        except acquire.EDeviceManager:
+            self.print_to_dialogue("Camera was already connected")
 
         self.enable_interface(True)
-        self.pushButton_pgc_connect.setEnabled(True)
+        self.pushButton_temperature_Connect.setEnabled(True)
 
     def get_temperature_worker(self):
         worker = Worker(self.get_temperature)
@@ -121,7 +120,7 @@ class Temperature_gui (QWidget):
         N_snap = self.spinBox_N_temp.value()
         self.sigmay = []
         self.sigmax = []
-        self.pgc_experiment.measure_temperature(N_snap)
+        self.OPX.measure_temperature(N_snap)
         for i in range(1, N_snap + 1):
             self.print_to_dialogue("Snap at %.2f ms" % (i))
             im, _ = self.camera.CaptureImage()
@@ -134,7 +133,7 @@ class Temperature_gui (QWidget):
             self.camera.SaveImageT(im, "%.2f" % (i))
 
         print("Taking background")
-        self.pgc_experiment.Background()
+        self.OPX.Background()
         backgroundim, _ = self.camera.CaptureImage()
         self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
         self.camera.SaveImageT(backgroundim, 0, background=True)
