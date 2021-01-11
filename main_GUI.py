@@ -12,7 +12,6 @@ import os
 from widgets.pgc import pgcWidget
 from widgets.temperature import temperatureWidget
 from widgets.od import ODWidget
-import logging
 import sys
 sys._excepthook = sys.excepthook
 def exception_hook(exctype, value, traceback):

@@ -26,6 +26,7 @@ try:
 except:
     pass
 import os
+from pyqtconsole.console import PythonConsole
 
 from functions.pgc.data_analysis import image, images
 import widgets.pgc.dataplot as dataplot
@@ -39,6 +40,8 @@ class Pgc_gui (QWidget):
         
         self.widgetPlot = dataplot.PlotWindow()
         self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
+        self.console = PythonConsole()
+        self.verticalLayout_terminal.addWidget(self.console)
         self.simulation = simulation
         if __name__=="__main__":
             self.threadpool = QThreadPool()
@@ -51,12 +54,17 @@ class Pgc_gui (QWidget):
         self.pushButton_updateSnapTime.clicked.connect(self.update_Snaptime)
         self.pushButton_update_dA.clicked.connect(self.update_dA)
         self.pushButton_update_df.clicked.connect(self.update_df)
+        
+        self.console.push_local_ns("o", self)
+        self.console.eval_queued()
 
 
     def enable_interface(self,v=True):
         self.frame_5.setEnabled(v)
-        self.frame.setEnabled(v)
+        # self.frame.setEnabled(v)
         self.widget.setEnabled(v)
+        self.checkBox_plotContinuous.setEnabled(v)
+        self.pushButton_takeBackground.setEnabled(v)
 
     def PGC_connect_worker(self):
         worker = Worker(self.PGC_connect)
@@ -145,7 +153,7 @@ class Pgc_gui (QWidget):
             # worker.signals.progress.connect(self.progress_fn)
             # Execute
             self.threadpool.start(worker)
-        else:
+        elif not self.simulation:
             self.pgc_experiment.toggle_camera_roll(False)
 
     def thread_complete(self):

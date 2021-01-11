@@ -29,7 +29,7 @@
    <item>
     <widget class="QFrame" name="frame">
      <property name="enabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="frameShape">
       <enum>QFrame::WinPanel</enum>
@@ -53,11 +53,11 @@
       <property name="spacing">
        <number>0</number>
       </property>
-      <item row="0" column="0" colspan="2">
-       <layout class="QGridLayout" name="verticalLayout_mpl"/>
-      </item>
       <item row="1" column="0" colspan="2">
        <widget class="QFrame" name="frame_3">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
@@ -70,25 +70,27 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <widget class="QLabel" name="label">
-         <property name="geometry">
-          <rect>
-           <x>310</x>
-           <y>30</y>
-           <width>321</width>
-           <height>31</height>
-          </rect>
+        <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <property name="leftMargin">
+          <number>2</number>
          </property>
-         <property name="font">
-          <font>
-           <pointsize>22</pointsize>
-          </font>
+         <property name="topMargin">
+          <number>2</number>
          </property>
-         <property name="text">
-          <string>Temperature:</string>
+         <property name="rightMargin">
+          <number>2</number>
          </property>
-        </widget>
+         <property name="bottomMargin">
+          <number>2</number>
+         </property>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_terminal"/>
+         </item>
+        </layout>
        </widget>
+      </item>
+      <item row="0" column="0" colspan="2">
+       <layout class="QGridLayout" name="verticalLayout_mpl"/>
       </item>
      </layout>
     </widget>
@@ -149,6 +151,12 @@
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QFrame" name="frame_4">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>97</height>
+            </size>
+           </property>
            <property name="frameShape">
             <enum>QFrame::StyledPanel</enum>
            </property>
@@ -372,23 +380,7 @@
           </widget>
          </item>
          <item>
-          <widget class="QListWidget" name="listWidget_dialogue">
-           <property name="cursor" stdset="0">
-            <cursorShape>ArrowCursor</cursorShape>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="autoScrollMargin">
-            <number>16</number>
-           </property>
-           <property name="dragEnabled">
-            <bool>false</bool>
-           </property>
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-          </widget>
+          <widget class="QListWidget" name="listWidget_dialogue"/>
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_temperature_Connect">
