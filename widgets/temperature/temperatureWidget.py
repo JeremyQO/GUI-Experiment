@@ -18,8 +18,8 @@ from datetime import datetime
 try:
     import MvCamera
     from mvIMPACT import acquire
-    from old.pgc_macro_Dor import pgc
-    # from pgc_macro_with_OD import pgc
+    # from old.pgc_macro_Dor import pgc
+    from pgc_macro_with_OD import pgc
 except:
     pass
 import os
@@ -44,7 +44,7 @@ class Temperature_gui (QWidget):
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
         # Connects:
-        self.pushButton_temperature_Connect.clicked.connect(self.temperature_connect)
+        self.pushButton_temperature_Connect.clicked.connect(self.temperature_connect_worker)
         self.pushButton_measure_temperature.clicked.connect(self.get_temperature_worker)
         self.pushButton_get_temperature_fromFolder.clicked.connect(self.get_temperature_from_dir)
         # self.pushButtonBrowse.clicked.connect(self.browseSlot)
@@ -69,13 +69,17 @@ class Temperature_gui (QWidget):
 
     def enable_interface(self,v=True):
         self.frame.setEnabled(v)
-        self.listWidget_dialogue.setEnabled(v)
         self.frame_temperature.setEnabled(v)
         self.frame_temperature.setEnabled(v)
 
-    def temperature_connect(self):
-        # print("success")
+    def temperature_connect_worker(self):
+        worker = Worker(self.temperature_connect)
         self.pushButton_temperature_Connect.setDisabled(True)
+        worker.signals.finished.connect(lambda: self.pushButton_temperature_Connect.setEnabled(True))
+        # worker.signals.progress.connect(self.progress_fn)
+        self.threadpool.start(worker)
+
+    def temperature_connect(self, progress_callback):
         self.enable_interface(False)
         if self.simulation:
             dirname = "c:\\users\\orelb\\desktop\\mot_pgc_fall\\images" if os.getlogin() == 'orelb' else \
@@ -102,7 +106,11 @@ class Temperature_gui (QWidget):
     def get_temperature_worker(self):
         worker = Worker(self.get_temperature)
         worker.signals.finished.connect(lambda: self.print_to_dialogue("Done taking temperature"))
+        worker.signals.progress.connect(self.progress_fn)
         self.threadpool.start(worker)
+
+    def progress_fn(self, n):
+        self.progressBar.setValue(n)
 
     def get_temperature(self, progress_callback):
         if self.simulation:
@@ -117,9 +125,9 @@ class Temperature_gui (QWidget):
         self.camera.clear_folder()
         self.plot_continuous = False
         # self.set_enable(False)
+        self.widgetPlot.sigmay = []
+        self.widgetPlot.sigmax = []
         N_snap = self.spinBox_N_temp.value()
-        self.sigmay = []
-        self.sigmax = []
         self.OPX.measure_temperature(N_snap)
         for i in range(1, N_snap + 1):
             self.print_to_dialogue("Snap at %.2f ms" % (i))
@@ -127,10 +135,11 @@ class Temperature_gui (QWidget):
             imnp = np.asarray(im.convert(mode='L'), dtype=float)
             imim = image(imnp)
             ax, sx, sy = imim.optimizing([500, 1300, 500, 1100])
-            self.sigmay.append(sy)
-            self.sigmax.append(sx)
+            self.widgetPlot.sigmay.append(sy)
+            self.widgetPlot.sigmax.append(sx)
             self.widgetPlot.plotImages(imim)
             self.camera.SaveImageT(im, "%.2f" % (i))
+            progress_callback.emit(i * 100 / N_snap)
 
         print("Taking background")
         self.OPX.Background()

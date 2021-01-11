@@ -21,7 +21,7 @@ import time
 from datetime import datetime
 try:
     import MvCamera
-    from old.pgc_macro_Dor import pgc
+    from pgc_macro_with_OD import pgc
     from mvIMPACT import acquire
 except:
     pass
@@ -45,7 +45,7 @@ class Pgc_gui (QWidget):
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         
         # Connects:
-        self.pushButton_PGC_Connect.clicked.connect(self.PGC_connect)
+        self.pushButton_PGC_Connect.clicked.connect(self.PGC_connect_worker)
         self.checkBox_plotContinuous.clicked.connect(self.take_continuous_pictures_worker)
         self.pushButton_takeBackground.clicked.connect(self.take_new_background_worker)
         self.pushButton_updateSnapTime.clicked.connect(self.update_Snaptime)
@@ -56,12 +56,16 @@ class Pgc_gui (QWidget):
     def enable_interface(self,v=True):
         self.frame_5.setEnabled(v)
         self.frame.setEnabled(v)
-        self.listWidget_dialogue.setEnabled(v)
         self.widget.setEnabled(v)
-        
-    def PGC_connect(self):
-        # print("Success")
+
+    def PGC_connect_worker(self):
+        worker = Worker(self.PGC_connect)
         self.pushButton_PGC_Connect.setDisabled(True)
+        worker.signals.finished.connect(lambda: self.pushButton_PGC_Connect.setEnabled(True))
+        # worker.signals.progress.connect(self.progress_fn)
+        self.threadpool.start(worker)
+
+    def PGC_connect(self, progress_callback):
         self.enable_interface(False)
         if self.simulation:
             dirname = "C:\\Users\\orelb\\Desktop\\MOT_PGC_Fall\\Images" if os.getlogin()=='orelb' else\

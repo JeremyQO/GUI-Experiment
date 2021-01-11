@@ -3,6 +3,8 @@
 Created on Mon Dec 28 16:52:30 2020
 
 @author: Jeremy
+
+based on https://www.learnpyqt.com/tutorials/multithreading-pyqt-applications-qthreadpool/
 """
 
 import sys
