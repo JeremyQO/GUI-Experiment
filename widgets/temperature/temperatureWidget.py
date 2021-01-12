@@ -38,8 +38,7 @@ class Temperature_gui (QWidget):
 
         self.widgetPlot = dataplot.PlotWindow()
         self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
-        self.console = PythonConsole()
-        self.verticalLayout_terminal.addWidget(self.console)
+        self.init_terminal()
         self.simulation = simulation
         self.picturesDirName = None
         self.pixelCal = float(self.LineEdit_CalPixMM.text())
@@ -51,12 +50,24 @@ class Temperature_gui (QWidget):
         self.pushButton_temperature_Connect.clicked.connect(self.temperature_connect_worker)
         self.pushButton_measure_temperature.clicked.connect(self.get_temperature_worker)
         self.pushButton_get_temperature_fromFolder.clicked.connect(self.get_temperature_from_dir)
+        self.checkBox_iPython.clicked.connect(self.showHideConsole)
         # self.pushButtonBrowse.clicked.connect(self.browseSlot)
         
         # self.lineEdit_Folder.returnPressed.connect(self.returnPressedSlot)
         self.LineEdit_CalPixMM.returnPressed.connect(self.updateCal)
+                
+    def init_terminal(self):
+        self.console = PythonConsole()
+        self.verticalLayout_terminal.addWidget(self.console)
         self.console.push_local_ns("o", self)
         self.console.eval_queued()
+        self.frame_3.hide()
+        
+    def showHideConsole(self):
+        if self.checkBox_iPython.isChecked():
+            self.frame_3.show()
+        else:
+            self.frame_3.hide()
         
     def updateCal(self):
         calibration =  self.LineEdit_CalPixMM.text()
@@ -77,6 +88,7 @@ class Temperature_gui (QWidget):
     def enable_interface(self,v=True):
         self.frame.setEnabled(v)
         self.frame_temperature.setEnabled(v)
+        self.widget.setEnabled(v)
         # self.frame_temperature.setEnabled(v)
 
     def temperature_connect_worker(self):
