@@ -161,7 +161,7 @@ class Pgc_gui (QuantumWidget):
                     time.sleep(0.01)
                     # progress_callback.emit(int(image.std_x))
                     # self.plotData([i for i in range(len(image.line_x))], image.line_x)
-                    self.widgetPlot.plotData(im)
+                    self.widgetPlot.plotDataPGC(im)
             return
         # backgroundim = pil.Image.open('background_23-12-2020.png')
         # background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
@@ -185,7 +185,7 @@ class Pgc_gui (QuantumWidget):
                         if len(self.widgetPlot.sigmax)>30:
                             self.widgetPlot.sigmay.pop(0)
                             self.widgetPlot.sigmax.pop(0)
-                    self.widgetPlot.plotData(imim)
+                    self.widgetPlot.plotDataPGC(imim)
                 except RuntimeError as e:
                     print(e)
                     
