@@ -11,7 +11,6 @@ To convert *.ui file to *.py:
 """
 
 import numpy as np
-from PyQt5 import uic
 from PyQt5.QtWidgets import *
 import matplotlib
 if matplotlib.get_backend()!='Qt5Agg':
@@ -26,22 +25,17 @@ try:
 except:
     pass
 import os
-from pyqtconsole.console import PythonConsole
 
 from functions.pgc.data_analysis import image, images
-import widgets.pgc.dataplot as dataplot
 from widgets.worker import Worker 
 
-class Pgc_gui (QWidget):
-    def __init__(self, simulation=True):
-        super(Pgc_gui, self).__init__()
-        ui = os.path.join(os.path.dirname(__file__), "gui.ui")
-        uic.loadUi(ui, self)
-        
-        self.widgetPlot = dataplot.PlotWindow()
-        self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
-        self.init_terminal()
-        self.simulation = simulation
+from widgets.quantumWidget import QuantumWidget
+
+class Pgc_gui (QuantumWidget):
+    def __init__(self, ui=None, simulation=True):
+        ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
+        super(Pgc_gui, self).__init__(ui, simulation)
+
         if __name__=="__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -54,21 +48,6 @@ class Pgc_gui (QWidget):
         self.pushButton_update_dA.clicked.connect(self.update_dA)
         self.pushButton_update_df.clicked.connect(self.update_df)
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
-
-        
-    def init_terminal(self):
-        self.console = PythonConsole()
-        self.verticalLayout_terminal.addWidget(self.console)
-        self.console.push_local_ns("o", self)
-        self.console.eval_queued()
-        self.frame_3.hide()
-        self.checkBox_iPython.setEnabled(True)
-        
-    def showHideConsole(self):
-        if self.checkBox_iPython.isChecked():
-            self.frame_3.show()
-        else:
-            self.frame_3.hide()
     
     def enable_interface(self,v=True):
         self.frame_5.setEnabled(v)

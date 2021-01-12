@@ -8,7 +8,6 @@ Created on Fri Dec 25 14:16:30 2020
 """
 
 import numpy as np
-from PyQt5 import uic
 from PyQt5.QtWidgets import *
 import matplotlib
 if matplotlib.get_backend() != 'Qt5Agg':
@@ -23,23 +22,18 @@ try:
 except:
     pass
 import os
-from pyqtconsole.console import PythonConsole
 
 from functions.temperature.data_analysis import images, image
-import widgets.temperature.dataplot as dataplot
 from widgets.worker import Worker
-import sys
 
-class Temperature_gui (QWidget):
-    def __init__(self, simulation=True):
-        super(Temperature_gui, self).__init__()
-        ui = os.path.join(os.path.dirname(__file__), "gui.ui")
-        uic.loadUi(ui, self)
+from widgets.quantumWidget import QuantumWidget
 
-        self.widgetPlot = dataplot.PlotWindow()
-        self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
-        self.init_terminal()
-        self.simulation = simulation
+
+class Temperature_gui (QuantumWidget):
+    def __init__(self, ui=None, simulation=True):
+        ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
+        super(Temperature_gui, self).__init__(ui, simulation)
+
         self.picturesDirName = None
         self.pixelCal = float(self.LineEdit_CalPixMM.text())
         if __name__ == "__main__":
@@ -55,20 +49,7 @@ class Temperature_gui (QWidget):
         
         # self.lineEdit_Folder.returnPressed.connect(self.returnPressedSlot)
         self.LineEdit_CalPixMM.returnPressed.connect(self.updateCal)
-                
-    def init_terminal(self):
-        self.console = PythonConsole()
-        self.verticalLayout_terminal.addWidget(self.console)
-        self.console.push_local_ns("o", self)
-        self.console.eval_queued()
-        self.frame_3.hide()
-        
-    def showHideConsole(self):
-        if self.checkBox_iPython.isChecked():
-            self.frame_3.show()
-        else:
-            self.frame_3.hide()
-        
+    
     def updateCal(self):
         calibration =  self.LineEdit_CalPixMM.text()
         try:
@@ -173,7 +154,6 @@ class Temperature_gui (QWidget):
     def print_to_dialogue (self, s):
         now = datetime.now()
         dt_string = now.strftime("%H:%M:%S")
-        f = lambda: print(dt_string+" - "+s)
         self.listWidget_dialogue.addItem(dt_string+" - "+s)
         print(dt_string+" - "+s)
         self.listWidget_dialogue.scrollToBottom()

@@ -17,19 +17,35 @@ from PyQt5.QtCore import QThreadPool
 from datetime import datetime
 import os
 import widgets.temperature.dataplot as dataplot
+from pyqtconsole.console import PythonConsole
 
-class WidgetParent (QWidget):
+class QuantumWidget (QWidget):
     def __init__(self, ui=None, simulation=True):
-        super(WidgetParent, self).__init__()
+        super(QuantumWidget, self).__init__()
         ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
         uic.loadUi(ui, self)
 
         self.widgetPlot = dataplot.PlotWindow()
         self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
         self.simulation = simulation
+        self.init_terminal()
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+
+    def init_terminal(self):
+        self.console = PythonConsole()
+        self.verticalLayout_terminal.addWidget(self.console)
+        self.console.push_local_ns("o", self)
+        self.console.eval_queued()
+        self.frame_3.hide()
+        self.checkBox_iPython.setEnabled(True)
+        
+    def showHideConsole(self):
+        if self.checkBox_iPython.isChecked():
+            self.frame_3.show()
+        else:
+            self.frame_3.hide()
 
     def print_to_dialogue (self, s):
         now = datetime.now()

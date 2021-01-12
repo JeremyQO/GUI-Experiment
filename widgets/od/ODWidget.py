@@ -11,9 +11,9 @@ import matplotlib
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
     
-from widgets.widgetParent import WidgetParent
+from widgets.quantumWidget import QuantumWidget
 
-class OD_gui (WidgetParent):
+class OD_gui (QuantumWidget):
     def __init__(self, ui=None, simulation=True):
         ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
         super().__init__(ui, simulation)
