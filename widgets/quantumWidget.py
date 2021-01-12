@@ -9,7 +9,7 @@ we want to run.
 """
 
 from PyQt5 import uic
-from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox
 import matplotlib
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
@@ -53,11 +53,19 @@ class QuantumWidget (QWidget):
         self.listWidget_dialogue.addItem(dt_string+" - "+s)
         print(dt_string+" - "+s)
         self.listWidget_dialogue.scrollToBottom()
+        
+    def alert_box(self, message):
+        m = QMessageBox()
+        m.setText(message)
+        m.setIcon(QMessageBox.Warning)
+        m.setStandardButtons(QMessageBox.Ok)
+        m.setDefaultButton(QMessageBox.Cancel)
+        ret = m.exec_()
 
 if __name__=="__main__":
     app = QApplication([])
     simulation = False if os.getlogin() == 'orelb' else True
-    window = WidgetParent(ui="GUI-experiment\\widgets\\od", simulation=simulation)
+    window = QuantumWidget(ui="GUI-experiment\\widgets\\od", simulation=simulation)
     window.show()
     # window.temperature_connect()
     # window.get_temperature(1)

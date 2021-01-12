@@ -11,7 +11,7 @@ To convert *.ui file to *.py:
 """
 
 import numpy as np
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QApplication
 import matplotlib
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')

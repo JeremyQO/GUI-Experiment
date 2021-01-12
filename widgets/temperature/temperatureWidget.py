@@ -8,17 +8,17 @@ Created on Fri Dec 25 14:16:30 2020
 """
 
 import numpy as np
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QApplication, QFileDialog
 import matplotlib
 if matplotlib.get_backend() != 'Qt5Agg':
     matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import QThreadPool, pyqtSlot
-from datetime import datetime
+from datetime import date, datetime
 try:
     import MvCamera
     from mvIMPACT import acquire
-    # from old.pgc_macro_Dor import pgc
     from pgc_macro_with_OD import pgc
+    from PIL import Image
 except:
     pass
 import os
@@ -49,6 +49,17 @@ class Temperature_gui (QuantumWidget):
         
         # self.lineEdit_Folder.returnPressed.connect(self.returnPressedSlot)
         self.LineEdit_CalPixMM.returnPressed.connect(self.updateCal)
+        
+        if os.getlogin() == 'orelb':
+            dirname = 'C:\Pycharm\Expriements\Instruments\mvIMPACT_cam\Images'
+            self.lineEdit_Folder.setText(dirname)
+            self.pushButton_get_temperature_fromFolder.setEnabled(True)
+            self.picturesDirName = dirname
+        else:
+            dirname = 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\23-12-2020'
+            self.lineEdit_Folder.setText(dirname)
+            self.pushButton_get_temperature_fromFolder.setEnabled(True)
+            self.picturesDirName = dirname
     
     def updateCal(self):
         calibration =  self.LineEdit_CalPixMM.text()
@@ -56,15 +67,7 @@ class Temperature_gui (QuantumWidget):
             self.pixelCal = float(calibration)
             self.print_to_dialogue("Pixels per mm: %.1f"%(float(calibration)))
         except ValueError:
-            m = QMessageBox()
-            m.setText("Calibration must be float")
-            m.setIcon(QMessageBox.Warning)
-            m.setStandardButtons(QMessageBox.Ok)
-            m.setDefaultButton(QMessageBox.Cancel)
-            ret = m.exec_()
-            self.lineEdit.setText("")
-            self.refreshAll()
-            self.debugPrint("Calibration must be float")
+            self.alert_box("Calibration must be float")
 
     def enable_interface(self,v=True):
         self.frame.setEnabled(v)
@@ -122,11 +125,19 @@ class Temperature_gui (QuantumWidget):
             self.widgetPlot.plotData(self.ims)
             return
 
-        self.camera.clear_folder()
+        dirname = 'C:\Pycharm\Expriements\Instruments\mvIMPACT_cam\Images'
         self.plot_continuous = False
         # self.set_enable(False)
         self.widgetPlot.sigmay = []
         self.widgetPlot.sigmax = []
+        
+        now = datetime.now()
+        today = date.today()
+        imagesdirname = today.strftime("%b-%d-%Y_") + now.strftime("%H-%M-%S")
+        imagesdir = os.path.join(dirname, imagesdirname)
+        if not os.path.isdir(imagesdir):
+            os.mkdir(imagesdir)
+            
         N_snap = self.spinBox_N_temp.value()
         self.OPX.measure_temperature(N_snap)
         for i in range(1, N_snap + 1):
@@ -138,17 +149,25 @@ class Temperature_gui (QuantumWidget):
             self.widgetPlot.sigmay.append(sy)
             self.widgetPlot.sigmax.append(sx)
             self.widgetPlot.plotImages(imim)
-            self.camera.SaveImageT(im, "%.2f" % (i))
+            now = datetime.now()
+            imname = imagesdir + "\\" +now.strftime("%H-%M-%S_")
+            imname+= 't=' + "%.2f"%(i) + '.png' 
+            im.save(imname, "PNG")
+            # self.camera.SaveImageT(im, "%.2f" % (i))
             progress_callback.emit(i * 100 / N_snap)
 
         print("Taking background")
         self.OPX.Background()
         backgroundim, _ = self.camera.CaptureImage()
+        now = datetime.now()
+        imname = imagesdir + "\\" +now.strftime("%H-%M-%S_")
+        imname+= "background" + '.png'
+        backgroundim.save(imname, "PNG")
         self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
-        self.camera.SaveImageT(backgroundim, 0, background=True)
+        # self.camera.SaveImageT(backgroundim, 0, background=True)
 
-        dirname = 'C:\Pycharm\Expriements\Instruments\mvIMPACT_cam\Images'
-        self.ims = images(dirname)
+
+        self.ims = images(imagesdir)
         self.widgetPlot.plotData(self.ims)
 
     def print_to_dialogue (self, s):
@@ -166,15 +185,7 @@ class Temperature_gui (QuantumWidget):
         if os.path.isdir(dirname):
             self.picturesDirName = dirname
         else:
-            m = QMessageBox()
-            m.setText("Invalid folder name!\n" + dirname)
-            m.setIcon(QMessageBox.Warning)
-            m.setStandardButtons(QMessageBox.Ok)
-            m.setDefaultButton(QMessageBox.Cancel)
-            ret = m.exec_()
-            self.lineEdit.setText("")
-            self.refreshAll()
-            self.debugPrint("Invalid file specified: " + fileName)
+            self.alert_box("Invalid folder name!\n" + dirname)
 
     @pyqtSlot()
     def browseSlot(self):
@@ -187,7 +198,10 @@ class Temperature_gui (QuantumWidget):
     def get_temperature_from_dir(self):
         dirname = self.picturesDirName
         if os.path.isdir(dirname):
-            self.ims = images(dirname)
+            try:
+                self.ims = images(dirname)
+            except IndexError :
+                self.alert_box("Directory does not contain any images")
             self.ims.pixelCal = self.pixelCal
             self.widgetPlot.plotData(self.ims)
             self.print_to_dialogue("Tx = %.2f uK, Ty = %.2f uK"%(self.ims.Tx*1e6, self.ims.Ty*1e6))
