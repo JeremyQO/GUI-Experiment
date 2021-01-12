@@ -166,16 +166,11 @@ class Temperature_gui (QuantumWidget):
         self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
         # self.camera.SaveImageT(backgroundim, 0, background=True)
 
-
-        self.ims = images(imagesdir)
-        self.widgetPlot.plotData(self.ims)
-
-    def print_to_dialogue (self, s):
-        now = datetime.now()
-        dt_string = now.strftime("%H:%M:%S")
-        self.listWidget_dialogue.addItem(dt_string+" - "+s)
-        print(dt_string+" - "+s)
-        self.listWidget_dialogue.scrollToBottom()
+        try:
+            self.ims = images(imagesdir)
+            self.widgetPlot.plotData(self.ims)
+        except RuntimeError :
+            self.print_to_dialogue("Optimal parameters not found: Number of calls to function has reached maxfev = 800.")
 
     @pyqtSlot()
     def returnPressedSlot(self):
@@ -200,12 +195,16 @@ class Temperature_gui (QuantumWidget):
         if os.path.isdir(dirname):
             try:
                 self.ims = images(dirname)
+                self.ims.pixelCal = self.pixelCal
+                self.widgetPlot.plotData(self.ims)
+                self.print_to_dialogue("Tx = %.2f uK, Ty = %.2f uK" % (self.ims.Tx * 1e6, self.ims.Ty * 1e6))
             except IndexError :
                 self.alert_box("Directory does not contain any images")
-            self.ims.pixelCal = self.pixelCal
-            self.widgetPlot.plotData(self.ims)
-            self.print_to_dialogue("Tx = %.2f uK, Ty = %.2f uK"%(self.ims.Tx*1e6, self.ims.Ty*1e6))
-        
+            except IndexError:
+                self.alert_box("No background image found")
+            except RuntimeError:
+                self.alert_box("Optimal parameters not found: Number of calls to function has reached maxfev = 800.")
+
 
 if __name__=="__main__":
     app = QApplication([])
