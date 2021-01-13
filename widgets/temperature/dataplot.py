@@ -82,7 +82,7 @@ class PlotWindow(QDialog):
             m = im.npimage
             ax1.axvline(x=im.c_x, color='red')
             ax1.axhline(y=im.c_y, color='red')
-        ax1.imshow(m, interpolation='none')   
+        ax1.imshow(m, interpolation='none', cmap='rainbow')
         ax2.plot(im.xaxis, im.line_x, label='x axis')
         ax2.plot(im.xaxis, gaussian(im.xaxis, *im.popt_x),label='STD=%.0f'%(im.std_x))
         ax2.legend()

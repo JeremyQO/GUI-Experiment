@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>Form</class>
- <widget class="QWidget" name="Form">
+ <class>Temperature</class>
+ <widget class="QWidget" name="Temperature">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -433,7 +433,7 @@
   <connection>
    <sender>pushButtonBrowse</sender>
    <signal>clicked()</signal>
-   <receiver>Form</receiver>
+   <receiver>Temperature</receiver>
    <slot>browseSlot()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -449,7 +449,7 @@
   <connection>
    <sender>lineEdit_Folder</sender>
    <signal>returnPressed()</signal>
-   <receiver>Form</receiver>
+   <receiver>Temperature</receiver>
    <slot>returnPressedSlot()</slot>
    <hints>
     <hint type="sourcelabel">

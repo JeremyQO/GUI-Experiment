@@ -6,8 +6,9 @@ Created on Sun Jan 10 12:17:08 2021
 """
 
 import os
-from PyQt5.QtWidgets import *
+from PyQt5.QtWidgets import QApplication
 import matplotlib
+from PyQt5.QtCore import QThreadPool
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
     
@@ -20,6 +21,8 @@ class OD_gui (QuantumWidget):
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        
+        
         
 
 if __name__=="__main__":

@@ -15,3 +15,4 @@ window and places said widget into it.
 
 * Make sure the various objects all have access to the same pcg() object
 * Make tab widgets inhering from one Parent template
+* IMPORTANT: in quantum widget, the PlotData is specific to temperature. It also imports the widgets.temperature.dataplot module and should be more general.

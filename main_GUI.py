@@ -36,6 +36,7 @@ class Experiment_gui(QMainWindow):
         self.tabwidget.setTabsClosable(True)
         self.tabwidget.setMovable(True)
         self.tabwidget.tabCloseRequested.connect(self.removeTab)
+        self.tabwidget.currentChanged.connect(self.tabchanged)
         layout.addWidget(self.tabwidget, 0, 0)
         layout.setContentsMargins(9,0, 9, 0)
         
@@ -51,26 +52,53 @@ class Experiment_gui(QMainWindow):
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
     def pgc_open_tab(self):
-        self.pgc_tab = pgcWidget.Pgc_gui(simulation=self.simulation)
-        self.pgc_tab.threadpool = self.threadpool
-        self.tabwidget.addTab(self.pgc_tab, "PGC")
+        if not hasattr(self, 'pgc_tab'):
+            self.pgc_tab = pgcWidget.Pgc_gui(simulation=self.simulation)
+            self.pgc_tab.threadpool = self.threadpool
+            self.tabwidget.addTab(self.pgc_tab, "PGC")
             
     def temperature_open_tab(self):
-        self.temperature_tab = temperatureWidget.Temperature_gui(simulation=self.simulation)
-        self.temperature_tab.threadpool = self.threadpool
-        self.tabwidget.addTab(self.temperature_tab,"Temperature")
-        
+        if not hasattr(self, 'temperature_tab'):
+            self.temperature_tab = temperatureWidget.Temperature_gui(simulation=self.simulation)
+            self.temperature_tab.threadpool = self.threadpool
+            self.tabwidget.addTab(self.temperature_tab,"Temperature")
+                
     def OD_open_tab(self):
-        self.OD_tab = ODWidget.OD_gui(simulation=self.simulation)
-        self.OD_tab.threadpool = self.threadpool
-        self.tabwidget.addTab(self.OD_tab,"OD")
+        if not hasattr(self, 'OD_tab'):
+            self.OD_tab = ODWidget.OD_gui(simulation=self.simulation)
+            self.OD_tab.threadpool = self.threadpool
+            self.tabwidget.addTab(self.OD_tab,"OD")
+
+    def tabchanged(self, i):
+        if hasattr(self, "temperature_tab") and hasattr(self, "pgc_tab"):
+            if hasattr(self.temperature_tab, 'OPX') and (not hasattr(self.pgc_tab, 'OPX')):
+                self.pgc_tab.OPX = self.temperature_tab.OPX
+                self.pgc_tab.enable_interface(True)
+                self.pgc_tab.print_to_dialogue("Grabbed OPX object from Temperature tab")
+                
+            if (not hasattr(self.temperature_tab, 'OPX')) and hasattr(self.pgc_tab, 'OPX'):
+                self.temperature_tab.OPX = self.pgc_tab.OPX
+                self.temperature_tab.enable_interface(True)
+                self.temperature_tab.print_to_dialogue("Grabbed OPX object from PGC tab")
+                
+            if hasattr(self.temperature_tab, 'camera') and (not hasattr(self.pgc_tab, 'camera')):
+                self.pgc_tab.camera = self.temperature_tab.camera
+                self.pgc_tab.print_to_dialogue("Grabbed Camera object from Temperature tab")
+                
+            if (not hasattr(self.temperature_tab, 'OPX')) and hasattr(self.pgc_tab, 'OPX'):
+                self.temperature_tab.camera = self.pgc_tab.camera
+                self.temperature_tab.print_to_dialogue("Grabbed Camera object from PGC tab")    
         
     def removeTab(self, index):
         widget = self.tabwidget.widget(index)
         if widget is not None:
             widget.deleteLater()
+            if widget.objectName() == 'Temperature':
+                del self.temperature_tab
+            if widget.objectName() == 'PGC':
+                del self.pgc_tab
         self.tabwidget.removeTab(index)
-  
+
 if __name__=="__main__":
     import sys
     app = QApplication([])

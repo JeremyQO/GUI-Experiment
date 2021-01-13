@@ -17,7 +17,6 @@ if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
 from PyQt5.QtCore import QThreadPool
 import time
-from datetime import datetime
 try:
     import MvCamera
     from pgc_macro_with_OD import pgc
@@ -47,6 +46,7 @@ class Pgc_gui (QuantumWidget):
         self.pushButton_updateSnapTime.clicked.connect(self.update_Snaptime)
         self.pushButton_update_dA.clicked.connect(self.update_dA)
         self.pushButton_update_df.clicked.connect(self.update_df)
+        
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
     
     def enable_interface(self,v=True):
@@ -75,7 +75,7 @@ class Pgc_gui (QuantumWidget):
             return
 
         self.print_to_dialogue("Connecting to OPX...")
-        self.pgc_experiment = pgc()
+        self.OPX = pgc()
         self.print_to_dialogue("Connected to OPX")
         self.print_to_dialogue("Connecting to Camera...")
         try:
@@ -92,7 +92,7 @@ class Pgc_gui (QuantumWidget):
         if self.simulation:
             self.print_to_dialogue("Updated snaptime to %.2f" % (v))
             return
-        self.pgc_experiment.update_snap_time(float(v))
+        self.OPX.update_snap_time(float(v))
         self.print_to_dialogue("Updated snaptime to %.2f" % (v))
         
     def update_dA(self):
@@ -100,7 +100,7 @@ class Pgc_gui (QuantumWidget):
         if self.simulation:
             self.print_to_dialogue("Updated dA to %.3f"%(v))
             return
-        self.pgc_experiment.update_da(v)
+        self.OPX.update_da(v)
         self.print_to_dialogue("Updated dA to %.3f" % (v))
 
     def update_df(self):
@@ -108,7 +108,7 @@ class Pgc_gui (QuantumWidget):
         if self.simulation:
             self.print_to_dialogue("Updated df to %.3f"%(v))
             return
-        self.pgc_experiment.update_df_pgc(v)
+        self.OPX.update_df_pgc(v)
         self.print_to_dialogue("Updated df to %.3f" % (v))
 
     def take_new_background_worker(self):
@@ -123,17 +123,10 @@ class Pgc_gui (QuantumWidget):
             return
 
         self.print_to_dialogue("Snapping Background...")
-        self.pgc_experiment.Background()
+        self.OPX.Background()
         backgroundim, _ = self.camera.CaptureImage()
         self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
         self.checkBox_substractBackground.setEnabled(True)
-
-    def print_to_dialogue (self, s):
-        now = datetime.now()
-        dt_string = now.strftime("%H:%M:%S")
-        self.listWidget_dialogue.addItem(dt_string+" - "+s)
-        print(dt_string+" - "+s)
-        self.listWidget_dialogue.scrollToBottom()
 
     def take_continuous_pictures_worker(self):
         if self.checkBox_plotContinuous.isChecked():
@@ -144,7 +137,7 @@ class Pgc_gui (QuantumWidget):
             # Execute
             self.threadpool.start(worker)
         elif not self.simulation:
-            self.pgc_experiment.toggle_camera_roll(False)
+            self.OPX.toggle_camera_roll(False)
 
     def thread_complete(self):
         self.print_to_dialogue("Acquisition stopped")
@@ -166,7 +159,7 @@ class Pgc_gui (QuantumWidget):
         # backgroundim = pil.Image.open('background_23-12-2020.png')
         # background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
         else:
-            self.pgc_experiment.toggle_camera_roll(True)
+            self.OPX.toggle_camera_roll(True)
             self.widgetPlot.sigmay = []
             self.widgetPlot.sigmax = []
             while self.checkBox_plotContinuous.isChecked():

@@ -18,7 +18,6 @@ try:
     import MvCamera
     from mvIMPACT import acquire
     from pgc_macro_with_OD import pgc
-    from PIL import Image
 except:
     pass
 import os

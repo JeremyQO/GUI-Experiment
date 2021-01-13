@@ -69,6 +69,7 @@
     <addaction name="actionTemperature"/>
     <addaction name="actionOD"/>
     <addaction name="separator"/>
+    <addaction name="actionConfigure"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
@@ -121,6 +122,11 @@
   <action name="actionOD">
    <property name="text">
     <string>OD</string>
+   </property>
+  </action>
+  <action name="actionConfigure">
+   <property name="text">
+    <string>Configure</string>
    </property>
   </action>
  </widget>

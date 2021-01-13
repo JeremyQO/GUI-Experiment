@@ -29,6 +29,7 @@ class QuantumWidget (QWidget):
         self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
         self.simulation = simulation
         self.init_terminal()
+        self.checkBox_iPython.setEnabled(True)
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
