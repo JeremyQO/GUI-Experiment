@@ -144,17 +144,22 @@ class Temperature_gui (QuantumWidget):
             self.print_to_dialogue("Snap at %.2f ms" % (i))
             im, _ = self.camera.CaptureImage()
             imnp = np.asarray(im.convert(mode='L'), dtype=float)
-            imim = image(imnp)
-            ax, sx, sy = imim.optimizing([500, 1300, 500, 1100])
-            self.widgetPlot.sigmay.append(sy)
-            self.widgetPlot.sigmax.append(sx)
-            self.widgetPlot.plotImages(imim)
-            now = datetime.now()
-            imname = imagesdir + "\\" +now.strftime("%H-%M-%S_")
-            imname+= 't=' + "%.2f"%(i) + '.png' 
-            im.save(imname, "PNG")
-            # self.camera.SaveImageT(im, "%.2f" % (i))
-            progress_callback.emit(i * 100 / N_snap)
+            try:
+                imim = image(imnp)
+                ax, sx, sy = imim.optimizing([500, 1300, 500, 1100])
+                self.widgetPlot.sigmay.append(sy)
+                self.widgetPlot.sigmax.append(sx)
+                self.widgetPlot.plotImages(imim)
+                now = datetime.now()
+                imname = imagesdir + "\\" +now.strftime("%H-%M-%S_")
+                imname+= 't=' + "%.2f"%(i) + '.png'
+                im.save(imname, "PNG")
+                # self.camera.SaveImageT(im, "%.2f" % (i))
+                progress_callback.emit(i * 100 / N_snap)
+            except RuntimeError:
+                self.print_to_dialogue("Couldn't fit... stopping")
+                # self.alert_box("couldn't fit")
+                break
 
         print("Taking background")
         self.OPX.Background()

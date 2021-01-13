@@ -346,7 +346,7 @@
            <item row="0" column="2">
             <widget class="QLabel" name="label_df">
              <property name="text">
-              <string>df (MHz)</string>
+              <string>Final f (MHz)</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignCenter</set>
