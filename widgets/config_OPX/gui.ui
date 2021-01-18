@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>OD</class>
- <widget class="QWidget" name="OD">
+ <class>Temperature</class>
+ <widget class="QWidget" name="Temperature">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1308</width>
-    <height>753</height>
+    <width>1283</width>
+    <height>712</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -37,7 +37,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <layout class="QVBoxLayout" name="verticalLayout_4">
       <property name="spacing">
        <number>0</number>
       </property>
@@ -54,7 +54,7 @@
        <number>0</number>
       </property>
       <item>
-       <layout class="QGridLayout" name="verticalLayout_mpl"/>
+       <layout class="QGridLayout" name="verticalLayout_5"/>
       </item>
       <item>
        <widget class="QWidget" name="widget" native="true">
@@ -74,23 +74,13 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
-         <item alignment="Qt::AlignVCenter">
+         <item>
           <widget class="QCheckBox" name="checkBox_iPython">
            <property name="enabled">
             <bool>true</bool>
            </property>
            <property name="text">
             <string>Show iPython Console</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="checkBox_ARM">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>ARM</string>
            </property>
           </widget>
          </item>
@@ -105,7 +95,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>90</height>
+          <height>120</height>
          </size>
         </property>
         <property name="frameShape">
@@ -114,7 +104,7 @@
         <property name="frameShadow">
          <enum>QFrame::Raised</enum>
         </property>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
          <property name="leftMargin">
           <number>2</number>
          </property>
@@ -190,64 +180,11 @@
          <enum>QFrame::Sunken</enum>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
+         <property name="bottomMargin">
+          <number>2</number>
+         </property>
          <item>
-          <widget class="QFrame" name="frame_4">
-           <property name="frameShape">
-            <enum>QFrame::StyledPanel</enum>
-           </property>
-           <property name="frameShadow">
-            <enum>QFrame::Raised</enum>
-           </property>
-           <layout class="QGridLayout" name="gridLayout">
-            <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox">
-              <property name="decimals">
-               <number>1</number>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QPushButton" name="pushButton">
-              <property name="text">
-               <string>Update</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1" colspan="2">
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>Change Probe Frequency (MHz) - IF_TOP2</string>
-              </property>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </item>
-         <item>
-          <widget class="QListWidget" name="listWidget_dialogue">
-           <property name="cursor" stdset="0">
-            <cursorShape>ArrowCursor</cursorShape>
-           </property>
-           <property name="frameShape">
-            <enum>QFrame::NoFrame</enum>
-           </property>
-           <property name="autoScrollMargin">
-            <number>16</number>
-           </property>
-           <property name="dragEnabled">
-            <bool>false</bool>
-           </property>
-           <property name="alternatingRowColors">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_OD_Connect">
-           <property name="text">
-            <string>Connect</string>
-           </property>
-          </widget>
+          <widget class="QListWidget" name="listWidget_dialogue"/>
          </item>
         </layout>
        </widget>

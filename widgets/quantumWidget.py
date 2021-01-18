@@ -26,7 +26,11 @@ class QuantumWidget (QWidget):
         uic.loadUi(ui, self)
 
         self.widgetPlot = dataplot.PlotWindow()
-        self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
+        
+        try:
+            self.verticalLayout_mpl.addWidget(self.widgetPlot.widgetPlot)
+        except AttributeError:
+            pass
         self.simulation = simulation
         self.init_terminal()
         self.checkBox_iPython.setEnabled(True)

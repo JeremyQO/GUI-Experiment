@@ -29,10 +29,13 @@ from widgets.quantumWidget import QuantumWidget
 
 
 class Temperature_gui (QuantumWidget):
-    def __init__(self, ui=None, simulation=True):
+    def __init__(self, Parent=None, ui=None, simulation=True):
+        if Parent is not None:
+            self.Parent = Parent
         ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
         super(Temperature_gui, self).__init__(ui, simulation)
 
+        self.OPX = None
         self.picturesDirName = None
         self.pixelCal = float(self.LineEdit_CalPixMM.text())
         if __name__ == "__main__":
@@ -94,6 +97,8 @@ class Temperature_gui (QuantumWidget):
 
         self.print_to_dialogue("connecting to opx...")
         self.OPX = pgc()
+        if hasattr(self, 'Parent'):
+            self.Parent.OPX = self.OPX
         self.print_to_dialogue("connected to opx")
         self.print_to_dialogue("connecting to camera...")
         try:

@@ -31,7 +31,9 @@ from widgets.worker import Worker
 from widgets.quantumWidget import QuantumWidget
 
 class Pgc_gui (QuantumWidget):
-    def __init__(self, ui=None, simulation=True):
+    def __init__(self, Parent=None, ui=None, simulation=True):
+        if Parent is not None:
+            self.Parent = Parent
         ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
         super(Pgc_gui, self).__init__(ui, simulation)
 
@@ -76,6 +78,8 @@ class Pgc_gui (QuantumWidget):
 
         self.print_to_dialogue("Connecting to OPX...")
         self.OPX = pgc()
+        if hasattr(self, 'Parent'):
+            self.Parent.OPX = self.OPX
         self.print_to_dialogue("Connected to OPX")
         self.print_to_dialogue("Connecting to Camera...")
         try:

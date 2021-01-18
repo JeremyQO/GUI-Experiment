@@ -18,8 +18,6 @@ import numpy as np
 def gaussian(x, amplitude, mean, stddev):
     return amplitude * np.exp(-((x - mean)**2 / 2 / stddev**2))
 
-
-
 class PlotWindow(QDialog):
     def __init__(self, parent=None):
         super(PlotWindow, self).__init__(parent)
@@ -51,7 +49,13 @@ class PlotWindow(QDialog):
         widget.setLayout(layout)
         widget.setContentsMargins(0, 0, 0, 0)
         self.widgetPlot = widget
-
+    
+    def plot(self,x,y):
+        self.figure.clear()
+        plt.plot(x,y)
+        plt.tight_layout()
+        self.canvas.draw()
+    
     def plotData(self, ims):
         self.figure.clear()
         ims.plot()
