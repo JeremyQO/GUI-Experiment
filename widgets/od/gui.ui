@@ -94,6 +94,13 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_acquire_OD">
+           <property name="text">
+            <string>Acquire OD</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </widget>
       </item>

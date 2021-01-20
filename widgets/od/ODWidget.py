@@ -5,8 +5,9 @@ Created on Sun Jan 10 12:17:08 2021
 @author: Jeremy Raskop
 """
 
-from redpitaya import redpitaya
+from functions.od import scpi
 import os
+import numpy as np
 from PyQt5.QtWidgets import QApplication
 import matplotlib
 from PyQt5.QtCore import QThreadPool
@@ -34,19 +35,30 @@ class OD_gui (QuantumWidget):
         
         self.checkBox_ARM.clicked.connect(self.acquire_worker)
         self.pushButton_OD_Connect.clicked.connect(self.OD_connect_worker)
+        self.pushButton_acquire_OD.clicked.connect(self.getOD_worker)
 
+    def getOD_worker(self):
+        worker = Worker(self.getOD)
+        self.print_to_dialogue("Acquiring OD...")
+        worker.signals.finished.connect(lambda: self.print_to_dialogue("OD acquired"))
+        self.threadpool.start(worker)
+            
+    def getOD(self, progress_callback):
+        data = self.rp.get_trace(channel=2,trigger=1)
+        self.widgetPlot.plot(np.arange(0,len(data)/self.rp.sampling_rate, 1./self.rp.sampling_rate), data)
+    
     def acquire_worker(self):
         if self.checkBox_ARM.isChecked():
             worker = Worker(self.acquire)
+            self.print_to_dialogue("Acquiring OD...")
             worker.signals.finished.connect(lambda: self.print_to_dialogue("Stopped acquiring OD"))
             self.threadpool.start(worker)
     
     def acquire(self, progress_callback):
         while self.checkBox_ARM.isChecked():
-            self.rp.acquire(decimation=1.0, duration=0.00001)
-            res = self.rp.get_result()
-            self.widgetPlot.plot(res[1])
-     
+            res = self.rp.get_trace(channel=1,trigger=1)
+            self.widgetPlot.plot(np.arange(0,len(res)/self.rp.sampling_rate, 1./self.rp.sampling_rate), res)
+    
     def OD_connect_worker(self):
         worker = Worker(self.OD_connect)
         self.pushButton_OD_Connect.setDisabled(True)
@@ -56,14 +68,19 @@ class OD_gui (QuantumWidget):
 
     def OD_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to opx...")
-        self.OPX = pgc()
-        if hasattr(self, 'Parent'):
-            self.Parent.OPX = self.OPX
-        self.print_to_dialogue("Connected to opx")
+        try:
+            self.OPX = pgc()
+            if hasattr(self, 'Parent'):
+                self.Parent.OPX = self.OPX
+            self.print_to_dialogue("Connected to opx")
+        except NameError:
+            self.print_to_dialogue("Couldn't connect to OPX")
         self.print_to_dialogue("Connecting to Red Pitaya...")
-        # try:
-        self.rp = redpitaya.RedPitaya()
-        self.print_to_dialogue("Connected to Red Pitaya")
+        try:
+            self.rp = scpi.Redpitaya("132.77.55.19")
+            self.print_to_dialogue("Connected to Red Pitaya")
+        except TypeError:
+            self.print_to_dialogue("Couldn't connect to RedPitaya")
         # except acquire.EDeviceManager:
         #     self.print_to_dialogue("Camera was already connected")
         # self.enable_interface(True)
