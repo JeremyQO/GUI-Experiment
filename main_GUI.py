@@ -79,9 +79,10 @@ class Experiment_gui(QMainWindow):
 
     def conf_open_tab(self):
         if not hasattr(self, 'conf_tab'):
-            self.conf_tab = configWidget.ConfigGUI(Parent=self, simulation=self.simulation)
+            # self.conf_tab = configWidget.ConfigGUI(Parent=self, simulation=self.simulation)
+            self.conf_tab = configWidget.ConfigGUI()
             self.conf_tab.threadpool = self.threadpool
-            self.tabwidget.addTab(self.conf_tab,"Configure")
+            self.tabwidget.addTab(self.conf_tab, "Configure")
 
     # def tabchanged(self, i):
     #     if hasattr(self, "temperature_tab") and hasattr(self, "pgc_tab"):

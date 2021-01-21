@@ -7,6 +7,7 @@ Created on Sun Jan 10 12:17:08 2021
 
 from functions.od import scpi
 import os
+import time
 import numpy as np
 from PyQt5.QtWidgets import QApplication
 import matplotlib
@@ -15,10 +16,10 @@ from widgets.worker import Worker
 try:
     from pgc_macro_with_OD import pgc
 except:
-    pass
+    print("Could not load pgc_macro_with_OD")
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
-    
+
 from widgets.quantumWidget import QuantumWidget
 
 class OD_gui (QuantumWidget):
@@ -40,24 +41,36 @@ class OD_gui (QuantumWidget):
     def getOD_worker(self):
         worker = Worker(self.getOD)
         self.print_to_dialogue("Acquiring OD...")
-        worker.signals.finished.connect(lambda: self.print_to_dialogue("OD acquired"))
+        self.pushButton_acquire_OD.setDisabled(True)
+        worker.signals.finished.connect(self.get_OD_done)
         self.threadpool.start(worker)
-            
+
+    def get_OD_done(self):
+        self.pushButton_acquire_OD.setEnabled(True)
+        self.print_to_dialogue("OD acquired")
+
     def getOD(self, progress_callback):
-        data = self.rp.get_trace(channel=2,trigger=1)
-        self.widgetPlot.plot(np.arange(0,len(data)/self.rp.sampling_rate, 1./self.rp.sampling_rate), data)
+        self.OPX.MeasureOD(0)
+        data = self.rp.get_trace(channel=2, trigger=1)
+        self.widgetPlot.plot(np.arange(0, len(data)/self.rp.sampling_rate, 1./self.rp.sampling_rate), data)
     
     def acquire_worker(self):
         if self.checkBox_ARM.isChecked():
             worker = Worker(self.acquire)
             self.print_to_dialogue("Acquiring OD...")
-            worker.signals.finished.connect(lambda: self.print_to_dialogue("Stopped acquiring OD"))
+            self.pushButton_acquire_OD.setDisabled(True)
+            worker.signals.finished.connect(self.acquire_done)
             self.threadpool.start(worker)
-    
+
+    def acquire_done(self):
+        self.print_to_dialogue("Stopped acquiring OD")
+        self.pushButton_acquire_OD.setEnabled(True)
+
     def acquire(self, progress_callback):
         while self.checkBox_ARM.isChecked():
-            res = self.rp.get_trace(channel=1,trigger=1)
-            self.widgetPlot.plot(np.arange(0,len(res)/self.rp.sampling_rate, 1./self.rp.sampling_rate), res)
+            self.OPX.MeasureOD(0)
+            res = self.rp.get_trace(channel=2, trigger=1)
+            self.widgetPlot.plot(np.arange(0, len(res)/self.rp.sampling_rate, 1./self.rp.sampling_rate), res)
     
     def OD_connect_worker(self):
         worker = Worker(self.OD_connect)
