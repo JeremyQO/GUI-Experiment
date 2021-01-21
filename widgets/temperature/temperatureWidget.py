@@ -17,7 +17,7 @@ from datetime import date, datetime
 try:
     import MvCamera
     from mvIMPACT import acquire
-    from pgc_macro_with_OD import pgc
+    from OPXcontrol.pgc_macro_with_OD import pgc
 except:
     pass
 import os

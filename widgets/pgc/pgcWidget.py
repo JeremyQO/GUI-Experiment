@@ -19,7 +19,7 @@ from PyQt5.QtCore import QThreadPool
 import time
 try:
     import MvCamera
-    from pgc_macro_with_OD import pgc
+    from OPXcontrol.pgc_macro_with_OD import pgc
     from mvIMPACT import acquire
 except:
     pass

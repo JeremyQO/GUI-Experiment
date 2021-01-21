@@ -90,7 +90,7 @@
             <bool>true</bool>
            </property>
            <property name="text">
-            <string>ARM</string>
+            <string>OD Continuous</string>
            </property>
           </widget>
          </item>
@@ -207,14 +207,20 @@
            </property>
            <layout class="QGridLayout" name="gridLayout">
             <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_frequency">
               <property name="decimals">
                <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>-40.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>40.000000000000000</double>
               </property>
              </widget>
             </item>
             <item row="1" column="2">
-             <widget class="QPushButton" name="pushButton">
+             <widget class="QPushButton" name="pushButton_update">
               <property name="text">
                <string>Update</string>
               </property>
@@ -223,7 +229,7 @@
             <item row="0" column="1" colspan="2">
              <widget class="QLabel" name="label">
               <property name="text">
-               <string>Change Probe Frequency (MHz) - IF_TOP2</string>
+               <string>Probe Detuning (MHz) - IF_TOP2 (AOM_2-3')</string>
               </property>
              </widget>
             </item>

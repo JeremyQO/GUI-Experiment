@@ -55,6 +55,16 @@ class PlotWindow(QDialog):
         plt.plot(x,y)
         plt.tight_layout()
         self.canvas.draw()
+
+    def plot_OD(self,x,y,cursors):
+        self.figure.clear()
+        plt.plot(x,y)
+        for curs in cursors:
+            plt.axvline(curs, c='r')
+        plt.ylabel('Power (a.u.)')
+        plt.xlabel('Time ($\\mu s$)')
+        plt.tight_layout()
+        self.canvas.draw()
     
     def plotData(self, ims):
         self.figure.clear()
