@@ -153,7 +153,7 @@ class Redpitaya (Scpi):
         print("Trigger status is "+ self.get_triggerStatus())
         self.set_averaging('OFF')
         print("Averaging mode is " + self.get_averaging())
-        self.set_triggerDelay(0)
+        self.set_triggerDelay(60000)
         print("Trigger delay at %s ns"%(self.get_triggerDelay()))
         self.set_triggerLevel(0.8) 
         print("Trigger level at %.2f mV"%(float(self.get_triggerLevel())*1000))
@@ -201,7 +201,7 @@ class Redpitaya (Scpi):
     
     def set_triggerDelay(self, t):
         """Set trigger delay in ns."""
-        return self.tx_txt("ACQ:TRIG:DLY:NS" +str(t))
+        return self.tx_txt("ACQ:TRIG:DLY:NS " +str(t))
     
     def get_triggerLevel(self):
         """Get trigger level in V."""
@@ -245,18 +245,18 @@ class Redpitaya (Scpi):
         buff = list(map(float, buff_string))
         self.sampling_rate = (len(buff)/13*100000)
         return buff 
-            
+
     
 if __name__ == "__main__":
     rp = Redpitaya("132.77.55.19")
 
-    import matplotlib.pyplot as plt
-    
-    data = rp.get_trace(channel=1,trigger=1)
-    
-    plt.plot(data)
-    plt.ylabel('Voltage')
-    plt.show()
+    # import matplotlib.pyplot as plt
+    #
+    # data = rp.get_trace(channel=1,trigger=1)
+    #
+    # plt.plot(data)
+    # plt.ylabel('Voltage')
+    # plt.show()
     
     
     

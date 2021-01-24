@@ -33,7 +33,7 @@ class Experiment_gui(QMainWindow):
         self.mainframe.setLayout(layout)
         self.mainframe.setContentsMargins(0,0,0,0)
         self.tabwidget = QTabWidget()
-        self.tabwidget.setTabsClosable(True)
+        self.tabwidget.setTabsClosable(False)
         self.tabwidget.setMovable(True)
         self.tabwidget.tabCloseRequested.connect(self.removeTab)
         # self.tabwidget.currentChanged.connect(self.tabchanged)

@@ -79,14 +79,19 @@ class Pgc_gui (QuantumWidget):
         self.print_to_dialogue("Connecting to OPX...")
         try:
             if hasattr(self, 'Parent'):
-                if hasattr(self.Parent, OPX):
+                if self.Parent.OPX is not None:
                     self.OPX = self.Parent.OPX
+                    self.print_to_dialogue("Grabbed OPX from parent")
                 else:
                     self.OPX = pgc()
                     self.Parent.OPX = self.OPX
-            self.print_to_dialogue("Connected to OPX")
+                    self.print_to_dialogue("Connected to OPX")
+            else:
+                self.OPX = pgc()
+                self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
+
         self.print_to_dialogue("Connecting to Camera...")
         try:
             self.camera = MvCamera.MvCamera()
@@ -110,7 +115,7 @@ class Pgc_gui (QuantumWidget):
         if self.simulation:
             self.print_to_dialogue("Updated dA to %.3f"%(v))
             return
-        self.OPX.update_da(v)
+        self.OPX.update_pgc_final_amplitude(v)
         self.print_to_dialogue("Updated dA to %.3f" % (v))
 
     def update_df(self):

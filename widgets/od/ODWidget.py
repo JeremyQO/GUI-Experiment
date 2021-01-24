@@ -110,12 +110,16 @@ class OD_gui (QuantumWidget):
         self.print_to_dialogue("Connecting to opx...")
         try:
             if hasattr(self, 'Parent'):
-                if hasattr(self.Parent, OPX):
+                if self.Parent.OPX is not None:
                     self.OPX = self.Parent.OPX
+                    self.print_to_dialogue("Grabbed OPX from parent")
                 else:
                     self.OPX = pgc()
                     self.Parent.OPX = self.OPX
-            self.print_to_dialogue("Connected to OPX")
+                    self.print_to_dialogue("Connected to OPX")
+            else:
+                self.OPX = pgc()
+                self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
         self.print_to_dialogue("Connecting to Red Pitaya...")
