@@ -96,9 +96,16 @@ class Temperature_gui (QuantumWidget):
             return
 
         self.print_to_dialogue("connecting to opx...")
-        self.OPX = pgc()
-        if hasattr(self, 'Parent'):
-            self.Parent.OPX = self.OPX
+        try:
+            if hasattr(self, 'Parent'):
+                if hasattr(self.Parent, OPX):
+                    self.OPX = self.Parent.OPX
+                else:
+                    self.OPX = pgc()
+                    self.Parent.OPX = self.OPX
+            self.print_to_dialogue("Connected to OPX")
+        except NameError:
+            self.print_to_dialogue("Couldn't connect to OPX")
         self.print_to_dialogue("connected to opx")
         self.print_to_dialogue("connecting to camera...")
         try:

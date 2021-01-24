@@ -12,7 +12,10 @@ from PyQt5.QtWidgets import QApplication
 import matplotlib
 from PyQt5.QtCore import QThreadPool
 from widgets.worker import Worker
-from calculate_OD import OD_exp
+try:
+    from calculate_OD import OD_exp
+except:
+    print("Run without calculate OD")
 try:
     from OPXcontrol.pgc_macro_with_OD import pgc
 except:
@@ -49,7 +52,6 @@ class OD_gui (QuantumWidget):
         detuning = self.doubleSpinBox_frequency.value()
         self.OPX.qm.set_intermediate_frequency("AOM_2-3'",(93 + detuning)*1e6)
         self.print_to_dialogue("Detuning set to %.1f MHz"%(detuning))
-
 
     def getOD_worker(self):
         worker = Worker(self.getOD)
@@ -107,10 +109,13 @@ class OD_gui (QuantumWidget):
     def OD_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to opx...")
         try:
-            self.OPX = pgc()
             if hasattr(self, 'Parent'):
-                self.Parent.OPX = self.OPX
-            self.print_to_dialogue("Connected to opx")
+                if hasattr(self.Parent, OPX):
+                    self.OPX = self.Parent.OPX
+                else:
+                    self.OPX = pgc()
+                    self.Parent.OPX = self.OPX
+            self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
         self.print_to_dialogue("Connecting to Red Pitaya...")

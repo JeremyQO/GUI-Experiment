@@ -76,6 +76,9 @@ class Experiment_gui(QMainWindow):
             self.OD_tab = ODWidget.OD_gui(Parent=self, simulation=self.simulation)
             self.OD_tab.threadpool = self.threadpool
             self.tabwidget.addTab(self.OD_tab,"OD")
+            if self.OPX is not None :
+                self.OD_tab.enable_interface(True)
+                self.OD_tab.OPX = self.OPX
 
     def conf_open_tab(self):
         if not hasattr(self, 'conf_tab'):
