@@ -206,6 +206,30 @@
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout">
+            <item row="3" column="2">
+             <widget class="QPushButton" name="pushButton_ODtimes">
+              <property name="text">
+               <string>Update</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_ODtimes">
+              <property name="maximum">
+               <double>20.000000000000000</double>
+              </property>
+              <property name="singleStep">
+               <double>0.500000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="2">
+             <widget class="QPushButton" name="pushButton_update">
+              <property name="text">
+               <string>Update</string>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="1">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_frequency">
               <property name="decimals">
@@ -219,17 +243,17 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="QPushButton" name="pushButton_update">
-              <property name="text">
-               <string>Update</string>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="1" colspan="2">
              <widget class="QLabel" name="label">
               <property name="text">
                <string>Probe Detuning (MHz) - IF_TOP2 (AOM_2-3')</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="1">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>OD Time (ms)</string>
               </property>
              </widget>
             </item>
