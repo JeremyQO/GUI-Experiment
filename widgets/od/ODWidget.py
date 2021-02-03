@@ -82,7 +82,7 @@ class OD_gui (QuantumWidget):
         wavelength = 780e-9
         self.odexp = OD_exp()
         OD = self.odexp.calculate_OD(beamRadius, times, self.cursors, data, wavelength)
-        self.widgetPlot.plot_OD(times, data, self.cursors)
+        self.widgetPlot.plot_OD(times, data, self.cursors, autoscale=self.checkBox_plotAutoscale.isChecked())
         self.print_to_dialogue("OD = %.2f"%(OD))
     
     def acquire_worker(self):
@@ -115,6 +115,12 @@ class OD_gui (QuantumWidget):
         self.pushButton_OD_Connect.setEnabled(True)
 
     def OD_connect(self, progress_callback):
+        self.print_to_dialogue("Connecting to Red Pitaya...")
+        try:
+            self.rp = scpi.Redpitaya("132.77.55.19")
+            self.print_to_dialogue("Connected to Red Pitaya")
+        except TypeError:
+            self.print_to_dialogue("Couldn't connect to RedPitaya")
         self.print_to_dialogue("Connecting to opx...")
         try:
             if hasattr(self, 'Parent'):
@@ -130,12 +136,7 @@ class OD_gui (QuantumWidget):
                 self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
-        self.print_to_dialogue("Connecting to Red Pitaya...")
-        try:
-            self.rp = scpi.Redpitaya("132.77.55.19")
-            self.print_to_dialogue("Connected to Red Pitaya")
-        except TypeError:
-            self.print_to_dialogue("Couldn't connect to RedPitaya")
+
         # except acquire.EDeviceManager:
         #     self.print_to_dialogue("Camera was already connected")
         # self.enable_interface(True)

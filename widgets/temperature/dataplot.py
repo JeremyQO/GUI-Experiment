@@ -56,9 +56,15 @@ class PlotWindow(QDialog):
         plt.tight_layout()
         self.canvas.draw()
 
-    def plot_OD(self,x,y,cursors):
+    def plot_OD(self,x,y,cursors,autoscale=True):
+        # xmin, xmax, ymin, ymax = plt.axis()
+        ymin, ymax = plt.ylim()
+        xmin, xmax = plt.xlim()
         self.figure.clear()
         plt.plot(x,y)
+        if not autoscale:
+            plt.ylim(ymin, ymax)
+            plt.xlim(xmin, xmax)
         for curs in cursors:
             plt.axvline(curs, c='r')
         plt.ylabel('Power (a.u.)')

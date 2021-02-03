@@ -85,6 +85,16 @@
           </widget>
          </item>
          <item>
+          <widget class="QCheckBox" name="checkBox_plotAutoscale">
+           <property name="text">
+            <string>Plot Autoscale</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QCheckBox" name="checkBox_ARM">
            <property name="enabled">
             <bool>true</bool>
