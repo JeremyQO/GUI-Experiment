@@ -144,16 +144,16 @@ class Scpi (object):
     
 
 class Redpitaya (Scpi):
-    def __init__(self, host, timeout=None, port=5000):
-        super().__init__(host,timeout,port)
-        self.set_decimation(1)
+    def __init__(self, host, timeout=None, port=5000, xscale=1):
+        super().__init__(host, timeout, port)
+        self.set_decimation(xscale)
         print(self.idn_q())
         print("Decimation is set to " + self.get_decimation())
         self.set_triggerSource('CH2_PE')
         print("Trigger status is "+ self.get_triggerStatus())
         self.set_averaging('OFF')
         print("Averaging mode is " + self.get_averaging())
-        self.set_triggerDelay(60000)
+        self.set_triggerDelay(60000*xscale)
         print("Trigger delay at %s ns"%(self.get_triggerDelay()))
         self.set_triggerLevel(0.8) 
         print("Trigger level at %.2f mV"%(float(self.get_triggerLevel())*1000))
