@@ -45,8 +45,8 @@ class OD_gui (QuantumWidget):
         self.pushButton_ODtimes.clicked.connect(self.change_ODmeasure_time)
         self.enable_interface(False)
 
-        self.rpxscale = 8
-        self.cursors = list(np.array([9.2e-6, 2.6e-5, 4.9e-5, 6.57e-5]) * 1e6) * self.rpxscale
+        self.decimation = 8
+        self.cursors = list(np.array([64,208,452,611])/ 8 * self.decimation)
 
 
     def enable_interface(self, v):
@@ -78,8 +78,8 @@ class OD_gui (QuantumWidget):
     def getOD(self, progress_callback, singleshot=True):
         if singleshot:
             self.OPX.MeasureOD(0)
-        data = self.rp.get_trace(channel=2, trigger=1)
-        times = np.arange(0, len(data) / self.rp.sampling_rate, 1. / self.rp.sampling_rate) * 1e6 * self.rpxscale
+        data = self.rp.get_trace(channel=2)
+        times = np.arange(0, len(data) / self.rp.sampling_rate, 1. / self.rp.sampling_rate) * 1e6
         beamRadius = 200e-6
         wavelength = 780e-9
         self.odexp = OD_exp()
@@ -119,7 +119,7 @@ class OD_gui (QuantumWidget):
     def OD_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to Red Pitaya...")
         try:
-            self.rp = scpi.Redpitaya("132.77.55.19", xscale=self.rpxscale)
+            self.rp = scpi.Redpitaya("132.77.55.19", decimation=self.decimation)
             self.print_to_dialogue("Connected to Red Pitaya")
         except TypeError:
             self.print_to_dialogue("Couldn't connect to RedPitaya")

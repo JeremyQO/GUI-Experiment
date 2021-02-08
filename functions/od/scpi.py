@@ -9,9 +9,6 @@ Created on Wed Jan 20 10:28:35 2021
 
 import socket
 
-__author__ = "Luka Golinar, Iztok Jeras"
-__copyright__ = "Copyright 2015, Red Pitaya"
-
 class Scpi (object):
     """SCPI class used to access Red Pitaya over an IP network."""
     delimiter = '\r\n'
@@ -20,8 +17,8 @@ class Scpi (object):
         """Initialize object and open IP connection.
         Host IP should be a string in parentheses, like '192.168.1.100'.
         """
-        self.host    = host
-        self.port    = port
+        self.host = host
+        self.port = port
         self.timeout = timeout
 
         try:
@@ -144,28 +141,32 @@ class Scpi (object):
     
 
 class Redpitaya (Scpi):
-    def __init__(self, host, timeout=None, port=5000, xscale=1):
+    def __init__(self, host, timeout=None, port=5000, decimation=1, trigger_source='EXT_PE'):
         super().__init__(host, timeout, port)
-        self.set_decimation(xscale)
+        self.decimation = decimation
+        self.set_decimation(decimation)
         print(self.idn_q())
         print("Decimation is set to " + self.get_decimation())
-        self.set_triggerSource('CH2_PE')
-        print("Trigger status is "+ self.get_triggerStatus())
+        # self.set_triggerSource('CH2_PE')
+        self.trigger_source = trigger_source
+        self.set_triggerSource(self.trigger_source)  # By default, we trigger on the default DIO0_P
+        print("Trigger status is " + self.get_triggerStatus())
         self.set_averaging('OFF')
         print("Averaging mode is " + self.get_averaging())
-        self.set_triggerDelay(60000*xscale)
-        print("Trigger delay at %s ns"%(self.get_triggerDelay()))
-        self.set_triggerLevel(0.8) 
-        print("Trigger level at %.2f mV"%(float(self.get_triggerLevel())*1000))
+        self.set_triggerDelay(37500*decimation)
+        print("Trigger delay at %s ns" % (self.get_triggerDelay()))
+        self.set_triggerLevel(1000)
+        print("Trigger level at %.2f mV" % (float(self.get_triggerLevel())*1000))
 
-    
     def set_decimation(self, d):
         """Set decimation factor."""
-        options = (1,8,64,1024,8192,65536)
+        options = (1, 8, 64, 1024, 8192, 65536)
         if d in options:
+            self.set_triggerDelay(37500 * d)
+            self.decimation = d
             return self.tx_txt('ACQ:DEC '+str(d))
         else:
-            print("Please choose decimations from "+str(options))
+            print("Please choose decimation from "+str(options))
     
     def get_decimation(self):
         """Get decimation factor"""
@@ -175,6 +176,7 @@ class Redpitaya (Scpi):
         """Disable triggering, trigger immediately or set trigger source & edge."""
         options = ("DISABLED", "NOW", "CH1_PE", "CH1_NE", "CH2_PE", "CH2_NE", "EXT_PE", "EXT_NE", "AWG_PE", "AWG_NE")
         if s in options:
+            self.trigger_source = s
             return self.tx_txt('ACQ:TRIG '+s)
         else:
             print("Please choose source from "+str(options))
@@ -214,7 +216,7 @@ class Redpitaya (Scpi):
     def get_data(self,start, end, source):
         return self.txrx_txt('ACQ:SOUR%i:GET:DATA:%i:%i?'%(int(source), int(start), int(end)))
     
-    def get_fullBuffer(self,s):
+    def get_fullBuffer(self, s):
         """
         Read full buf.
         Size starting from oldest sample in buffer (this is first sample after trigger delay).
@@ -223,27 +225,27 @@ class Redpitaya (Scpi):
         """
         return self.txrx_txt("ACQ:SOUR%i:DATA?"%(s))
     
-    def start_aquisition(self):
+    def start_acquisition(self):
         """Starts acquisition."""
         return self.tx_txt('ACQ:START')
     
-    def stop_aquisition(self):
+    def stop_acquisition(self):
         """Stops acquisition."""
         return self.tx_txt('ACQ:STOP')
 
-    def get_trace (self, channel, trigger, decimation = 1):
-        self.start_aquisition()
-        self.set_triggerSource('CH%i_PE'%(trigger))
+    def get_trace(self, channel):
+        self.start_acquisition()
+        self.set_triggerSource(self.trigger_source)
         while 1:
             self.tx_txt('ACQ:TRIG:STAT?')
             if self.rx_txt() == 'TD':
                 break
         
-        self.tx_txt('ACQ:SOUR%i:DATA?'%(channel))
+        self.tx_txt('ACQ:SOUR%i:DATA?' % (channel))
         buff_string = self.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = list(map(float, buff_string))
-        self.sampling_rate = (len(buff)/13*100000)
+        self.sampling_rate = (len(buff)/13*100000) / self.decimation
         return buff 
 
     
