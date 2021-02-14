@@ -56,12 +56,13 @@ class PlotWindow(QDialog):
         plt.tight_layout()
         self.canvas.draw()
 
-    def plot_OD(self,x,y,cursors,autoscale=True):
+    def plot_OD(self,x,y1,y2,cursors,autoscale=True):
         # xmin, xmax, ymin, ymax = plt.axis()
         ymin, ymax = plt.ylim()
         xmin, xmax = plt.xlim()
         self.figure.clear()
-        plt.plot(x,y)
+        plt.plot(x, y1)
+        plt.plot(x, y2)
         if not autoscale:
             plt.ylim(ymin, ymax)
             plt.xlim(xmin, xmax)

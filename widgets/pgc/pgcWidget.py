@@ -19,7 +19,7 @@ from PyQt5.QtCore import QThreadPool
 import time
 try:
     import MvCamera
-    from OPXcontrol.pgc_macro_with_OD import pgc
+    from OPXcontrol.OPX_control_Dor import OPX
     from mvIMPACT import acquire
 except:
     pass
@@ -83,11 +83,11 @@ class Pgc_gui (QuantumWidget):
                     self.OPX = self.Parent.OPX
                     self.print_to_dialogue("Grabbed OPX from parent")
                 else:
-                    self.OPX = pgc()
+                    self.OPX = OPX()
                     self.Parent.OPX = self.OPX
                     self.print_to_dialogue("Connected to OPX")
             else:
-                self.OPX = pgc()
+                self.OPX = OPX()
                 self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
@@ -107,7 +107,7 @@ class Pgc_gui (QuantumWidget):
         if self.simulation:
             self.print_to_dialogue("Updated snaptime to %.2f" % (v))
             return
-        self.OPX.update_snap_time(float(v))
+        self.OPX.update_snap_time_PGC(float(v))
         self.print_to_dialogue("Updated snaptime to %.2f" % (v))
         
     def update_dA(self):
@@ -152,7 +152,7 @@ class Pgc_gui (QuantumWidget):
             # Execute
             self.threadpool.start(worker)
         elif not self.simulation:
-            self.OPX.toggle_camera_roll(False)
+            self.OPX.toggle_camera_roll_PGC(False)
 
     def thread_complete(self):
         self.print_to_dialogue("Acquisition stopped")
@@ -174,7 +174,7 @@ class Pgc_gui (QuantumWidget):
         # backgroundim = pil.Image.open('background_23-12-2020.png')
         # background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
         else:
-            self.OPX.toggle_camera_roll(True)
+            self.OPX.toggle_camera_roll_PGC(True)
             self.widgetPlot.sigmay = []
             self.widgetPlot.sigmax = []
             while self.checkBox_plotContinuous.isChecked():

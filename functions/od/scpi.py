@@ -153,7 +153,7 @@ class Redpitaya (Scpi):
         print("Trigger status is " + self.get_triggerStatus())
         self.set_averaging('OFF')
         print("Averaging mode is " + self.get_averaging())
-        self.set_triggerDelay(37500*decimation)
+        self.set_triggerDelay(-25000*decimation)
         print("Trigger delay at %s ns" % (self.get_triggerDelay()))
         self.set_triggerLevel(1000)
         print("Trigger level at %.2f mV" % (float(self.get_triggerLevel())*1000))
@@ -246,9 +246,30 @@ class Redpitaya (Scpi):
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = list(map(float, buff_string))
         self.sampling_rate = (len(buff)/13*100000) / self.decimation
-        return buff 
+        return buff
 
-    
+    def get_traces(self):
+        self.start_acquisition()
+        self.set_triggerSource(self.trigger_source)
+        while 1:
+            self.tx_txt('ACQ:TRIG:STAT?')
+            if self.rx_txt() == 'TD':
+                break
+
+        self.tx_txt('ACQ:SOUR%i:DATA?' % (1))
+        buff_string = self.rx_txt()
+        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+        buff1 = list(map(float, buff_string))
+
+        self.tx_txt('ACQ:SOUR%i:DATA?' % (2))
+        buff_string = self.rx_txt()
+        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+        buff2 = list(map(float, buff_string))
+
+        self.sampling_rate = (len(buff1) / 13 * 100000) / self.decimation
+        return buff1, buff2
+
+
 if __name__ == "__main__":
     rp = Redpitaya("132.77.55.19")
 

@@ -17,7 +17,7 @@ from datetime import date, datetime
 try:
     import MvCamera
     from mvIMPACT import acquire
-    from OPXcontrol.pgc_macro_with_OD import pgc
+    from OPXcontrol.OPX_control_Dor import OPX
 except:
     pass
 import os
@@ -102,11 +102,11 @@ class Temperature_gui (QuantumWidget):
                     self.OPX = self.Parent.OPX
                     self.print_to_dialogue("Grabbed OPX from parent")
                 else:
-                    self.OPX = pgc()
+                    self.OPX = OPX()
                     self.Parent.OPX = self.OPX
                     self.print_to_dialogue("Connected to OPX")
             else:
-                self.OPX = pgc()
+                self.OPX = OPX()
                 self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")

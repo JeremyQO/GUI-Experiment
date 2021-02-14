@@ -106,7 +106,7 @@
   </action>
   <action name="actionOD">
    <property name="text">
-    <string>OD</string>
+    <string>OD/Nat</string>
    </property>
   </action>
   <action name="actionConfigure">
