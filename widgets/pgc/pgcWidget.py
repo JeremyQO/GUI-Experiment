@@ -50,6 +50,7 @@ class Pgc_gui (QuantumWidget):
         self.pushButton_update_df.clicked.connect(self.update_df)
         
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
+        self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
     
     def enable_interface(self,v=True):
         self.frame_5.setEnabled(v)
@@ -57,6 +58,7 @@ class Pgc_gui (QuantumWidget):
         self.checkBox_plotContinuous.setEnabled(v)
         self.pushButton_takeBackground.setEnabled(v)
         self.widget_2.setEnabled(v)
+        self.checkBox_parameters.setEnabled(v)
 
     def PGC_connect_worker(self):
         worker = Worker(self.PGC_connect)
@@ -76,21 +78,7 @@ class Pgc_gui (QuantumWidget):
             self.pushButton_PGC_Connect.setEnabled(True)
             return
 
-        self.print_to_dialogue("Connecting to OPX...")
-        try:
-            if hasattr(self, 'Parent'):
-                if self.Parent.OPX is not None:
-                    self.OPX = self.Parent.OPX
-                    self.print_to_dialogue("Grabbed OPX from parent")
-                else:
-                    self.OPX = OPX()
-                    self.Parent.OPX = self.OPX
-                    self.print_to_dialogue("Connected to OPX")
-            else:
-                self.OPX = OPX()
-                self.print_to_dialogue("Connected to OPX")
-        except NameError:
-            self.print_to_dialogue("Couldn't connect to OPX")
+        self.connectOPX()
 
         self.print_to_dialogue("Connecting to Camera...")
         try:

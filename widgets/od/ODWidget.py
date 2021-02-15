@@ -17,10 +17,7 @@ try:
     from calculate_OD import OD_exp
 except:
     print("Run without calculate OD")
-try:
-    from OPXcontrol.OPX_control_Dor import OPX
-except:
-    print("Could not load pgc_macro_with_OD")
+
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
 
@@ -37,6 +34,7 @@ class OD_gui (QuantumWidget):
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         self.widgetPlot.plot([None], [None])
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
+        self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
         
         self.checkBox_OD_continuous.clicked.connect(self.acquire_OD_worker)
         self.checkBox_Nat_continuous.clicked.connect(self.acquire_Nat_worker)
@@ -53,12 +51,16 @@ class OD_gui (QuantumWidget):
         self.cursorsOD = list(np.array([145, 312, 535, 705])/ 8 * self.decimation)
         self.cursorsNat = list(np.array([64,208,452,611])/ 8 * self.decimation)
 
+    
+
     def enable_interface(self, v):
         self.checkBox_OD_continuous.setEnabled(v)
         self.pushButton_singleshot_Nat.setEnabled(v)
         self.checkBox_Nat_continuous.setEnabled(v)
         self.pushButton_singleshot_OD.setEnabled(v)
         self.frame_4.setEnabled(v)
+        # self.checkBox_parameters.setEnabled(v)
+        self.frame_parameters.setEnabled(v)
 
     def change_Nat_Amp(self):
         newamp = self.doubleSpinBox_DepumpAmp.value()
@@ -182,21 +184,8 @@ class OD_gui (QuantumWidget):
             self.print_to_dialogue("Connected to Red Pitaya")
         except TypeError:
             self.print_to_dialogue("Couldn't connect to Red Pitaya")
-        self.print_to_dialogue("Connecting to OPX...")
-        try:
-            if hasattr(self, 'Parent'):
-                if self.Parent.OPX is not None:
-                    self.OPX = self.Parent.OPX
-                    self.print_to_dialogue("Grabbed OPX from parent")
-                else:
-                    self.OPX = OPX()
-                    self.Parent.OPX = self.OPX
-                    self.print_to_dialogue("Connected to OPX")
-            else:
-                self.OPX = OPX()
-                self.print_to_dialogue("Connected to OPX")
-        except NameError:
-            self.print_to_dialogue("Couldn't connect to OPX")
+        
+        self.connectOPX()
 
 
 if __name__ == "__main__":

@@ -47,6 +47,7 @@ class Temperature_gui (QuantumWidget):
         self.pushButton_measure_temperature.clicked.connect(self.get_temperature_worker)
         self.pushButton_get_temperature_fromFolder.clicked.connect(self.get_temperature_from_dir)
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
+        self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
         # self.pushButtonBrowse.clicked.connect(self.browseSlot)
         
         # self.lineEdit_Folder.returnPressed.connect(self.returnPressedSlot)
@@ -75,6 +76,7 @@ class Temperature_gui (QuantumWidget):
         self.frame.setEnabled(v)
         self.frame_temperature.setEnabled(v)
         self.widget.setEnabled(v)
+        self.checkBox_parameters.setEnabled(v)
         # self.frame_temperature.setEnabled(v)
 
     def temperature_connect_worker(self):
@@ -95,22 +97,7 @@ class Temperature_gui (QuantumWidget):
             self.pushButton_temperature_Connect.setEnabled(True)
             return
 
-        self.print_to_dialogue("connecting to opx...")
-        try:
-            if hasattr(self, 'Parent'):
-                if self.Parent.OPX is not None:
-                    self.OPX = self.Parent.OPX
-                    self.print_to_dialogue("Grabbed OPX from parent")
-                else:
-                    self.OPX = OPX()
-                    self.Parent.OPX = self.OPX
-                    self.print_to_dialogue("Connected to OPX")
-            else:
-                self.OPX = OPX()
-                self.print_to_dialogue("Connected to OPX")
-        except NameError:
-            self.print_to_dialogue("Couldn't connect to OPX")
-        self.print_to_dialogue("connected to opx")
+        self.connectOPX()
         self.print_to_dialogue("connecting to camera...")
         try:
             self.camera = MvCamera.MvCamera()

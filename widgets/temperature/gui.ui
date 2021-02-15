@@ -27,9 +27,37 @@
     <number>0</number>
    </property>
    <item>
+    <widget class="QFrame" name="frame_parameters">
+     <property name="minimumSize">
+      <size>
+       <width>234</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Raised</enum>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QFrame" name="frame">
      <property name="enabled">
       <bool>true</bool>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>772</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>16777215</height>
+      </size>
      </property>
      <property name="frameShape">
       <enum>QFrame::WinPanel</enum>
@@ -74,6 +102,16 @@
          <property name="bottomMargin">
           <number>0</number>
          </property>
+         <item>
+          <widget class="QCheckBox" name="checkBox_parameters">
+           <property name="text">
+            <string>Parameters</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
          <item alignment="Qt::AlignVCenter">
           <widget class="QCheckBox" name="checkBox_iPython">
            <property name="enabled">
