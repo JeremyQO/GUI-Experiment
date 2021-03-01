@@ -133,11 +133,11 @@ class Scpi (object):
 
     def err_c(self):
         """Error count."""
-        return rp.txrx_txt('SYST:ERR:COUN?')
+        return self.txrx_txt('SYST:ERR:COUN?')
 
-    def err_c(self):
+    def err_n(self):
         """Error next."""
-        return rp.txrx_txt('SYST:ERR:NEXT?')
+        return self.txrx_txt('SYST:ERR:NEXT?')
     
 
 class Redpitaya (Scpi):
@@ -157,6 +157,10 @@ class Redpitaya (Scpi):
         print("Trigger delay at %s ns" % (self.get_triggerDelay()))
         self.set_triggerLevel(1000)
         print("Trigger level at %.2f mV" % (float(self.get_triggerLevel())*1000))
+        self.tx_txt('OUTPUT1:STATE OFF')
+        print("Output 1 is OFF")
+        self.tx_txt('OUTPUT2:STATE OFF')
+        print("Output 2 is OFF")
 
     def set_decimation(self, d):
         """Set decimation factor."""
@@ -268,18 +272,26 @@ class Redpitaya (Scpi):
 
         self.sampling_rate = (len(buff1) / 13 * 100000) / self.decimation
         return buff1, buff2
-
+#
+# def f(freq):
+#     rp_s = Scpi("132.77.55.19")
+#
+#     wave_form = 'sine'
+#     ampl = 0.9
+#
+#     rp_s.tx_txt('GEN:RST')
+#     rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
+#     rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
+#     rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
+#
+#     # Enable output
+#     rp_s.tx_txt('OUTPUT1:STATE ON')
 
 if __name__ == "__main__":
     rp = Redpitaya("132.77.55.19")
+    # f(30e6)
 
-    # import matplotlib.pyplot as plt
-    #
-    # data = rp.get_trace(channel=1,trigger=1)
-    #
-    # plt.plot(data)
-    # plt.ylabel('Voltage')
-    # plt.show()
+
     
     
     

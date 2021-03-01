@@ -130,26 +130,12 @@
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_singleshot_OD">
-           <property name="text">
-            <string>Singleshot OD</string>
-           </property>
-          </widget>
-         </item>
-         <item>
           <widget class="QCheckBox" name="checkBox_OD_continuous">
            <property name="enabled">
             <bool>true</bool>
            </property>
            <property name="text">
             <string>OD Continuous</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_singleshot_Nat">
-           <property name="text">
-            <string>Singleshot Atom Number</string>
            </property>
           </widget>
          </item>

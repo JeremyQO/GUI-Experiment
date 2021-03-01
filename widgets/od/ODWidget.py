@@ -6,6 +6,7 @@ Created on Sun Jan 10 12:17:08 2021
 """
 
 from functions.od import scpi
+import time
 import os
 import sys
 import numpy as np
@@ -23,6 +24,7 @@ if matplotlib.get_backend()!='Qt5Agg':
 
 from widgets.quantumWidget import QuantumWidget
 
+
 class OD_gui (QuantumWidget):
     def __init__(self, Parent=None, ui=None, simulation=True):
         if Parent is not None:
@@ -37,27 +39,20 @@ class OD_gui (QuantumWidget):
         self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
         
         self.checkBox_OD_continuous.clicked.connect(self.acquire_OD_worker)
-        self.checkBox_Nat_continuous.clicked.connect(self.acquire_Nat_worker)
         self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
-        self.pushButton_singleshot_OD.clicked.connect(self.get_OD_worker)
         self.pushButton_update.clicked.connect(self.change_probe_frequency)
         self.pushButton_ODtimes.clicked.connect(self.change_OD_measure_time)
         self.pushButton_DepumpAmp.clicked.connect(self.change_Nat_Amp)
         self.pushButton_NatTime.clicked.connect(self.change_depumper_time)
-        self.pushButton_singleshot_Nat.clicked.connect(self.get_Nat_worker)
         self.enable_interface(False)
 
         self.decimation = 8
         self.cursorsOD = list(np.array([145, 312, 535, 705])/ 8 * self.decimation)
         self.cursorsNat = list(np.array([64,208,452,611])/ 8 * self.decimation)
 
-    
-
     def enable_interface(self, v):
         self.checkBox_OD_continuous.setEnabled(v)
-        self.pushButton_singleshot_Nat.setEnabled(v)
         self.checkBox_Nat_continuous.setEnabled(v)
-        self.pushButton_singleshot_OD.setEnabled(v)
         self.frame_4.setEnabled(v)
         # self.checkBox_parameters.setEnabled(v)
         self.frame_parameters.setEnabled(v)
@@ -85,12 +80,10 @@ class OD_gui (QuantumWidget):
     def get_OD_worker(self):
         worker = Worker(self.get_OD)
         self.print_to_dialogue("Acquiring OD...")
-        self.pushButton_singleshot_OD.setDisabled(True)
         worker.signals.finished.connect(self.get_OD_done)
         self.threadpool.start(worker)
 
     def get_OD_done(self):
-        self.pushButton_singleshot_OD.setEnabled(True)
         self.print_to_dialogue("OD acquired")
 
     def get_OD(self, progress_callback, singleshot=True):
@@ -106,34 +99,32 @@ class OD_gui (QuantumWidget):
         OD = self.odexp.calculate_OD(beamRadius, times, self.cursorsOD, data1, wavelength)
         self.widgetPlot.plot_OD(times, data1, data2, self.cursorsOD, autoscale=self.checkBox_plotAutoscale.isChecked())
         self.print_to_dialogue("OD = %.2f"%(OD))
+        # self.OPX.update_parameters()
 
     def acquire_OD_worker(self):
         if self.checkBox_OD_continuous.isChecked():
             worker = Worker(self.acquire_OD)
             self.print_to_dialogue("Acquiring OD...")
-            self.pushButton_singleshot_OD.setDisabled(True)
             worker.signals.finished.connect(self.acquire_OD_done)
             self.threadpool.start(worker)
 
     def acquire_OD_done(self):
-        self.OPX.toggleMeasureODcontinuous(False)
+        self.OPX.OD_switch(False)
         self.print_to_dialogue("Stopped acquiring OD")
-        self.pushButton_singleshot_OD.setEnabled(True)
 
     def acquire_OD(self, progress_callback):
-        self.OPX.toggleMeasureODcontinuous(True)
+        self.OPX.OD_switch(True)
         while self.checkBox_OD_continuous.isChecked():
             self.get_OD(1, singleshot=False)
 
     def get_Nat_worker(self):
         worker = Worker(self.get_Nat)
         self.print_to_dialogue("Acquiring number of atoms...")
-        self.pushButton_singleshot_Nat.setDisabled(True)
+        # self.print_to_dialogue("Acquiring number of atoms...")
         worker.signals.finished.connect(self.get_Nat_done)
         self.threadpool.start(worker)
 
     def get_Nat_done(self):
-        self.pushButton_singleshot_Nat.setEnabled(True)
         self.print_to_dialogue("Number of atoms acquired")
 
     def get_Nat(self, progress_callback, singleshot=True):
@@ -147,24 +138,6 @@ class OD_gui (QuantumWidget):
         # OD = self.odexp.calculate_OD(beamRadius, times, self.cursorsOD, data, wavelength)
         self.widgetPlot.plot_OD(times, data1, data2, self.cursorsNat, autoscale=self.checkBox_plotAutoscale.isChecked())
         # self.print_to_dialogue("OD = %.2f"%(OD))
-
-    def acquire_Nat_worker(self):
-        if self.checkBox_Nat_continuous.isChecked():
-            worker = Worker(self.acquire_Nat)  #
-            self.print_to_dialogue("Acquiring number of atoms...")
-            self.pushButton_singleshot_OD.setDisabled(True)
-            worker.signals.finished.connect(self.acquire_Nat_done)  #
-            self.threadpool.start(worker)
-
-    def acquire_Nat(self, progress_callback):
-        self.OPX.toggleMeasureNatomscontinuous(True)
-        while self.checkBox_Nat_continuous.isChecked():
-            self.get_Nat(1, singleshot=False)
-
-    def acquire_Nat_done(self):
-        self.OPX.toggleMeasureNatomscontinuous(False)
-        self.print_to_dialogue("Stopped acquiring number of atoms")
-        self.pushButton_singleshot_OD.setEnabled(True)
 
     def utils_connect_worker(self):
         worker = Worker(self.utils_connect)

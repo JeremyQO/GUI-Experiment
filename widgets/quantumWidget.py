@@ -4,8 +4,7 @@ Created on Sun Jan 10 12:17:08 2021
 
 @author: Jeremy Raskop
 
-This class should be used as a parent to all the widgets of the various experiments
-we want to run. 
+This class should be used as a parent to all the widgets of the various experiments.
 """
 
 from PyQt5 import uic
@@ -17,12 +16,14 @@ if matplotlib.get_backend()!='Qt5Agg':
 from PyQt5.QtCore import QThreadPool
 from datetime import datetime
 import os
+from widgets.worker import Worker
 import widgets.temperature.dataplot as dataplot
 from pyqtconsole.console import PythonConsole
 try:
-    from OPXcontrol.OPX_control_Dor import OPX
+    from OPXcontrol.OPX_control_New import OPX
 except:
     print("Could not load pgc_macro_with_OD")
+
 
 class QuantumWidget (QWidget):
     def __init__(self, ui=None, simulation=True):
@@ -50,80 +51,96 @@ class QuantumWidget (QWidget):
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
             
-        self.checkBox_MOT_ON.clicked.connect(self.MOT_switch_connect)
-        self.checkBox_PGC_ON.clicked.connect(self.PGC_switch_connect)
-        self.checkBox_Fountain_ON.clicked.connect(self.Fountain_switch_connect)
-        self.checkBox_Imaging_ON.clicked.connect(self.Imaging_switch_connect)
-        self.checkBox_OD_ON.clicked.connect(self.OD_switch_connect)
-        self.checkBox_Depump_ON.clicked.connect(self.Depump_switch_connect)
-        self.pushButton_Update_FPGCAmp.clicked.connect(self.Update_FPGCAmp_connect)
-        self.pushButton_AOM_0_AMP.clicked.connect(self.update_fountain_AOM_0_amplitude_connect)
-        self.pushButton_AOM_P_AMP.clicked.connect(self.update_fountain_AOM_P_amplitude_connect)
-        self.pushButton_AOM_M_AMP.clicked.connect(self.update_fountain_AOM_M_amplitude_connect)
-        self.pushButton_snapTime.clicked.connect(self.snapTime_connect)
-        self.pushButton_CameraTriggerTime.clicked.connect(self.CameraTriggerTime_connect)
-        self.pushButton_Nshots.clicked.connect(self.Nshots_connect)
-        self.pushButton_OD_Time.clicked.connect(self.OD_Time_connect)
-        self.pushButton_DepumpTime.clicked.connect(self.DepumpTime_connect)
-        self.pushButton_DepumpAmp.clicked.connect(self.DepumpAmp_connect)
+        self.frame_parameters.checkBox_MOT_ON.clicked.connect(self.MOT_switch_connect)
+        self.frame_parameters.checkBox_PGC_ON.clicked.connect(self.PGC_switch_connect)
+        self.frame_parameters.checkBox_Fountain_ON.clicked.connect(self.Fountain_switch_connect)
+        self.frame_parameters.checkBox_Imaging_ON.clicked.connect(self.Imaging_switch_connect)
+        self.frame_parameters.checkBox_OD_ON.clicked.connect(self.OD_switch_connect)
+        self.frame_parameters.checkBox_Depump_ON.clicked.connect(self.Depump_switch_connect)
+        self.frame_parameters.pushButton_Update_FPGCAmp.clicked.connect(self.Update_FPGCAmp_connect)
+        self.frame_parameters.pushButton_AOM_0_AMP.clicked.connect(self.update_fountain_AOM_0_amplitude_connect)
+        self.frame_parameters.pushButton_AOM_P_AMP.clicked.connect(self.update_fountain_AOM_P_amplitude_connect)
+        self.frame_parameters.pushButton_AOM_M_AMP.clicked.connect(self.update_fountain_AOM_M_amplitude_connect)
+        self.frame_parameters.pushButton_snapTime.clicked.connect(self.snapTime_connect)
+        self.frame_parameters.pushButton_CameraTriggerTime.clicked.connect(self.CameraTriggerTime_connect)
+        self.frame_parameters.pushButton_Nshots.clicked.connect(self.Nshots_connect)
+        self.frame_parameters.pushButton_OD_Time.clicked.connect(self.OD_Time_connect)
+        self.frame_parameters.pushButton_DepumpTime.clicked.connect(self.DepumpTime_connect)
+        self.frame_parameters.pushButton_DepumpAmp.clicked.connect(self.DepumpAmp_connect)
+        self.frame_parameters.pushButton_UpdateAll.clicked.connect(self.updateParameters_workers)
         # update all
 
+    def updateParameters_workers(self):
+        self.frame_parameters.pushButton_UpdateAll.setEnabled(False)
+        worker = Worker(self.updateParameters)
+        worker.signals.finished.connect(self.updateParameters_done)
+        self.threadpool.start(worker)
+
+    def updateParameters(self, progress_callback):
+        print("Before")
+        self.OPX.update_parameters()
+        print("After")
+
+    def updateParameters_done(self):
+        self.print_to_dialogue("Parameters updated.")
+        self.frame_parameters.pushButton_UpdateAll.setEnabled(True)
+
     def MOT_switch_connect(self):
-        self.OPX.MOT_switch(self.checkBox_MOT_ON.isChecked())
+        self.OPX.MOT_switch(self.frame_parameters.checkBox_MOT_ON.isChecked())
         
     def PGC_switch_connect(self):
-        self.OPX.Linear_PGC_switch(self.checkBox_PGC_ON.isChecked())
+        self.OPX.Linear_PGC_switch(self.frame_parameters.checkBox_PGC_ON.isChecked())
         
     def Fountain_switch_connect(self):
-        self.OPX.Fountain_switch(self.checkBox_Fountain_ON.isChecked())
+        self.OPX.Fountain_switch(self.frame_parameters.checkBox_Fountain_ON.isChecked())
         
     def Imaging_switch_connect(self):
-        self.OPX.Imaging_switch(self.checkBox_Imaging_ON.isChecked())
+        self.OPX.Imaging_switch(self.frame_parameters.checkBox_Imaging_ON.isChecked())
         
     def OD_switch_connect(self):
-        self.OPX.OD_switch(self.checkBox_OD_ON.isChecked())
+        self.OPX.OD_switch(self.frame_parameters.checkBox_OD_ON.isChecked())
         
     def Depump_switch_connect(self):
-        self.OPX.Depump_switch(self.checkBox_Depump_ON.isChecked())
+        self.OPX.Depump_switch(self.frame_parameters.checkBox_Depump_ON.isChecked())
         
     def Update_FPGCAmp_connect(self):
-        a = self.doubleSpinBox_Update_FPGCAmp.value()
+        a = self.frame_parameters.doubleSpinBox_Update_FPGCAmp.value()
         self.OPX.update_lin_pgc_final_amplitude(a)
 
     def update_fountain_AOM_0_amplitude_connect(self):
-        a = self.doubleSpinBox_AOM_0_AMP.value()
+        a = self.frame_parameters.doubleSpinBox_AOM_0_AMP.value()
         self.OPX.update_fountain_AOM_0_amplitude(a)
         
     def update_fountain_AOM_P_amplitude_connect(self):
-        a = self.doubleSpinBox_AOM_P_AMP.value()
+        a = self.frame_parameters.doubleSpinBox_AOM_P_AMP.value()
         self.OPX.update_fountain_AOM_plus_amplitude(a) 
     
     def update_fountain_AOM_M_amplitude_connect(self):
-        a = self.doubleSpinBox_AOM_M_AMP.value()
+        a = self.frame_parameters.doubleSpinBox_AOM_M_AMP.value()
         self.OPX.update_fountain_AOM_minus_amplitude(a) 
     
     def snapTime_connect(self):
-        s = self.doubleSpinBox_snapTime.value()
+        s = self.frame_parameters.doubleSpinBox_snapTime.value()
         self.OPX.update_snap_time(s)
         
     def CameraTriggerTime_connect(self):
-        t = self.doubleSpinBox_CameraTriggerTime.value()
-        self.OPX.doubleSpinBox_CameraTriggerTime(t)
+        t = self.frame_parameters.doubleSpinBox_CameraTriggerTime.value()
+        self.OPX.update_camera_trig_time(t)
         
     def Nshots_connect(self):
-        n = self.spinBox_Nshots.value()
+        n = self.frame_parameters.spinBox_Nshots.value()
         self.OPX.Film_graber(n)
         
     def OD_Time_connect(self):
-        t = self.doubleSpinBox_OD_Time.value()
+        t = self.frame_parameters.doubleSpinBox_OD_Time.value()
         self.OPX.MeasureOD(t)
         
     def DepumpTime_connect(self):
-        t = self.doubleSpinBox_DepumpTime.value()
+        t = self.frame_parameters.doubleSpinBox_DepumpTime.value()
         self.OPX.MeasureNatoms(t)
         
     def DepumpAmp_connect(self):
-        a = self.doubleSpinBox_DepumpAmp.value()
+        a = self.frame_parameters.doubleSpinBox_DepumpAmp.value()
         self.OPX.doubleSpinBox_DepumpAmp(a)
 
     def init_terminal(self):
@@ -158,7 +175,7 @@ class QuantumWidget (QWidget):
         self.listWidget_dialogue.addItem(dt_string+" - "+s)
         print(dt_string+" - "+s)
         self.listWidget_dialogue.scrollToBottom()
-        
+
     def alert_box(self, message):
         m = QMessageBox()
         m.setText(message)
@@ -166,7 +183,7 @@ class QuantumWidget (QWidget):
         m.setStandardButtons(QMessageBox.Ok)
         m.setDefaultButton(QMessageBox.Cancel)
         ret = m.exec_()
-        
+
     def connectOPX(self):
         self.print_to_dialogue("Connecting to OPX...")
         try:
