@@ -20,7 +20,7 @@ from widgets.worker import Worker
 import widgets.temperature.dataplot as dataplot
 from pyqtconsole.console import PythonConsole
 try:
-    from OPXcontrol.OPX_control_New import OPX
+    from OPXcontrol.OPX_control_New_v1 import OPX
 except:
     print("Could not load pgc_macro_with_OD")
 
