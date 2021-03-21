@@ -334,46 +334,10 @@
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout_3">
-            <item row="2" column="3">
+            <item row="2" column="2">
              <widget class="QLineEdit" name="lineEdit"/>
             </item>
-            <item row="0" column="0">
-             <widget class="QLabel" name="label_4">
-              <property name="text">
-               <string>Start (ms)</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="0">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_start_temp">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="value">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
             <item row="2" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_end_temp">
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>16777215</height>
-               </size>
-              </property>
-              <property name="value">
-               <double>15.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="2">
              <widget class="QSpinBox" name="spinBox_N_temp">
               <property name="maximumSize">
                <size>
@@ -392,17 +356,43 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="label_5">
+            <item row="2" column="0">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_start_temp">
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="value">
+               <double>1.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QLabel" name="label_4">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The first picture will be taken at the time given by &amp;quot;Start/interval (ms)&amp;quot;&lt;/p&gt;&lt;p&gt;Then, a number of pictures = &amp;quot;N points&amp;quot; will be taken, at times that are multiples of &amp;quot;Start/interval (ms)&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
-               <string>End (ms)</string>
+               <string>Start/interval (ms)</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>
-            <item row="3" column="0" colspan="4">
+            <item row="4" column="0" colspan="3">
+             <widget class="QProgressBar" name="progressBar">
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="textVisible">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0" colspan="3">
              <widget class="QPushButton" name="pushButton_measure_temperature">
               <property name="minimumSize">
                <size>
@@ -415,20 +405,7 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="3">
-             <widget class="QLabel" name="label_8">
-              <property name="toolTip">
-               <string>Pixel/length calibration in pixels per milimiter</string>
-              </property>
-              <property name="text">
-               <string>Cal (pixel/mm)</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignCenter</set>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="2">
+            <item row="0" column="1">
              <widget class="QLabel" name="label_6">
               <property name="text">
                <string>N points</string>
@@ -438,13 +415,16 @@
               </property>
              </widget>
             </item>
-            <item row="4" column="0" colspan="4">
-             <widget class="QProgressBar" name="progressBar">
-              <property name="value">
-               <number>0</number>
+            <item row="0" column="2">
+             <widget class="QLabel" name="label_8">
+              <property name="toolTip">
+               <string>Pixel/length calibration in pixels per milimiter</string>
               </property>
-              <property name="textVisible">
-               <bool>false</bool>
+              <property name="text">
+               <string>Cal (pixel/mm)</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignCenter</set>
               </property>
              </widget>
             </item>

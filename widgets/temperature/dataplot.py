@@ -61,8 +61,8 @@ class PlotWindow(QDialog):
         ymin, ymax = plt.ylim()
         xmin, xmax = plt.xlim()
         self.figure.clear()
-        plt.plot(x, y1)
-        plt.plot(x, y2)
+        plt.plot(x, y1, label="Depump")
+        plt.plot(x, y2, label="OD")
         if not autoscale:
             plt.ylim(ymin, ymax)
             plt.xlim(xmin, xmax)
@@ -70,6 +70,7 @@ class PlotWindow(QDialog):
             plt.axvline(curs, c='r')
         plt.ylabel('Power (a.u.)')
         plt.xlabel('Time ($\\mu s$)')
+        plt.legend()
         plt.tight_layout()
         self.canvas.draw()
     

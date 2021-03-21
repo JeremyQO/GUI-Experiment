@@ -140,9 +140,23 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="pushButton_CursorsOD">
+           <property name="text">
+            <string>Place Cursors OD</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QCheckBox" name="checkBox_Nat_continuous">
            <property name="text">
             <string> Atom number Continuous </string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_CursorsNat">
+           <property name="text">
+            <string>Place Cursors Nat</string>
            </property>
           </widget>
          </item>
@@ -251,41 +265,10 @@
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="6" column="1">
-             <widget class="QLabel" name="label_4">
-              <property name="text">
-               <string>Depump Time (ms)</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="2">
-             <widget class="QPushButton" name="pushButton_ODtimes">
+            <item row="1" column="2">
+             <widget class="QPushButton" name="pushButton_update">
               <property name="text">
                <string>Update</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_ODtimes">
-              <property name="maximum">
-               <double>20.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.500000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="4" column="1">
-             <widget class="QLabel" name="label_3">
-              <property name="text">
-               <string>Depump Relative Amplitude</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QLabel" name="label_2">
-              <property name="text">
-               <string>OD Time (ms)</string>
               </property>
              </widget>
             </item>
@@ -302,26 +285,6 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="2">
-             <widget class="QPushButton" name="pushButton_update">
-              <property name="text">
-               <string>Update</string>
-              </property>
-             </widget>
-            </item>
-            <item row="5" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_DepumpAmp">
-              <property name="maximum">
-               <double>1.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.010000000000000</double>
-              </property>
-              <property name="value">
-               <double>1.000000000000000</double>
-              </property>
-             </widget>
-            </item>
             <item row="0" column="1" colspan="2">
              <widget class="QLabel" name="label">
               <property name="text">
@@ -329,27 +292,17 @@
               </property>
              </widget>
             </item>
-            <item row="5" column="2">
-             <widget class="QPushButton" name="pushButton_DepumpAmp">
+            <item row="2" column="1">
+             <widget class="QCheckBox" name="checkBox_saveData">
               <property name="text">
-               <string>Update</string>
+               <string>Save All Data</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_NatTime">
-              <property name="maximum">
-               <double>20.000000000000000</double>
-              </property>
-              <property name="singleStep">
-               <double>0.500000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="7" column="2">
-             <widget class="QPushButton" name="pushButton_NatTime">
+            <item row="2" column="2">
+             <widget class="QPushButton" name="pushButton_saveCurrentData">
               <property name="text">
-               <string>Update</string>
+               <string>Save Current Data</string>
               </property>
              </widget>
             </item>

@@ -44,8 +44,11 @@ class QuantumWidget (QWidget):
         ui_parameters = os.path.join(os.path.dirname(__file__), "quantumWidgetParameters.ui")
         uic.loadUi(ui_parameters, self.frame_parameters)
         
-        self.paramsSc = QShortcut(QKeySequence('Ctrl+Space'), self)
+        # self.paramsSc = QShortcut(QKeySequence('Ctrl+Space'), self)
+        self.paramsSc = QShortcut(QKeySequence('F1'), self)
         self.paramsSc.activated.connect(self.checkCheckBoxParameters)
+        self.iPython = QShortcut(QKeySequence('F2'), self)
+        self.iPython.activated.connect(self.checkCheckBoxIpythonConsole)
         
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
@@ -67,6 +70,7 @@ class QuantumWidget (QWidget):
         self.frame_parameters.pushButton_OD_Time.clicked.connect(self.OD_Time_connect)
         self.frame_parameters.pushButton_DepumpTime.clicked.connect(self.DepumpTime_connect)
         self.frame_parameters.pushButton_DepumpAmp.clicked.connect(self.DepumpAmp_connect)
+        self.frame_parameters.pushButton_FinalPGCFreq.clicked.connect(self.FinalPGCFreq_connect)
         self.frame_parameters.pushButton_UpdateAll.clicked.connect(self.updateParameters_workers)
         # update all
 
@@ -77,9 +81,7 @@ class QuantumWidget (QWidget):
         self.threadpool.start(worker)
 
     def updateParameters(self, progress_callback):
-        print("Before")
         self.OPX.update_parameters()
-        print("After")
 
     def updateParameters_done(self):
         self.print_to_dialogue("Parameters updated.")
@@ -102,7 +104,11 @@ class QuantumWidget (QWidget):
         
     def Depump_switch_connect(self):
         self.OPX.Depump_switch(self.frame_parameters.checkBox_Depump_ON.isChecked())
-        
+
+    def FinalPGCFreq_connect(self):
+        f = self.frame_parameters.doubleSpinBox_FinalPGCFreq.value()
+        self.OPX.update_pgc_final_freq(f)
+
     def Update_FPGCAmp_connect(self):
         a = self.frame_parameters.doubleSpinBox_Update_FPGCAmp.value()
         self.OPX.update_lin_pgc_final_amplitude(a)
@@ -162,7 +168,12 @@ class QuantumWidget (QWidget):
             self.frame_parameters.show()
         else:
             self.frame_parameters.hide()
-        
+
+    def checkCheckBoxIpythonConsole(self):
+        s = self.checkBox_iPython.isChecked()
+        self.checkBox_iPython.setChecked(not s)
+        self.showHideConsole()
+
     def showHideConsole(self):
         if self.checkBox_iPython.isChecked():
             self.frame_3.show()

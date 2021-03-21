@@ -3,11 +3,13 @@
 Created on Wed Jan 20 10:28:35 2021
 
 @author: Jeremy
+
+SCPI access to Red Pitaya.
 """
 
-"""SCPI access to Red Pitaya."""
-
 import socket
+import numpy as np
+import time
 
 class Scpi (object):
     """SCPI class used to access Red Pitaya over an IP network."""
@@ -153,7 +155,7 @@ class Redpitaya (Scpi):
         print("Trigger status is " + self.get_triggerStatus())
         self.set_averaging('OFF')
         print("Averaging mode is " + self.get_averaging())
-        self.set_triggerDelay(-25000*decimation)
+        self.set_triggerDelay(-40000*decimation)
         print("Trigger delay at %s ns" % (self.get_triggerDelay()))
         self.set_triggerLevel(1000)
         print("Trigger level at %.2f mV" % (float(self.get_triggerLevel())*1000))
@@ -272,24 +274,41 @@ class Redpitaya (Scpi):
 
         self.sampling_rate = (len(buff1) / 13 * 100000) / self.decimation
         return buff1, buff2
-#
-# def f(freq):
-#     rp_s = Scpi("132.77.55.19")
-#
-#     wave_form = 'sine'
-#     ampl = 0.9
-#
-#     rp_s.tx_txt('GEN:RST')
-#     rp_s.tx_txt('SOUR1:FUNC ' + str(wave_form).upper())
-#     rp_s.tx_txt('SOUR1:FREQ:FIX ' + str(freq))
-#     rp_s.tx_txt('SOUR1:VOLT ' + str(ampl))
-#
-#     # Enable output
-#     rp_s.tx_txt('OUTPUT1:STATE ON')
+
+    def get_fullbufferFormated(self, s):
+        buff_string = self.get_fullBuffer(s)
+        buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+        buff1 = list(map(float, buff_string))
+        return buff1
+
+    def outputSin(self, ampl=0.9, freq=10000, output=1):
+        wave_form = 'sine'
+        self.tx_txt('GEN:RST')
+        self.tx_txt('SOUR%s:FUNC ' % output + str(wave_form).upper())
+        self.tx_txt('SOUR%s:FREQ:FIX ' % output + str(freq))
+        self.tx_txt('SOUR%s:VOLT ' % output + str(ampl))
+
+        # Enable output
+        self.tx_txt('OUTPUT%s:STATE ON' % output)
+
+
+def acquireHomodyne(rp, s):
+    data = []
+    for i in range(100):
+        d = rp.get_fullbufferFormated(s)
+        data.append(d)
+        time.sleep(0.01)
+        print(i)
+    if s==1:
+        np.savetxt("homodyne_electronics_CH1.txt", data)
+    if s==2:
+        np.savetxt("homodyne_electronics_CH2.txt", data)
+
 
 if __name__ == "__main__":
-    rp = Redpitaya("132.77.55.19")
-    # f(30e6)
+    rp1 = Redpitaya("rp-f08a95.local")
+    rp2 = Redpitaya("rp-f08c22.local")
+    rp3 = Redpitaya("rp-f0629e.local")  # OD
 
 
     

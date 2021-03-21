@@ -19,7 +19,7 @@ from PyQt5.QtCore import QThreadPool
 import time
 try:
     import MvCamera
-    from OPXcontrol.OPX_control_Dor import OPX
+    # from OPXcontrol.OPX_control_New_v1 import OPX
     from mvIMPACT import acquire
 except:
     pass
@@ -45,20 +45,23 @@ class Pgc_gui (QuantumWidget):
         self.pushButton_PGC_Connect.clicked.connect(self.PGC_connect_worker)
         self.checkBox_plotContinuous.clicked.connect(self.take_continuous_pictures_worker)
         self.pushButton_takeBackground.clicked.connect(self.take_new_background_worker)
-        self.pushButton_updateSnapTime.clicked.connect(self.update_Snaptime)
-        self.pushButton_update_dA.clicked.connect(self.update_dA)
-        self.pushButton_update_df.clicked.connect(self.update_df)
+        # self.pushButton_updateSnapTime.clicked.connect(self.update_Snaptime)
+        # self.pushButton_update_dA.clicked.connect(self.update_dA)
+        # self.pushButton_update_df.clicked.connect(self.update_df)
         
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
         self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
+
+        self.enable_interface(False)
     
     def enable_interface(self,v=True):
-        self.frame_5.setEnabled(v)
+        # self.frame_5.setEnabled(v)
         self.widget.setEnabled(v)
         self.checkBox_plotContinuous.setEnabled(v)
         self.pushButton_takeBackground.setEnabled(v)
         self.widget_2.setEnabled(v)
         self.checkBox_parameters.setEnabled(v)
+        self.frame_parameters.setEnabled(v)
 
     def PGC_connect_worker(self):
         worker = Worker(self.PGC_connect)
@@ -78,8 +81,6 @@ class Pgc_gui (QuantumWidget):
             self.pushButton_PGC_Connect.setEnabled(True)
             return
 
-        self.connectOPX()
-
         self.print_to_dialogue("Connecting to Camera...")
         try:
             self.camera = MvCamera.MvCamera()
@@ -87,32 +88,34 @@ class Pgc_gui (QuantumWidget):
         except acquire.EDeviceManager:
             self.print_to_dialogue("Camera was already connected")
 
+        self.connectOPX()
+
         self.enable_interface(True)
         self.pushButton_PGC_Connect.setEnabled(True)
 
-    def update_Snaptime(self):
-        v = self.doubleSpinBox_Snap.value()
-        if self.simulation:
-            self.print_to_dialogue("Updated snaptime to %.2f" % (v))
-            return
-        self.OPX.update_snap_time_PGC(float(v))
-        self.print_to_dialogue("Updated snaptime to %.2f" % (v))
+    # def update_Snaptime(self):
+    #     v = self.doubleSpinBox_Snap.value()
+    #     if self.simulation:
+    #         self.print_to_dialogue("Updated snaptime to %.2f" % (v))
+    #         return
+    #     self.OPX.update_snap_time(float(v))
+    #     self.print_to_dialogue("Updated snaptime to %.2f" % (v))
         
-    def update_dA(self):
-        v = self.doubleSpinBox_dA.value()
-        if self.simulation:
-            self.print_to_dialogue("Updated dA to %.3f"%(v))
-            return
-        self.OPX.update_pgc_final_amplitude(v)
-        self.print_to_dialogue("Updated dA to %.3f" % (v))
+    # def update_dA(self):
+    #     v = self.doubleSpinBox_dA.value()
+    #     if self.simulation:
+    #         self.print_to_dialogue("Updated dA to %.3f"%(v))
+    #         return
+    #     self.OPX.update_lin_pgc_final_amplitude(v)
+    #     self.print_to_dialogue("Updated dA to %.3f" % (v))
 
-    def update_df(self):
-        v = self.doubleSpinBox_df.value()
-        if self.simulation:
-            self.print_to_dialogue("Updated df to %.3f"%(v))
-            return
-        self.OPX.update_df_pgc(v)
-        self.print_to_dialogue("Updated df to %.3f" % (v))
+    # def update_df(self):
+    #     v = self.doubleSpinBox_df.value()
+    #     if self.simulation:
+    #         self.print_to_dialogue("Updated df to %.3f"%(v))
+    #         return
+    #     self.OPX.update_pgc_final_freq(v)
+    #     self.print_to_dialogue("Updated df to %.3f" % (v))
 
     def take_new_background_worker(self):
         worker = Worker(self.take_new_background)
@@ -126,9 +129,15 @@ class Pgc_gui (QuantumWidget):
             return
 
         self.print_to_dialogue("Snapping Background...")
-        self.OPX.Background()
+        self.OPX.update_snap_time(50)
+        # self.OPX.Imaging_switch(True)
+        self.OPX.update_parameters()
         backgroundim, _ = self.camera.CaptureImage()
+        # time.sleep(5)
         self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
+        v = self.frame_parameters.doubleSpinBox_FinalPGCFreq.value()
+        self.OPX.update_snap_time(float(v))
+        self.OPX.update_parameters()
         self.checkBox_substractBackground.setEnabled(True)
 
     def take_continuous_pictures_worker(self):
@@ -139,8 +148,9 @@ class Pgc_gui (QuantumWidget):
             # worker.signals.progress.connect(self.progress_fn)
             # Execute
             self.threadpool.start(worker)
-        elif not self.simulation:
-            self.OPX.toggle_camera_roll_PGC(False)
+        # elif not self.simulation:
+        #     self.OPX.Imaging_switch(False)
+        #     self.OPX.update_parameters()
 
     def thread_complete(self):
         self.print_to_dialogue("Acquisition stopped")
@@ -161,29 +171,29 @@ class Pgc_gui (QuantumWidget):
             return
         # backgroundim = pil.Image.open('background_23-12-2020.png')
         # background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
-        else:
-            self.OPX.toggle_camera_roll_PGC(True)
-            self.widgetPlot.sigmay = []
-            self.widgetPlot.sigmax = []
-            while self.checkBox_plotContinuous.isChecked():
-                # try:
-                im, _ = self.camera.CaptureImage()
-                if self.checkBox_substractBackground.isChecked() and hasattr(self, "background"):
-                    imnp = np.asarray(im.convert(mode='L'), dtype=float)-self.background
-                else:
-                    imnp = np.asarray(im.convert(mode='L'), dtype=float)
-                try:
-                    imim = image(imnp)
-                    ax, sx, sy = imim.optimizing([500,1300,500,1100])
-                    if sx >0:
-                        self.widgetPlot.sigmay.append(sy)
-                        self.widgetPlot.sigmax.append(sx)
-                        if len(self.widgetPlot.sigmax)>30:
-                            self.widgetPlot.sigmay.pop(0)
-                            self.widgetPlot.sigmax.pop(0)
-                    self.widgetPlot.plotDataPGC(imim)
-                except RuntimeError as e:
-                    print(e)
+
+        # self.OPX.Imaging_switch(True)
+        # self.OPX.update_parameters()
+        self.widgetPlot.sigmay = []
+        self.widgetPlot.sigmax = []
+        while self.checkBox_plotContinuous.isChecked():
+            # try:
+            im, _ = self.camera.CaptureImage(TimeOut_ms=1000000000)
+            if self.checkBox_substractBackground.isChecked() and hasattr(self, "background"):
+                imnp = np.asarray(im.convert(mode='L'), dtype=float)-self.background
+            else:
+                imnp = np.asarray(im.convert(mode='L'), dtype=float)
+
+            imim = image(imnp)
+            ax, sx, sy = imim.optimizing([500,1300,500,1100])
+            if sx >0:
+                self.widgetPlot.sigmay.append(sy)
+                self.widgetPlot.sigmax.append(sx)
+                if len(self.widgetPlot.sigmax)>30:
+                    self.widgetPlot.sigmay.pop(0)
+                    self.widgetPlot.sigmax.pop(0)
+            self.widgetPlot.plotDataPGC(imim)
+
                     
 
 if __name__ == "__main__":

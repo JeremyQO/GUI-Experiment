@@ -17,7 +17,7 @@ from datetime import date, datetime
 try:
     import MvCamera
     from mvIMPACT import acquire
-    from OPXcontrol.OPX_control_Dor import OPX
+    # from OPXcontrol.OPX_control_New_v1 import OPX
 except:
     pass
 import os
@@ -97,7 +97,6 @@ class Temperature_gui (QuantumWidget):
             self.pushButton_temperature_Connect.setEnabled(True)
             return
 
-        self.connectOPX()
         self.print_to_dialogue("connecting to camera...")
         try:
             self.camera = MvCamera.MvCamera()
@@ -105,17 +104,23 @@ class Temperature_gui (QuantumWidget):
         except acquire.EDeviceManager:
             self.print_to_dialogue("Camera was already connected")
 
+        self.connectOPX()
         self.enable_interface(True)
         self.pushButton_temperature_Connect.setEnabled(True)
 
     def get_temperature_worker(self):
         worker = Worker(self.get_temperature)
-        worker.signals.finished.connect(lambda: self.print_to_dialogue("Done taking temperature"))
+        worker.signals.finished.connect(self.get_temperature_done)
         worker.signals.progress.connect(self.progress_fn)
         self.threadpool.start(worker)
 
     def progress_fn(self, n):
         self.progressBar.setValue(n)
+
+    def get_temperature_done(self):
+        self.print_to_dialogue("Done taking temperature")
+        self.pushButton_measure_temperature.setEnabled(True)
+        self.progress_fn(0)
 
     def get_temperature(self, progress_callback):
         if self.simulation:
@@ -126,6 +131,8 @@ class Temperature_gui (QuantumWidget):
             # _, *axs = self.ims.plot()
             self.widgetPlot.plotData(self.ims)
             return
+
+        self.pushButton_measure_temperature.setEnabled(False)
 
         dirname = 'C:\Pycharm\Expriements\Instruments\mvIMPACT_cam\Images'
         self.plot_continuous = False
@@ -141,9 +148,16 @@ class Temperature_gui (QuantumWidget):
             os.mkdir(imagesdir)
             
         N_snap = self.spinBox_N_temp.value()
-        self.OPX.measure_temperature(N_snap)
+        Snap_time = self.doubleSpinBox_start_temp.value()
+        # self.OPX.measure_temperature(N_snap)
+        self.OPX.Imaging_switch(True)
+        self.OPX.Film_graber(N_snap)
+        self.OPX.update_snap_time(Snap_time)
+        self.OPX.update_parameters()
+        sucess = True
         for i in range(1, N_snap + 1):
             self.print_to_dialogue("Snap at %.2f ms" % (i))
+            progress_callback.emit(i * 100 / N_snap)
             im, _ = self.camera.CaptureImage()
             imnp = np.asarray(im.convert(mode='L'), dtype=float)
             try:
@@ -157,18 +171,26 @@ class Temperature_gui (QuantumWidget):
                 imname+= 't=' + "%.2f"%(i) + '.png'
                 im.save(imname, "PNG")
                 # self.camera.SaveImageT(im, "%.2f" % (i))
-                progress_callback.emit(i * 100 / N_snap)
-            except RuntimeError:
+
+            except RuntimeError as e:
                 self.print_to_dialogue("Couldn't fit... stopping")
+                print(e)
+                sucess=False
                 # self.alert_box("couldn't fit")
                 break
 
-        print("Taking background")
-        self.OPX.Background()
+        if not sucess :
+            return
+
+        self.print_to_dialogue("Taking background")
+        # self.OPX.Background()
+        self.OPX.update_snap_time(50)
+        self.OPX.update_parameters()
+
         backgroundim, _ = self.camera.CaptureImage()
         now = datetime.now()
         imname = imagesdir + "\\" +now.strftime("%H-%M-%S_")
-        imname+= "background" + '.png'
+        imname += "background" + '.png'
         backgroundim.save(imname, "PNG")
         self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)
         # self.camera.SaveImageT(backgroundim, 0, background=True)
@@ -220,5 +242,5 @@ if __name__=="__main__":
     window.show()
     # window.temperature_connect()
     # window.get_temperature(1)
-    # app.exec_()
+    app.exec_()
     # sys.exit(app.exec_())

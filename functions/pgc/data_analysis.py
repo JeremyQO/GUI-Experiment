@@ -39,8 +39,12 @@ class image:
         return self.npimage[self.c_y], self.npimage[:,self.c_x]
     
     def get_popt(self):
-        popt_x, _ = optimize.curve_fit(gaussian, self.xaxis, self.line_x, p0=[100,self.c_x,100])
-        popt_y, _ = optimize.curve_fit(gaussian, self.yaxis, self.line_y, p0=[100,self.c_y,100])
+        try:
+            popt_x, _ = optimize.curve_fit(gaussian, self.xaxis, self.line_x, p0=[100,self.c_x,100])
+            popt_y, _ = optimize.curve_fit(gaussian, self.yaxis, self.line_y, p0=[100,self.c_y,100])
+        except RuntimeError:
+            popt_x = [100,self.c_x,100]
+            popt_y = [100,self.c_y,100]
         return popt_x, popt_y
     
     def show(self, aoe=None):
