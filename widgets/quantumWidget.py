@@ -211,7 +211,6 @@ class QuantumWidget (QWidget):
                 self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
-            
 
 
 if __name__=="__main__":

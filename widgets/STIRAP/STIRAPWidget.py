@@ -80,8 +80,8 @@ class STIRAP_gui (QuantumWidget):
 
         # np.savetxt(self.datafile, np.transpose([self.rplastdata1, self.rplastdata2]),  fmt='%.6e', header=header)
         np.savez_compressed(os.path.join(todaydatadir, nowformated), 
-                            CH1_OD=self.rplastdata1, 
-                            CH2_Depump=self.rplastdata2,
+                            CH1_OD=self.last_data1_OD, 
+                            CH2_Depump=self.last_data2_OD,
                             CH1_Sigma = self.last_data1_Sigma,
                             CH2_Sigma = self.last_data2_Sigma,
                             CH1_Pi = self.last_data1_Pi,
@@ -258,10 +258,10 @@ class STIRAP_gui (QuantumWidget):
         times_Sigma = np.arange(0, len(data1_Sigma) / self.rp_Sigma.sampling_rate / self.rp_Sigma.decimation, 1. / self.rp_Sigma.sampling_rate / self.rp_Sigma.decimation) * 1e6
         times_Pi = np.arange(0, len(data1_Pi) / self.rp_Pi.sampling_rate / self.rp_Pi.decimation, 1. / self.rp_Pi.sampling_rate / self.rp_Pi.decimation) * 1e6
         self.rptimes = times_OD
-        data = [data1_OD, 
-                data2_OD, 
-                data1_Sigma, 
-                data2_Sigma, 
+        data = [data1_OD,
+                data2_OD,
+                data1_Sigma,
+                data2_Sigma,
                 data1_Sigma + data2_Sigma,
                 data1_Pi,
                 ]
