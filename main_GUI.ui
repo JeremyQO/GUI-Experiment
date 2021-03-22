@@ -55,6 +55,7 @@
     <addaction name="actionPGC"/>
     <addaction name="actionTemperature"/>
     <addaction name="actionOD"/>
+    <addaction name="actionSTIRAP"/>
     <addaction name="separator"/>
     <addaction name="actionConfigure"/>
    </widget>
@@ -112,6 +113,11 @@
   <action name="actionConfigure">
    <property name="text">
     <string>Configure</string>
+   </property>
+  </action>
+  <action name="actionSTIRAP">
+   <property name="text">
+    <string>STIRAP</string>
    </property>
   </action>
  </widget>

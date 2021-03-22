@@ -164,3 +164,13 @@ class PlotWindow(QDialog):
 
         # refresh canvas
         self.canvas.draw()
+        
+    def plot_traces(self, data, truthiness, labels):
+        self.figure.clear()
+        for i, el in enumerate(data):
+            if truthiness[i] is True:
+                plt.plot(el, label=labels[i])
+        plt.legend()
+        plt.tight_layout()
+        # refresh canvas
+        self.canvas.draw()

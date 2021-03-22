@@ -12,6 +12,7 @@ import os
 from widgets.pgc import pgcWidget
 from widgets.temperature import temperatureWidget
 from widgets.od import ODWidget
+from widgets.STIRAP import STIRAPWidget
 from widgets.config_OPX import configWidget
 import sys
 sys._excepthook = sys.excepthook
@@ -46,12 +47,22 @@ class Experiment_gui(QMainWindow):
         self.actionTemperature.triggered.connect(self.temperature_open_tab)
         self.actionOD.triggered.connect(self.OD_open_tab)
         self.actionConfigure.triggered.connect(self.conf_open_tab)
+        self.actionSTIRAP.triggered.connect(self.STIRAP_open_tab)
 
         # Start Threadpool for multi-threading 
         self.simulation = simulation
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+
+    def STIRAP_open_tab(self):
+        if not hasattr(self, 'OD_tab'):
+            self.STIRAP_tab = STIRAPWidget.STIRAP_gui(Parent=self, simulation=self.simulation)
+            self.STIRAP_tab.threadpool = self.threadpool
+            self.tabwidget.addTab(self.STIRAP_tab,"STIRAP")
+            if self.OPX is not None :
+                self.STIRAP_tab.enable_interface(True)
+                self.STIRAP_tab.OPX = self.OPX
 
     def pgc_open_tab(self):
         if not hasattr(self, 'pgc_tab'):

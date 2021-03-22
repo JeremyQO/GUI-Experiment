@@ -143,7 +143,7 @@ class Scpi (object):
     
 
 class Redpitaya (Scpi):
-    def __init__(self, host, timeout=None, port=5000, decimation=1, trigger_source='EXT_PE'):
+    def __init__(self, host, timeout=None, port=5000, decimation=8, trigger_source='EXT_PE'):
         super().__init__(host, timeout, port)
         self.decimation = decimation
         self.set_decimation(decimation)
@@ -168,7 +168,7 @@ class Redpitaya (Scpi):
         """Set decimation factor."""
         options = (1, 8, 64, 1024, 8192, 65536)
         if d in options:
-            self.set_triggerDelay(37500 * d)
+            self.set_triggerDelay(40000 * d)
             self.decimation = d
             return self.tx_txt('ACQ:DEC '+str(d))
         else:
