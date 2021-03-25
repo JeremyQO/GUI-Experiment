@@ -16,7 +16,7 @@ from PyQt5.QtCore import QThreadPool
 from datetime import date, datetime
 from widgets.worker import Worker
 try:
-    from calculate_OD import OD_exp
+    from functions.od.calculate_OD import OD_exp
 except:
     print("Run without calculate OD")
 if matplotlib.get_backend()!='Qt5Agg':

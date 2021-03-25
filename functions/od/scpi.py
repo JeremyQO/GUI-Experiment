@@ -11,6 +11,7 @@ import socket
 import numpy as np
 import time
 
+
 class Scpi (object):
     """SCPI class used to access Red Pitaya over an IP network."""
     delimiter = '\r\n'
@@ -43,11 +44,11 @@ class Scpi (object):
         """Close IP connection."""
         self.__del__()
 
-    def rx_txt(self, chunksize = 4096):
+    def rx_txt(self, chunksize=4096):
         """Receive text string and return it after removing the delimiter."""
         msg = ''
         while 1:
-            chunk = self._socket.recv(chunksize + len(self.delimiter)).decode('utf-8') # Receive chunk size of 2^n preferably
+            chunk = self._socket.recv(chunksize + len(self.delimiter)).decode('utf-8')  # Receive chunk size of 2^n preferably
             msg += chunk
             if (len(chunk) and chunk[-2:] == self.delimiter):
                 break
@@ -299,9 +300,9 @@ def acquireHomodyne(rp, s):
         data.append(d)
         time.sleep(0.01)
         print(i)
-    if s==1:
+    if s == 1:
         np.savetxt("homodyne_electronics_CH1.txt", data)
-    if s==2:
+    if s == 2:
         np.savetxt("homodyne_electronics_CH2.txt", data)
 
 
@@ -310,31 +311,3 @@ if __name__ == "__main__":
     rp2 = Redpitaya("rp-f08c22.local")
     rp3 = Redpitaya("rp-f0629e.local")  # OD
 
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

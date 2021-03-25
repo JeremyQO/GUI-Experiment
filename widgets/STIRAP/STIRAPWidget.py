@@ -60,6 +60,7 @@ class STIRAP_gui (QuantumWidget):
         self.last_data1_Pi, self.last_data2_Pi = [], []
         self.rptimes = []
         self.datafile = None
+        self.display_traces_worker()
 
     def saveCurrentDataClicked(self):
         now = datetime.now()

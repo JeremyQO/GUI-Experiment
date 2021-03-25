@@ -16,10 +16,14 @@ from widgets.STIRAP import STIRAPWidget
 from widgets.config_OPX import configWidget
 import sys
 sys._excepthook = sys.excepthook
+
+
 def exception_hook(exctype, value, traceback):
     print(exctype, value, traceback)
     sys._excepthook(exctype, value, traceback)
     sys.exit(1)
+
+
 sys.excepthook = exception_hook
 
 
