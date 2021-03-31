@@ -60,7 +60,6 @@ class STIRAP_gui (QuantumWidget):
         self.last_data1_Pi, self.last_data2_Pi = [], []
         self.rptimes = []
         self.datafile = None
-        self.display_traces_worker()
 
     def saveCurrentDataClicked(self):
         now = datetime.now()
@@ -123,15 +122,15 @@ class STIRAP_gui (QuantumWidget):
         tresholdlevel = od.min()+dy/2
         a, b, d = 0, 0, 0
         for i, el in enumerate(od):
-            if el>=tresholdlevel:
+            if el >= tresholdlevel:
                 a = int(i-15)
                 break
         for i, el in enumerate(od[a+100:]):
-            if el<=tresholdlevel:
+            if el <= tresholdlevel:
                 d = int(i)
                 break
         for i, el in enumerate(od[a+d+400:]):
-            if el>=tresholdlevel:
+            if el >= tresholdlevel:
                 b = int(i+a+d+400 - 15)
                 break
         res = optimize.minimize(self.odexp.tominimizeNat, np.array([b]), args=(a, d, od))
@@ -245,16 +244,20 @@ class STIRAP_gui (QuantumWidget):
         # self.print_to_dialogue("OD = %.2f"%(OD))
 
     def display_traces_worker(self):
-        worker = Worker(self.display_traces)
+        worker = Worker(self.display_traces_loop)
         self.threadpool.start(worker)
+
+    def display_traces_loop(self, progress_callback):
+        while True:
+            self.display_traces()
 
     def display_traces(self):
         data1_OD, data2_OD = self.rp_OD.get_traces()
         data1_Sigma, data2_Sigma = self.rp_Sigma.get_traces()
         data1_Pi, data2_Pi = self.rp_Pi.get_traces()
-        self.last_data1_OD, self.last_data2_OD = self.data1_OD, self.data2_OD
-        self.last_data1_Sigma, self.last_data2_Sigma = self.data1_Sigma, self.data2_Sigma
-        self.last_data1_Pi, self.last_data2_Pi = self.data1_Pi, self.data2_Pi
+        self.last_data1_OD, self.last_data2_OD = data1_OD, data2_OD
+        self.last_data1_Sigma, self.last_data2_Sigma = data1_Sigma, data2_Sigma
+        self.last_data1_Pi, self.last_data2_Pi = data1_Pi, data2_Pi
         times_OD = np.arange(0, len(data1_OD) / self.rp_OD.sampling_rate / self.rp_OD.decimation, 1. / self.rp_OD.sampling_rate / self.rp_OD.decimation) * 1e6
         times_Sigma = np.arange(0, len(data1_Sigma) / self.rp_Sigma.sampling_rate / self.rp_Sigma.decimation, 1. / self.rp_Sigma.sampling_rate / self.rp_Sigma.decimation) * 1e6
         times_Pi = np.arange(0, len(data1_Pi) / self.rp_Pi.sampling_rate / self.rp_Pi.decimation, 1. / self.rp_Pi.sampling_rate / self.rp_Pi.decimation) * 1e6
@@ -263,7 +266,7 @@ class STIRAP_gui (QuantumWidget):
                 data2_OD,
                 data1_Sigma,
                 data2_Sigma,
-                data1_Sigma + data2_Sigma,
+                np.array(data1_Sigma) + np.array(data2_Sigma),
                 data1_Pi,
                 ]
         truthiness = [self.checkBox_OD.isChecked(), 
@@ -309,18 +312,19 @@ class STIRAP_gui (QuantumWidget):
             self.print_to_dialogue("Couldn't connect to Red Pitaya OD")
             
         try:
-            self.rp_sigma = scpi.Redpitaya("rp-f08c22.local")
+            self.rp_Sigma = scpi.Redpitaya("rp-f08a95.local")
             self.print_to_dialogue("Connected to Red Pitaya Sigma")
         except TypeError:
             self.print_to_dialogue("Couldn't connect to Red Pitaya Sigma")
             
         try:
-            self.rp_pi = scpi.Redpitaya("rp-f08a95.local")
+            self.rp_Pi = scpi.Redpitaya("rp-f08c22.local")
             self.print_to_dialogue("Connected to Red Pitaya Pi")
         except TypeError:
             self.print_to_dialogue("Couldn't connect to Red Pitaya Pi")
         
         self.connectOPX()
+        self.display_traces_worker()
 
 
 if __name__ == "__main__":

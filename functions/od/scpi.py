@@ -144,9 +144,10 @@ class Scpi (object):
     
 
 class Redpitaya (Scpi):
-    def __init__(self, host, timeout=None, port=5000, decimation=8, trigger_source='EXT_PE'):
+    def __init__(self, host, timeout=None, port=5000, decimation=8, trigger_delay=-40000, trigger_source='EXT_PE'):
         super().__init__(host, timeout, port)
         self.decimation = decimation
+        self.trigger_delay = trigger_delay
         self.set_decimation(decimation)
         print(self.idn_q())
         print("Decimation is set to " + self.get_decimation())
@@ -156,7 +157,7 @@ class Redpitaya (Scpi):
         print("Trigger status is " + self.get_triggerStatus())
         self.set_averaging('OFF')
         print("Averaging mode is " + self.get_averaging())
-        self.set_triggerDelay(-40000*decimation)
+        self.set_triggerDelay(trigger_delay*decimation)
         print("Trigger delay at %s ns" % (self.get_triggerDelay()))
         self.set_triggerLevel(1000)
         print("Trigger level at %.2f mV" % (float(self.get_triggerLevel())*1000))
@@ -218,7 +219,7 @@ class Redpitaya (Scpi):
     
     def set_triggerLevel(self, lvl):
         """Set trigger level in V."""
-        return self.tx_txt('ACQ:TRIG:LEV '+ str(lvl))
+        return self.tx_txt('ACQ:TRIG:LEV '+ str(lvl) + ' mV')
     
     def get_data(self,start, end, source):
         return self.txrx_txt('ACQ:SOUR%i:GET:DATA:%i:%i?'%(int(source), int(start), int(end)))
@@ -293,21 +294,75 @@ class Redpitaya (Scpi):
         self.tx_txt('OUTPUT%s:STATE ON' % output)
 
 
-def acquireHomodyne(rp, s):
-    data = []
-    for i in range(100):
-        d = rp.get_fullbufferFormated(s)
-        data.append(d)
-        time.sleep(0.01)
-        print(i)
-    if s == 1:
-        np.savetxt("homodyne_electronics_CH1.txt", data)
-    if s == 2:
-        np.savetxt("homodyne_electronics_CH2.txt", data)
+# def acquireHomodyne(rp, s):
+#     data = []
+#     for i in range(100):
+#         d = rp.get_fullbufferFormated(s)
+#         data.append(d)
+#         time.sleep(0.01)
+#         print(i)
+#     if s == 1:
+#         np.savetxt("homodyne_electronics_CH1.txt", data)
+#     if s == 2:
+#         np.savetxt("homodyne_electronics_CH2.txt", data)
+
+class redPitayaCluster :
+    def __init__(self):
+        trigger_delay = -40000
+        decimation = 8
+        self.Sigma = Redpitaya("rp-f08a95.local", trigger_delay=trigger_delay, decimation=decimation)  # sigma +/-
+        self.Pi = Redpitaya("rp-f08c22.local", trigger_delay=trigger_delay, decimation=decimation)  # Pi
+        self.OD = Redpitaya("rp-f0629e.local", trigger_delay=trigger_delay, decimation=decimation)  # OD
+        self.rplist = [self.Sigma, self.Pi, self.OD]
+
+    def set_triggerDelay(self, t):
+        for rp in self.rplist:
+            rp.set_triggerDelay(t)
+
+    def set_decimation(self, d):
+        for rp in self.rplist:
+            rp.set_decimation(d)
+        self.set_triggerDelay(rp.trigger_delay * d)
+
+    def get_tracesSlow(self):
+        data1_OD, data2_OD = self.OD.get_traces()
+        data1_Sigma, data2_Sigma = self.Sigma.get_traces()
+        data1_Pi, data2_Pi = self.Pi.get_traces()
+        data = [data1_OD,
+                data2_OD,
+                data1_Sigma,
+                data2_Sigma,
+                np.array(data1_Sigma) + np.array(data2_Sigma),
+                data1_Pi,
+                ]
+        return data
+
+    # def get_traces(self):
+    #     for el in self.rplist:
+    #         el.start_acquisition()
+    #         el.set_triggerSource(el.trigger_source)
+    #     while 1:
+    #         self.rplist[0].tx_txt('ACQ:TRIG:STAT?')
+    #         if self.rplist[0].rx_txt() == 'TD':
+    #             break
+    #
+    #     self.tx_txt('ACQ:SOUR%i:DATA?' % (1))
+    #     buff_string = self.rx_txt()
+    #     buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+    #     buff1 = list(map(float, buff_string))
+    #
+    #     self.tx_txt('ACQ:SOUR%i:DATA?' % (2))
+    #     buff_string = self.rx_txt()
+    #     buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+    #     buff2 = list(map(float, buff_string))
+    #
+    #     self.sampling_rate = (len(buff1) / 13 * 100000) / self.decimation
+    #     return buff1, buff2
 
 
 if __name__ == "__main__":
-    rp1 = Redpitaya("rp-f08a95.local")
-    rp2 = Redpitaya("rp-f08c22.local")
-    rp3 = Redpitaya("rp-f0629e.local")  # OD
+    # rp1 = Redpitaya("rp-f08a95.local")  # sigma +/-
+    # rp2 = Redpitaya("rp-f08c22.local")
+    # rp3 = Redpitaya("rp-f0629e.local")  # OD
+    rp = redPitayaCluster()
 

@@ -244,7 +244,7 @@ class OD_gui (QuantumWidget):
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to Red Pitaya...")
         try:
-            self.rp = scpi.Redpitaya("132.77.55.19", decimation=self.decimation)
+            self.rp = scpi.Redpitaya("rp-f0629e.local", decimation=self.decimation)
             self.print_to_dialogue("Connected to Red Pitaya")
         except TypeError:
             self.print_to_dialogue("Couldn't connect to Red Pitaya")

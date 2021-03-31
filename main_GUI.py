@@ -132,11 +132,13 @@ class Experiment_gui(QMainWindow):
                 del self.pgc_tab
         self.tabwidget.removeTab(index)
 
-if __name__=="__main__":
+
+if __name__ == "__main__":
     import sys
     app = QApplication([])
-    simulation = False if os.getlogin()=='orelb' else True
+    simulation = False if os.getlogin() == 'orelb' else True
     window = Experiment_gui(simulation=simulation)
     window.show()
     app.exec_()
     # sys.exit(app.exec_())
+

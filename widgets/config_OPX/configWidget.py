@@ -15,7 +15,8 @@ Step 2: Add possibility to add elements/pulses/waveforms...
 from PyQt5 import uic
 from PyQt5.QtWidgets import QApplication, QWidget
 import os
-from widgets.config_OPX.Config import config
+# from widgets.config_OPX.Config import config
+from OPXcontrol.Config_v2 import config
 import sys
 import json
 sys._excepthook = sys.excepthook

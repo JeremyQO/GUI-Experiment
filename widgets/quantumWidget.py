@@ -20,7 +20,7 @@ from widgets.worker import Worker
 import widgets.temperature.dataplot as dataplot
 from pyqtconsole.console import PythonConsole
 try:
-    from OPXcontrol.OPX_control_New_v1 import OPX
+    from OPXcontrol.OPX_control_New_v2 import OPX
 except:
     print("Could not load pgc_macro_with_OD")
 
@@ -60,6 +60,7 @@ class QuantumWidget (QWidget):
         self.frame_parameters.checkBox_Imaging_ON.clicked.connect(self.Imaging_switch_connect)
         self.frame_parameters.checkBox_OD_ON.clicked.connect(self.OD_switch_connect)
         self.frame_parameters.checkBox_Depump_ON.clicked.connect(self.Depump_switch_connect)
+        self.frame_parameters.checkBox_STIRAP_ON.clicked.connect(self.STIRAP_switch_connect)
         self.frame_parameters.pushButton_Update_FPGCAmp.clicked.connect(self.Update_FPGCAmp_connect)
         self.frame_parameters.pushButton_AOM_0_AMP.clicked.connect(self.update_fountain_AOM_0_amplitude_connect)
         self.frame_parameters.pushButton_AOM_P_AMP.clicked.connect(self.update_fountain_AOM_P_amplitude_connect)
@@ -104,6 +105,9 @@ class QuantumWidget (QWidget):
         
     def Depump_switch_connect(self):
         self.OPX.Depump_switch(self.frame_parameters.checkBox_Depump_ON.isChecked())
+
+    def STIRAP_switch_connect(self):
+        self.OPX.STIRAP_switch(self.frame_parameters.checkBox_STIRAP_ON.isChecked())
 
     def FinalPGCFreq_connect(self):
         f = self.frame_parameters.doubleSpinBox_FinalPGCFreq.value()
