@@ -146,6 +146,7 @@ class Scpi (object):
 class Redpitaya (Scpi):
     def __init__(self, host, timeout=None, port=5000, decimation=8, trigger_delay=-40000, trigger_source='EXT_PE'):
         super().__init__(host, timeout, port)
+        self.sampling_rate = 125e6
         self.decimation = decimation
         self.trigger_delay = trigger_delay
         self.set_decimation(decimation)
@@ -274,7 +275,7 @@ class Redpitaya (Scpi):
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff2 = list(map(float, buff_string))
 
-        self.sampling_rate = (len(buff1) / 13 * 100000) / self.decimation
+        self.sampling_rate = (len(buff1) / 12.5 * 100000) / self.decimation
         return buff1, buff2
 
     def get_fullbufferFormated(self, s):
@@ -307,22 +308,29 @@ class Redpitaya (Scpi):
 #         np.savetxt("homodyne_electronics_CH2.txt", data)
 
 class redPitayaCluster :
-    def __init__(self):
-        trigger_delay = -40000
-        decimation = 8
+    def __init__(self, trigger_delay=-40000, decimation=8):
         self.Sigma = Redpitaya("rp-f08a95.local", trigger_delay=trigger_delay, decimation=decimation)  # sigma +/-
         self.Pi = Redpitaya("rp-f08c22.local", trigger_delay=trigger_delay, decimation=decimation)  # Pi
-        self.OD = Redpitaya("rp-f0629e.local", trigger_delay=trigger_delay, decimation=decimation)  # OD
-        self.rplist = [self.Sigma, self.Pi, self.OD]
+        self.OD = Redpitaya("rp-f0629e.local", trigger_delay=trigger_delay, decimation=decimation, trigger_source='EXT_NE')  # OD
+        self.rplist = [self.OD, self.Sigma, self.Pi]
+        self.triggerDelay = trigger_delay
+        self.decimation = decimation
+        self.sampling_rate = 125e6
 
     def set_triggerDelay(self, t):
         for rp in self.rplist:
             rp.set_triggerDelay(t)
+            self.triggerDelay = t
 
     def set_decimation(self, d):
         for rp in self.rplist:
             rp.set_decimation(d)
-        self.set_triggerDelay(rp.trigger_delay * d)
+        # self.set_triggerDelay(self.triggerDelay / d)
+        self.decimation = d
+
+    def get_triggerDelay(self):
+        """Get trigger delay in ns."""
+        return [redp.get_triggerDelay() for redp in self.rplist]
 
     def get_tracesSlow(self):
         data1_OD, data2_OD = self.OD.get_traces()
@@ -337,27 +345,32 @@ class redPitayaCluster :
                 ]
         return data
 
-    # def get_traces(self):
-    #     for el in self.rplist:
-    #         el.start_acquisition()
-    #         el.set_triggerSource(el.trigger_source)
-    #     while 1:
-    #         self.rplist[0].tx_txt('ACQ:TRIG:STAT?')
-    #         if self.rplist[0].rx_txt() == 'TD':
-    #             break
-    #
-    #     self.tx_txt('ACQ:SOUR%i:DATA?' % (1))
-    #     buff_string = self.rx_txt()
-    #     buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-    #     buff1 = list(map(float, buff_string))
-    #
-    #     self.tx_txt('ACQ:SOUR%i:DATA?' % (2))
-    #     buff_string = self.rx_txt()
-    #     buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-    #     buff2 = list(map(float, buff_string))
-    #
-    #     self.sampling_rate = (len(buff1) / 13 * 100000) / self.decimation
-    #     return buff1, buff2
+    def get_traces(self):
+        for el in self.rplist:
+            el.start_acquisition()
+            el.set_triggerSource(el.trigger_source)
+        while 1:
+            self.rplist[0].tx_txt('ACQ:TRIG:STAT?')
+            if self.rplist[0].rx_txt() == 'TD':
+                break
+
+        data = []
+        for el in self.rplist:
+            el.tx_txt('ACQ:SOUR%i:DATA?' % (1))
+            buff_string = el.rx_txt()
+            buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+            buff1 = list(map(float, buff_string))
+            data.append(buff1)
+            el.tx_txt('ACQ:SOUR%i:DATA?' % (2))
+            buff_string = el.rx_txt()
+            buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+            buff2 = list(map(float, buff_string))
+            data.append(buff2)
+
+        self.bufferDuration = (len(data[0]) / self.sampling_rate) * self.rplist[0].decimation
+        data[5] = data[4]
+        data[4] = np.array(data[2]) + np.array(data[3])
+        return data
 
 
 if __name__ == "__main__":

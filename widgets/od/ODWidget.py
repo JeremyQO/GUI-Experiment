@@ -156,7 +156,7 @@ class OD_gui (QuantumWidget):
             odtime = self.doubleSpinBox_ODtimes.value()
             self.OPX.MeasureOD(odtime)
         # data = self.rp.get_trace(channel=2)
-        data1, data2 = self.rp.get_traces()
+        data2, data1 = self.rp.get_traces()
         self.rplastdataOD1, self.rplastdataOD2 = data1, data2
         self.rplastdata1, self.rplastdata2 = data1, data2
         times = np.arange(0, len(data1) / self.rp.sampling_rate, 1. / self.rp.sampling_rate) * 1e6
@@ -216,7 +216,7 @@ class OD_gui (QuantumWidget):
         if singleshot:
             self.OPX.MeasureNatoms(0)
         # data = self.rp.get_trace(channel=1)
-        data1, data2 = self.rp.get_traces()
+        data2, data1 = self.rp.get_traces()
         self.rplastdataNat1, self.rplastdataNat2 = data1, data2
         self.rplastdata1, self.rplastdata2 = data1, data2
         times = np.arange(0, len(data1) / self.rp.sampling_rate, 1. / self.rp.sampling_rate) * 1e6

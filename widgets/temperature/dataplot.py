@@ -80,6 +80,27 @@ class PlotWindow(QDialog):
         plt.tight_layout()
         self.canvas.draw()
 
+    def plot_traces(self, data, time, truthiness, labels, autoscale=True):
+        ymin, ymax = plt.ylim()
+        xmin, xmax = plt.xlim()
+        self.figure.clear()
+        colors = ['b', 'g', 'r', 'c', 'k', 'm']
+        for i, el in enumerate(data):
+            if truthiness[i]:
+                plt.plot(time, el, color=colors[i], label=labels[i])
+
+        if not autoscale:
+            plt.ylim(ymin, ymax)
+            plt.xlim(xmin, xmax)
+
+        plt.xlabel('Time ($\mu$s)')
+        plt.ylabel('Voltage (V)')
+        plt.legend()
+        # plt.legend(loc='upper right')
+        plt.tight_layout()
+        # refresh canvas
+        self.canvas.draw()
+
     def plotDataPGC(self,im, axSigma = None, aoe=None):
 
         # print(self.xdata)
@@ -165,14 +186,4 @@ class PlotWindow(QDialog):
         # refresh canvas
         self.canvas.draw()
         
-    def plot_traces(self, data, truthiness, labels):
-        self.figure.clear()
-        for i, el in enumerate(data):
-            if truthiness[i]:
-                plt.plot(el, label=labels[i])
-        # plt.legend()
-
-        plt.tight_layout()
-        # refresh canvas
-        self.canvas.draw()
 

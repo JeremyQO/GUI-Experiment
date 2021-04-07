@@ -115,14 +115,21 @@
             <bool>true</bool>
            </property>
            <property name="text">
-            <string>iPython Console</string>
+            <string>iPython</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="checkBox_sequence">
+           <property name="text">
+            <string>Sequence</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="checkBox_plotAutoscale">
            <property name="text">
-            <string>Plot Autoscale</string>
+            <string>Autoscale</string>
            </property>
            <property name="checked">
             <bool>true</bool>
@@ -133,6 +140,9 @@
           <widget class="QCheckBox" name="checkBox_OD">
            <property name="text">
             <string>OD</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -145,7 +155,10 @@
             </size>
            </property>
            <property name="text">
-            <string>Repump</string>
+            <string>Depump</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -163,6 +176,9 @@
            <property name="text">
             <string>CH1</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
@@ -175,6 +191,9 @@
            </property>
            <property name="text">
             <string>CH2</string>
+           </property>
+           <property name="checked">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
@@ -189,12 +208,18 @@
            <property name="text">
             <string>CH1 + CH2</string>
            </property>
+           <property name="checked">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="checkBox_Pi">
            <property name="text">
             <string>Pi</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -216,7 +241,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>90</height>
+          <height>120</height>
          </size>
         </property>
         <property name="frameShape">
@@ -242,6 +267,22 @@
           <layout class="QVBoxLayout" name="verticalLayout_terminal"/>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QFrame" name="frame_STIRAP_sequence">
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>120</height>
+         </size>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Raised</enum>
+        </property>
        </widget>
       </item>
      </layout>
@@ -310,13 +351,6 @@
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="1" column="2">
-             <widget class="QPushButton" name="pushButton_update">
-              <property name="text">
-               <string>Update</string>
-              </property>
-             </widget>
-            </item>
             <item row="1" column="1">
              <widget class="QDoubleSpinBox" name="doubleSpinBox_frequency">
               <property name="decimals">
@@ -330,10 +364,10 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1" colspan="2">
-             <widget class="QLabel" name="label">
+            <item row="1" column="2">
+             <widget class="QPushButton" name="pushButton_update">
               <property name="text">
-               <string>Probe Detuning (MHz) - IF_TOP2 (AOM_2-3')</string>
+               <string>Update</string>
               </property>
              </widget>
             </item>
@@ -344,10 +378,85 @@
               </property>
              </widget>
             </item>
+            <item row="0" column="1" colspan="2">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Probe Detuning (MHz) - IF_TOP2 (AOM_2-3')</string>
+              </property>
+             </widget>
+            </item>
             <item row="2" column="2">
              <widget class="QPushButton" name="pushButton_saveCurrentData">
               <property name="text">
                <string>Save Current Data</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>Decimation:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="2">
+             <widget class="QPushButton" name="pushButton_updateTriggerDelay">
+              <property name="text">
+               <string>Update</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Trigger Delay:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1">
+             <widget class="QLineEdit" name="lineEdit_triggerDelay"/>
+            </item>
+            <item row="4" column="1">
+             <widget class="QComboBox" name="comboBox_decimation">
+              <property name="currentIndex">
+               <number>1</number>
+              </property>
+              <item>
+               <property name="text">
+                <string>1</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>8</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>64</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>1024</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>8192</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>65536</string>
+               </property>
+              </item>
+             </widget>
+            </item>
+            <item row="4" column="2">
+             <widget class="QPushButton" name="pushButton_updateDecimation">
+              <property name="text">
+               <string>Update</string>
               </property>
              </widget>
             </item>

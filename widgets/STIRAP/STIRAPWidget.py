@@ -5,6 +5,8 @@ Created on Sun Jan 10 12:17:08 2021
 @author: Jeremy Raskop
 """
 
+from PyQt5 import uic
+import time
 from functions.od import scpi
 from scipy import optimize
 import os
@@ -30,7 +32,9 @@ class STIRAP_gui (QuantumWidget):
         if Parent is not None:
             self.Parent = Parent
         ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
+        ui_stirap_sequence = os.path.join(os.path.dirname(__file__), "STIRAP_sequence.ui")  # if ui is None else ui
         super().__init__(ui, simulation)
+        uic.loadUi(ui_stirap_sequence, self.frame_STIRAP_sequence)
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
@@ -43,9 +47,13 @@ class STIRAP_gui (QuantumWidget):
         self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
         self.pushButton_update.clicked.connect(self.change_probe_frequency)
         self.pushButton_Cursor.clicked.connect(self.positionNatCursors)
+        self.pushButton_updateDecimation.clicked.connect(self.updateDecimation)
+        self.pushButton_updateTriggerDelay.clicked.connect(self.updateTriggerDelay)
+        self.checkBox_sequence.clicked.connect(self.showHideSequence)
         # self.pushButton_CursorsOD.clicked.connect(self.positionNatODCursors)
         self.pushButton_saveCurrentData.clicked.connect(self.saveCurrentDataClicked)
         self.enable_interface(False)
+        self.frame_STIRAP_sequence.hide()
 
         # self.decimation = 8
         self.cursorsOD = list(np.array([145, 312, 535, 705]))
@@ -60,6 +68,22 @@ class STIRAP_gui (QuantumWidget):
         self.last_data1_Pi, self.last_data2_Pi = [], []
         self.rptimes = []
         self.datafile = None
+
+    def showHideSequence(self):
+        if self.checkBox_sequence.isChecked():
+            self.frame_STIRAP_sequence.show()
+        else:
+            self.frame_STIRAP_sequence.hide()
+
+    def updateDecimation(self):
+        dec = int(self.comboBox_decimation.currentText())
+        self.rp.set_decimation(dec)
+        self.print_to_dialogue("Decimation changed to %i" % dec)
+
+    def updateTriggerDelay(self):
+        t = int(self.lineEdit_triggerDelay.text())
+        self.rp.set_triggerDelay(t)
+        self.print_to_dialogue("Trigger delay changed to %i" % t)
 
     def saveCurrentDataClicked(self):
         now = datetime.now()
@@ -82,10 +106,10 @@ class STIRAP_gui (QuantumWidget):
         np.savez_compressed(os.path.join(todaydatadir, nowformated), 
                             CH1_OD=self.last_data1_OD, 
                             CH2_Depump=self.last_data2_OD,
-                            CH1_Sigma = self.last_data1_Sigma,
-                            CH2_Sigma = self.last_data2_Sigma,
-                            CH1_Pi = self.last_data1_Pi,
-                            CH2_Pi = self.last_data2_Pi,
+                            CH1_Sigma=self.last_data1_Sigma,
+                            CH2_Sigma=self.last_data2_Sigma,
+                            CH1_Pi=self.last_data1_Pi,
+                            CH2_Pi=self.last_data2_Pi,
                             times=self.rptimes, 
                             meta=meta
                             )
@@ -144,8 +168,12 @@ class STIRAP_gui (QuantumWidget):
             self.print_to_dialogue("Failed to find optimal position for cursors")
 
     def enable_interface(self, v):
-        self.checkBox_OD.setEnabled(v)
-        self.checkBox_Repump.setEnabled(v)
+        # self.checkBox_OD.setEnabled(v)
+        # self.checkBox_Repump.setEnabled(v)
+        # self.checkBox_CH1.setEnabled(v)
+        # self.checkBox_CH2.setEnabled(v)
+        # self.checkBox_CH1CH2Sum.setEnabled(v)
+        # self.checkBox_Pi.setEnabled(v)
         self.frame_4.setEnabled(v)
         # self.checkBox_parameters.setEnabled(v)
         self.frame_parameters.setEnabled(v)
@@ -252,24 +280,14 @@ class STIRAP_gui (QuantumWidget):
             self.display_traces()
 
     def display_traces(self):
-        data1_OD, data2_OD = self.rp_OD.get_traces()
-        data1_Sigma, data2_Sigma = self.rp_Sigma.get_traces()
-        data1_Pi, data2_Pi = self.rp_Pi.get_traces()
-        self.last_data1_OD, self.last_data2_OD = data1_OD, data2_OD
-        self.last_data1_Sigma, self.last_data2_Sigma = data1_Sigma, data2_Sigma
-        self.last_data1_Pi, self.last_data2_Pi = data1_Pi, data2_Pi
-        times_OD = np.arange(0, len(data1_OD) / self.rp_OD.sampling_rate / self.rp_OD.decimation, 1. / self.rp_OD.sampling_rate / self.rp_OD.decimation) * 1e6
-        times_Sigma = np.arange(0, len(data1_Sigma) / self.rp_Sigma.sampling_rate / self.rp_Sigma.decimation, 1. / self.rp_Sigma.sampling_rate / self.rp_Sigma.decimation) * 1e6
-        times_Pi = np.arange(0, len(data1_Pi) / self.rp_Pi.sampling_rate / self.rp_Pi.decimation, 1. / self.rp_Pi.sampling_rate / self.rp_Pi.decimation) * 1e6
-        self.rptimes = times_OD
-        data = [data1_OD,
-                data2_OD,
-                data1_Sigma,
-                data2_Sigma,
-                np.array(data1_Sigma) + np.array(data2_Sigma),
-                data1_Pi,
-                ]
-        truthiness = [self.checkBox_OD.isChecked(), 
+        # data = self.rp.get_tracesSlow()
+        data = self.rp.get_traces()
+        self.last_data1_OD, self.last_data2_OD = data[0], data[1]
+        self.last_data1_Sigma, self.last_data2_Sigma = data[2], data[3]
+        self.last_data1_Pi, self.last_data2_Pi = data[4], data[5]
+        self.rptimes = np.arange(0, self.rp.bufferDuration, 1. / self.rp.sampling_rate * self.rp.OD.decimation) * 1e6
+        self.rptimes = np.linspace(0, self.rp.bufferDuration, len(self.last_data1_OD)) * 1e6
+        truthiness = [self.checkBox_OD.isChecked(),
                       self.checkBox_Repump.isChecked(),
                       self.checkBox_CH1.isChecked(),
                       self.checkBox_CH2.isChecked(),
@@ -277,7 +295,7 @@ class STIRAP_gui (QuantumWidget):
                       self.checkBox_Pi.isChecked(),
                       ]
         labels = ["OD", "Depump", "CH1", "CH2", "CH1+CH2", "Pi"]
-        self.widgetPlot.plot_traces(data, truthiness, labels)
+        self.widgetPlot.plot_traces(data, self.rptimes, truthiness, labels, autoscale=self.checkBox_plotAutoscale.isChecked())
         if self.checkBox_saveData.isChecked():
             self.saveCurrentDataClicked()
 
@@ -303,28 +321,17 @@ class STIRAP_gui (QuantumWidget):
         self.pushButton_utils_Connect.setEnabled(True)
 
     def utils_connect(self, progress_callback):
-        self.print_to_dialogue("Connecting to Red Pitaya...")
-        
-        try:
-            self.rp_OD = scpi.Redpitaya("rp-f0629e.local")
-            self.print_to_dialogue("Connected to Red Pitaya OD")
-        except TypeError:
-            self.print_to_dialogue("Couldn't connect to Red Pitaya OD")
-            
-        try:
-            self.rp_Sigma = scpi.Redpitaya("rp-f08a95.local")
-            self.print_to_dialogue("Connected to Red Pitaya Sigma")
-        except TypeError:
-            self.print_to_dialogue("Couldn't connect to Red Pitaya Sigma")
-            
-        try:
-            self.rp_Pi = scpi.Redpitaya("rp-f08c22.local")
-            self.print_to_dialogue("Connected to Red Pitaya Pi")
-        except TypeError:
-            self.print_to_dialogue("Couldn't connect to Red Pitaya Pi")
-        
+        self.print_to_dialogue("Connecting to RedPitayas...")
+        trigger_delay = 500000
+        self.lineEdit_triggerDelay.setText(str(trigger_delay))
+        decimation = int(self.comboBox_decimation.currentText())
+        self.rp = scpi.redPitayaCluster(trigger_delay=trigger_delay, decimation=decimation)
+        self.print_to_dialogue("RedPitayas are connected.")
+        time.sleep(0.1)
         self.connectOPX()
         self.display_traces_worker()
+        self.updateTriggerDelay()
+        self.updateDecimation()
 
 
 if __name__ == "__main__":

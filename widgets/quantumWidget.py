@@ -7,6 +7,7 @@ Created on Sun Jan 10 12:17:08 2021
 This class should be used as a parent to all the widgets of the various experiments.
 """
 
+import time
 from PyQt5 import uic
 from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QShortcut
 from PyQt5.QtGui import QKeySequence
@@ -107,7 +108,8 @@ class QuantumWidget (QWidget):
         self.OPX.Depump_switch(self.frame_parameters.checkBox_Depump_ON.isChecked())
 
     def STIRAP_switch_connect(self):
-        self.OPX.STIRAP_switch(self.frame_parameters.checkBox_STIRAP_ON.isChecked())
+        # self.OPX.STIRAP_switch(self.frame_parameters.checkBox_STIRAP_ON.isChecked())
+        self.OPX.STIRAP_operation_switch(self.frame_parameters.checkBox_STIRAP_ON.isChecked())
 
     def FinalPGCFreq_connect(self):
         f = self.frame_parameters.doubleSpinBox_FinalPGCFreq.value()
