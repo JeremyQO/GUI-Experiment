@@ -82,18 +82,19 @@ class OD_gui (QuantumWidget):
         nat = np.array(self.rplastdataNat1)
         dy = nat.max() - nat.min()
         tresholdlevel = nat.min()+dy/2
+        d_threshold = 150  # position before the threshold position on which we want to place the cursor
         a, b, d = 0, 0, 0
         for i, el in enumerate(nat):
             if el>=tresholdlevel:
-                a = int(i-15)
+                a = int(i-d_threshold)
                 break
-        for i, el in enumerate(nat[a+100:]):
+        for i, el in enumerate(nat[a+100+d_threshold:]):
             if el<=tresholdlevel:
                 d = int(i)
                 break
         for i, el in enumerate(nat[a+d+400:]):
             if el>=tresholdlevel:
-                b = int(i+a+d+400 - 15)
+                b = int(i+a+d+400 - d_threshold)
                 break
         res = optimize.minimize(self.odexp.tominimizeNat, np.array([b]), args=(a, d, nat))
         print(res)

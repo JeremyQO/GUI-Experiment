@@ -33,7 +33,8 @@ class OD_exp:
         self.trig2_end = np.where(times < trigger_times[3])[0][-1]
         d1 = np.array(OD_trace[self.trig1_strt:self.trig1_end])
         d2 = np.array(OD_trace[self.trig2_strt:self.trig2_end])
-        s = 75263  # sensitivity in V/W
+        s = 7081.1  # sensitivity in V/W
+        # s = 75263  # sensitivity in V/W
         h = 6.62607004e-34  # planck's constant
         THz = 1e12
         fl = 384.2304844685 * THz  # Laser frequency

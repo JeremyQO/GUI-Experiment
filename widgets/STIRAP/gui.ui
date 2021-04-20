@@ -223,13 +223,6 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_Cursor">
-           <property name="text">
-            <string>Place Cursors</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
@@ -271,6 +264,12 @@
       </item>
       <item>
        <widget class="QFrame" name="frame_STIRAP_sequence">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>150</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
@@ -351,47 +350,6 @@
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="1" column="1">
-             <widget class="QDoubleSpinBox" name="doubleSpinBox_frequency">
-              <property name="decimals">
-               <number>1</number>
-              </property>
-              <property name="minimum">
-               <double>-40.000000000000000</double>
-              </property>
-              <property name="maximum">
-               <double>40.000000000000000</double>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="2">
-             <widget class="QPushButton" name="pushButton_update">
-              <property name="text">
-               <string>Update</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QCheckBox" name="checkBox_saveData">
-              <property name="text">
-               <string>Save All Data</string>
-              </property>
-             </widget>
-            </item>
-            <item row="0" column="1" colspan="2">
-             <widget class="QLabel" name="label">
-              <property name="text">
-               <string>Probe Detuning (MHz) - IF_TOP2 (AOM_2-3')</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="2">
-             <widget class="QPushButton" name="pushButton_saveCurrentData">
-              <property name="text">
-               <string>Save Current Data</string>
-              </property>
-             </widget>
-            </item>
             <item row="3" column="1">
              <widget class="QLabel" name="label_2">
               <property name="text">
@@ -399,27 +357,48 @@
               </property>
              </widget>
             </item>
-            <item row="7" column="2">
+            <item row="9" column="3">
+             <widget class="QCheckBox" name="checkBox_displayNat">
+              <property name="text">
+               <string>Display Nat</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="3">
              <widget class="QPushButton" name="pushButton_updateTriggerDelay">
               <property name="text">
                <string>Update</string>
               </property>
              </widget>
             </item>
-            <item row="6" column="1">
-             <widget class="QLabel" name="label_3">
+            <item row="4" column="3">
+             <widget class="QPushButton" name="pushButton_updateDecimation">
               <property name="text">
-               <string>Trigger Delay:</string>
+               <string>Update</string>
               </property>
              </widget>
             </item>
-            <item row="7" column="1">
+            <item row="2" column="3">
+             <widget class="QPushButton" name="pushButton_saveCurrentData">
+              <property name="text">
+               <string>Save Data Once</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="3">
+             <widget class="QPushButton" name="pushButton_update">
+              <property name="text">
+               <string>Update</string>
+              </property>
+             </widget>
+            </item>
+            <item row="7" column="1" colspan="2">
              <widget class="QLineEdit" name="lineEdit_triggerDelay"/>
             </item>
-            <item row="4" column="1">
+            <item row="4" column="1" colspan="2">
              <widget class="QComboBox" name="comboBox_decimation">
               <property name="currentIndex">
-               <number>1</number>
+               <number>0</number>
               </property>
               <item>
                <property name="text">
@@ -453,11 +432,79 @@
               </item>
              </widget>
             </item>
-            <item row="4" column="2">
-             <widget class="QPushButton" name="pushButton_updateDecimation">
+            <item row="2" column="1" colspan="2">
+             <widget class="QCheckBox" name="checkBox_saveData">
               <property name="text">
-               <string>Update</string>
+               <string>Save All Data</string>
               </property>
+             </widget>
+            </item>
+            <item row="1" column="1" colspan="2">
+             <widget class="QDoubleSpinBox" name="doubleSpinBox_frequency">
+              <property name="decimals">
+               <number>1</number>
+              </property>
+              <property name="minimum">
+               <double>-40.000000000000000</double>
+              </property>
+              <property name="maximum">
+               <double>40.000000000000000</double>
+              </property>
+             </widget>
+            </item>
+            <item row="8" column="1" colspan="2">
+             <widget class="QLabel" name="label_4">
+              <property name="text">
+               <string>Atom Counting:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="6" column="1" colspan="2">
+             <widget class="QLabel" name="label_3">
+              <property name="text">
+               <string>Trigger Delay (us):</string>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="1" colspan="3">
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>Probe Detuning (MHz) - IF_TOP2 (AOM_2-3')</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="2">
+             <widget class="QPushButton" name="pushButton_Cursor">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="text">
+               <string>Place Cursors</string>
+              </property>
+             </widget>
+            </item>
+            <item row="9" column="1">
+             <widget class="QComboBox" name="comboBox_cursors">
+              <item>
+               <property name="text">
+                <string>Sigma</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Pi</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>Depump</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>OD</string>
+               </property>
+              </item>
              </widget>
             </item>
            </layout>

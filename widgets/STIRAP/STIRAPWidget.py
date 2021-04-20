@@ -17,11 +17,12 @@ import matplotlib
 from PyQt5.QtCore import QThreadPool
 from datetime import date, datetime
 from widgets.worker import Worker
+from functions.stirap.calculate_Nat_stirap import NAtoms
 try:
-    from calculate_OD import OD_exp
+    from functions.od.calculate_OD import OD_exp
 except:
     print("Run without calculate OD")
-if matplotlib.get_backend()!='Qt5Agg':
+if matplotlib.get_backend() != 'Qt5Agg':
     matplotlib.use('Qt5Agg')
 
 from widgets.quantumWidget import QuantumWidget
@@ -44,7 +45,7 @@ class STIRAP_gui (QuantumWidget):
         
         self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
         self.pushButton_update.clicked.connect(self.change_probe_frequency)
-        self.pushButton_Cursor.clicked.connect(self.positionNatCursors)
+        self.pushButton_Cursor.clicked.connect(self.positionCursorsList)
         self.pushButton_updateDecimation.clicked.connect(self.updateDecimation)
         self.pushButton_updateTriggerDelay.clicked.connect(self.updateTriggerDelay)
         self.checkBox_sequence.clicked.connect(self.showHideSequence)
@@ -53,7 +54,7 @@ class STIRAP_gui (QuantumWidget):
         self.frame_STIRAP_sequence.hide()
         
         # STIRAP sequence update parameters
-        self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.clicked.connect(self.updateParameters_workers)
+        self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.clicked.connect(self.updateParameters_sequence_workers)
         self.frame_STIRAP_sequence.checkBox_preparation_pi.clicked.connect(self.update_preparation)
         self.frame_STIRAP_sequence.checkBox_preparation_sigma_p.clicked.connect(self.update_preparation)
         self.frame_STIRAP_sequence.checkBox_preparation_sigma_m.clicked.connect(self.update_preparation)
@@ -71,14 +72,19 @@ class STIRAP_gui (QuantumWidget):
         self.frame_STIRAP_sequence.spinBox_pulse_length.editingFinished.connect(self.update_pulse_length)
 
         # self.decimation = 8
-        self.cursorsOD = list(np.array([145, 312, 535, 705]))
-        self.cursorsNat = list(np.array([145, 312, 535, 705]))
-        
+        # self.cursors = list(np.array([145, 312, 535, 705]))
+        self.cursors = []
+
         self.last_data1_OD, self.last_data2_OD = [], []
         self.last_data1_Sigma, self.last_data2_Sigma = [], []
         self.last_data1_Pi, self.last_data2_Pi = [], []
+        self.last_data_CH1CH2Sum, self.last_data_Pi = [], []
         self.rptimes = []
+        self.cursors_data = []
         self.datafile = None
+        # self.enable_interface(True)
+
+        self.odexp = OD_exp()
         
     def update_pulse_length(self):
         duration = self.frame_STIRAP_sequence.spinBox_pulse_length.value()
@@ -99,7 +105,8 @@ class STIRAP_gui (QuantumWidget):
         self.print_to_dialogue("Update T2")
         
     def update_depump12p_onOff (self):
-        self.OPX.STIRAP_2nd_pump_pulses(self.frame_STIRAP_sequence.checkBox_depump12p_onOff.isChecked())
+        v = 1 if self.frame_STIRAP_sequence.checkBox_depump12p_onOff.isChecked() else 0
+        self.OPX.STIRAP_2nd_pump_pulses(v)
 
     def update_depump_amplitude(self):
         amp = self.frame_STIRAP_sequence.doubleSpinBox_depump_amplitude.value()
@@ -132,15 +139,18 @@ class STIRAP_gui (QuantumWidget):
         self.OPX.STIRAP_pump_amplitude(amp)
         self.print_to_dialogue("Updated Preparation Amplitude")
     
-    def updateParameters_workers(self):
-        self.frame_parameters.pushButton_UpdateAll.setEnabled(False)
-        worker = Worker(self.updateParameters)
-        worker.signals.finished.connect(self.updateParameters_done)
+    def updateParameters_sequence_workers(self):
+        self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.setEnabled(False)
+        worker = Worker(self.updateParameters_sequence)
+        worker.signals.finished.connect(self.update_stirap_sequence_done)
         self.threadpool.start(worker)
 
-    def updateParameters(self, progress_callback):
+    def updateParameters_sequence(self, progress_callback):
         self.OPX.update_parameters()
-        self.print_to_dialogue("Paramteters updated")
+
+    def update_stirap_sequence_done(self):
+        self.print_to_dialogue("Parameters updated.")
+        self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.setEnabled(True)
 
     def showHideSequence(self):
         if self.checkBox_sequence.isChecked():
@@ -151,12 +161,13 @@ class STIRAP_gui (QuantumWidget):
     def updateDecimation(self):
         dec = int(self.comboBox_decimation.currentText())
         self.rp.set_decimation(dec)
+        self.lineEdit_triggerDelay.setText(str(int(self.rp.triggerDelay)*1e-3))
         self.print_to_dialogue("Decimation changed to %i" % dec)
 
     def updateTriggerDelay(self):
-        t = int(self.lineEdit_triggerDelay.text())
+        t = int(float(self.lineEdit_triggerDelay.text())*1e3)
         self.rp.set_triggerDelay(t)
-        self.print_to_dialogue("Trigger delay changed to %i" % t)
+        self.print_to_dialogue("Trigger delay changed to %i ns" % t)
 
     def saveCurrentDataClicked(self):
         now = datetime.now()
@@ -187,58 +198,49 @@ class STIRAP_gui (QuantumWidget):
                             meta=meta
                             )
 
-    def positionNatCursors(self):
-        self.alert_box("Turn of the B-field gradient and make sure that the depumper pulses are properly contained within the plot.")
-        nat = np.array(self.rplastdataNat1)
+    def positionCursorsList(self):
+        self.alert_box(
+            "Turn of the B-field gradient and make sure that the pulses are properly contained within the plot.")
+        boxText = str(self.comboBox_cursors.currentText())
+        self.print_to_dialogue("Placing cursors around %s" % boxText)
+        if boxText == "Sigma":
+            dat = np.array(self.last_data_CH1CH2Sum)
+            self.cursors = self.positionCursors(dat)
+        if boxText == "Pi":
+            dat = np.array(self.last_data_Pi)
+            self.cursors = self.positionCursors(dat)
+        if boxText == "Depump":
+            dat = np.array(self.last_data2_OD)
+            self.cursors = self.positionCursors(dat)
+        if boxText == "OD":
+            dat = np.array(self.last_data1_OD)
+            self.cursors = self.positionCursors(dat)
+
+    def positionCursors(self, dat):
+        nat = np.array(dat)
         dy = nat.max() - nat.min()
         tresholdlevel = nat.min()+dy/2
+        d_threshold = 150  # position before the threshold position on which we want to place the cursor
         a, b, d = 0, 0, 0
         for i, el in enumerate(nat):
             if el>=tresholdlevel:
-                a = int(i-15)
+                a = int(i-d_threshold)
                 break
-        for i, el in enumerate(nat[a+100:]):
+        for i, el in enumerate(nat[a+100+d_threshold:]):
             if el<=tresholdlevel:
                 d = int(i)
                 break
         for i, el in enumerate(nat[a+d+400:]):
             if el>=tresholdlevel:
-                b = int(i+a+d+400 - 15)
+                b = int(i+a+d+400 - d_threshold)
                 break
         res = optimize.minimize(self.odexp.tominimizeNat, np.array([b]), args=(a, d, nat))
         print(res)
         b_opt = res.x[0]
-        self.cursorsNat = np.array([a, a + d, b_opt, b_opt + d])/self.rp_OD.sampling_rate*1e6
         print([a, a + d, b_opt, b_opt + d])
         self.print_to_dialogue("Minimized down to Nat = %.0f * 1e3"%(res.fun/1e3))
-
-    def positionNatODCursors(self):
-        self.alert_box("Turn of the B-field gradient and make sure that the OD pulses are properly contained within the plot.")
-        od = np.array(self.rplastdataOD2)
-        dy = od.max() - od.min()
-        tresholdlevel = od.min()+dy/2
-        a, b, d = 0, 0, 0
-        for i, el in enumerate(od):
-            if el >= tresholdlevel:
-                a = int(i-15)
-                break
-        for i, el in enumerate(od[a+100:]):
-            if el <= tresholdlevel:
-                d = int(i)
-                break
-        for i, el in enumerate(od[a+d+400:]):
-            if el >= tresholdlevel:
-                b = int(i+a+d+400 - 15)
-                break
-        res = optimize.minimize(self.odexp.tominimizeNat, np.array([b]), args=(a, d, od))
-        print(res)
-        b_opt = res.x[0]
-        if res.success:
-            self.cursorsOD = np.array([a, a + d, b_opt, b_opt + d])/self.rp_OD.sampling_rate*1e6
-            print([a, a + d, b_opt, b_opt + d])
-            self.print_to_dialogue("Minimized down to Nat = %.0f * 1e3"%(res.fun/1e3))
-        else:
-            self.print_to_dialogue("Failed to find optimal position for cursors")
+        cursors = np.array([a, a + d, b_opt, b_opt + d])/self.rp.sampling_rate*self.rp.decimation*1e6
+        return cursors
 
     def enable_interface(self, v):
         self.frame_4.setEnabled(v)
@@ -249,92 +251,6 @@ class STIRAP_gui (QuantumWidget):
         self.OPX.qm.set_intermediate_frequency("AOM_2-3'",(93 + detuning)*1e6)
         self.print_to_dialogue("Detuning set to %.1f MHz"%(detuning))
 
-    def get_OD_worker(self):
-        worker = Worker(self.get_OD)
-        self.print_to_dialogue("Acquiring OD...")
-        worker.signals.finished.connect(self.get_OD_done)
-        self.threadpool.start(worker)
-
-    def get_OD_done(self):
-        self.print_to_dialogue("OD acquired")
-
-    def get_OD(self, progress_callback, singleshot=True):
-        if singleshot:
-            odtime = self.doubleSpinBox_ODtimes.value()
-            self.OPX.MeasureOD(odtime)
-        data1, data2 = self.rp_OD.get_traces()
-        self.rplastdataOD1, self.rplastdataOD2 = data1, data2
-        self.rplastdata1, self.rplastdata2 = data1, data2
-        times = np.arange(0, len(data1) / self.rp_OD.sampling_rate, 1. / self.rp_OD.sampling_rate) * 1e6
-        self.rptimes = times
-        beamRadius = 200e-6
-        wavelength = 780e-9
-        self.odexp = OD_exp()
-        OD = self.odexp.calculate_OD(beamRadius, times, self.cursorsOD, data2, wavelength)
-        self.widgetPlot.plot_OD(times, data1, data2, self.cursorsOD, autoscale=self.checkBox_plotAutoscale.isChecked())
-        self.print_to_dialogue("OD = %.2f"%(OD))
-        if self.checkBox_saveData.isChecked():
-            self.saveCurrentDataClicked()
-
-    def acquire_OD_worker(self):
-        if self.checkBox_OD.isChecked():
-            worker = Worker(self.acquire_OD)
-            self.print_to_dialogue("Acquiring OD...")
-            worker.signals.finished.connect(self.acquire_OD_done)
-            self.threadpool.start(worker)
-
-    def acquire_OD_done(self):
-        # self.OPX.OD_switch(False)
-        self.print_to_dialogue("Stopped acquiring OD")
-
-    def acquire_OD(self, progress_callback):
-        # self.OPX.OD_switch(True)
-        while self.checkBox_OD.isChecked():
-            self.get_OD(1, singleshot=False)
-
-    def acquire_Nat_worker(self):
-        if self.checkBox_Repump.isChecked():
-            worker = Worker(self.acquire_Nat)
-            self.print_to_dialogue("Acquiring Nat...")
-            worker.signals.finished.connect(self.acquire_Nat_done)
-            self.threadpool.start(worker)
-
-    def acquire_Nat_done(self):
-        self.print_to_dialogue("Done acquiring Nat.")
-
-    def acquire_Nat(self,progress_callback):
-        # self.OPX.OD_switch(True)
-        while self.checkBox_Repump.isChecked():
-            self.get_Nat(1, singleshot=False)
-
-    def get_Nat_worker(self):
-        worker = Worker(self.get_Nat)
-        self.print_to_dialogue("Acquiring number of atoms...")
-        # self.print_to_dialogue("Acquiring number of atoms...")
-        worker.signals.finished.connect(self.get_Nat_done)
-        self.threadpool.start(worker)
-
-    def get_Nat_done(self):
-        self.print_to_dialogue("Number of atoms acquired")
-
-    def get_Nat(self, progress_callback, singleshot=True):
-        if singleshot:
-            self.OPX.MeasureNatoms(0)
-        # data = self.rp_OD.get_trace(channel=1)
-        data1, data2 = self.rp_OD.get_traces()
-        self.rplastdataNat1, self.rplastdataNat2 = data1, data2
-        self.rplastdata1, self.rplastdata2 = data1, data2
-        times = np.arange(0, len(data1) / self.rp_OD.sampling_rate, 1. / self.rp_OD.sampling_rate) * 1e6
-        self.rptimes = times
-
-        self.odexp = OD_exp()
-        Nat = self.odexp.calculate_Nat(self.cursorsNat, times, data1)
-        self.widgetPlot.plot_OD(times, data1, data2, self.cursorsNat, autoscale=self.checkBox_plotAutoscale.isChecked())
-        self.print_to_dialogue("Number of atoms = %.1f *1e6"%(Nat/1e6))
-        if self.checkBox_saveData.isChecked():
-            self.saveCurrentDataClicked()
-        # self.print_to_dialogue("OD = %.2f"%(OD))
-
     def display_traces_worker(self):
         worker = Worker(self.display_traces_loop)
         self.threadpool.start(worker)
@@ -344,11 +260,14 @@ class STIRAP_gui (QuantumWidget):
             self.display_traces()
 
     def display_traces(self):
-        # data = self.rp.get_tracesSlow()
         data = self.rp.get_traces()
+        dataPlot = data
+        dataPlot[5] = data[4]
+        dataPlot[4] = np.array(data[2]) + np.array(data[3])
         self.last_data1_OD, self.last_data2_OD = data[0], data[1]
         self.last_data1_Sigma, self.last_data2_Sigma = data[2], data[3]
         self.last_data1_Pi, self.last_data2_Pi = data[4], data[5]
+        self.last_data_CH1CH2Sum, self.last_data_Pi = dataPlot[4], dataPlot[5]
         self.rptimes = np.arange(0, self.rp.bufferDuration, 1. / self.rp.sampling_rate * self.rp.OD.decimation) * 1e6
         self.rptimes = np.linspace(0, self.rp.bufferDuration, len(self.last_data1_OD)) * 1e6
         truthiness = [self.checkBox_OD.isChecked(),
@@ -359,19 +278,26 @@ class STIRAP_gui (QuantumWidget):
                       self.checkBox_Pi.isChecked(),
                       ]
         labels = ["OD", "Depump", "CH1", "CH2", "CH1+CH2", "Pi"]
-        self.widgetPlot.plot_traces(data, self.rptimes, truthiness, labels, autoscale=self.checkBox_plotAutoscale.isChecked())
+        self.widgetPlot.plot_traces(dataPlot, self.rptimes, truthiness, labels, self.cursors, autoscale=self.checkBox_plotAutoscale.isChecked())
         if self.checkBox_saveData.isChecked():
             self.saveCurrentDataClicked()
-
-    def set_decimation(self, dec):
-        self.rp_OD.set_decimation(dec)
-        self.rp_Sigma.set_decimation(dec)
-        self.rp_Pi.set_decimation(dec)
-
-    def set_delay(self, delay):
-        self.rp_OD.set_delay(delay)
-        self.rp_Sigma.set_delay(delay)
-        self.rp_Pi.set_delay(delay)
+        if self.checkBox_displayNat.isChecked():
+            boxText = str(self.comboBox_cursors.currentText())
+            if boxText == "Sigma":
+                self.cursors_data = np.array(self.last_data_CH1CH2Sum)
+                avg_photons = 1.5
+            if boxText == "Pi":
+                self.cursors_data = np.array(self.last_data_Pi)
+                avg_photons = 1.5
+            if boxText == "Depump":
+                self.cursors_data = np.array(self.last_data2_OD)
+                avg_photons = 2.0
+            if boxText == "OD":
+                self.cursors_data = np.array(self.last_data1_OD)
+                avg_photons = 2.0
+            natoms = NAtoms()
+            Nat = natoms.calculate_Nat(self.cursors, self.rptimes, trace=self.cursors_data, avg_photons=avg_photons)
+            self.print_to_dialogue("Number of atoms = %.1f *1e6" % (Nat / 1e6))
 
     def utils_connect_worker(self):
         worker = Worker(self.utils_connect)
@@ -384,18 +310,50 @@ class STIRAP_gui (QuantumWidget):
         self.enable_interface(True)
         self.pushButton_utils_Connect.setEnabled(True)
 
+    def update_STIRAP_buttons_display(self):
+        opx = self.OPX
+        frame = self.frame_STIRAP_sequence
+        frame.doubleSpinBox_preparation_amplitude.setValue(opx.STIRAP_pump_amp)
+        frame.doubleSpinBox_depump_amplitude.setValue(opx.STIRAP_depump_amp)
+        frame.spinBox_pulse_length.setValue(opx.STIRAP_Pulse_Length)
+        frame.spinBox_T1.setValue(opx.STIRAP_Wait_Depump)
+        frame.spinBox_T2.setValue(opx.STIRAP_Wait_Reference)
+        frame.checkBox_depump12p_onOff.setChecked(opx.Drain_F1)
+
+        preparation = bin(opx.Preperation_Pulses)[2:].zfill(3)
+        v1 = [int(el) for el in preparation]
+        frame.checkBox_preparation_pi.setChecked(v1[0])
+        frame.checkBox_preparation_sigma_p.setChecked(v1[1])
+        frame.checkBox_preparation_sigma_m.setChecked(v1[2])
+
+        depump = bin(opx.STIRAP_Depump_Pulse)[2:].zfill(3)
+        v2 = [int(el) for el in depump]
+        frame.checkBox_depump_pi.setChecked(v2[0])
+        frame.checkBox_depump_sigma_p.setChecked(v2[1])
+        frame.checkBox_depump_sigma_m.setChecked(v2[2])
+
+        reference = bin(opx.STIRAP_Reference_Pulse)[2:].zfill(3)
+        v3 = [int(el) for el in reference]
+        frame.checkBox_depumpRef_pi.setChecked(v3[0])
+        frame.checkBox_depumpRef_sigma_p.setChecked(v3[1])
+        frame.checkBox_depumpRef_sigma_m.setChecked(v3[2])
+
+
+
+
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to RedPitayas...")
-        trigger_delay = 500000
-        self.lineEdit_triggerDelay.setText(str(trigger_delay))
+        trigger_delay = 62500
+        self.lineEdit_triggerDelay.setText(str(trigger_delay*1e-3))
         decimation = int(self.comboBox_decimation.currentText())
         self.rp = scpi.redPitayaCluster(trigger_delay=trigger_delay, decimation=decimation)
         self.print_to_dialogue("RedPitayas are connected.")
         time.sleep(0.1)
         self.connectOPX()
+        self.update_STIRAP_buttons_display()
         self.display_traces_worker()
-        self.updateTriggerDelay()
         self.updateDecimation()
+        self.updateTriggerDelay()
 
 
 if __name__ == "__main__":

@@ -6,14 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1308</width>
-    <height>753</height>
+    <width>1320</width>
+    <height>829</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Quantum Masabah'a</string>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="minimumSize">
+    <size>
+     <width>1320</width>
+     <height>720</height>
+    </size>
+   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="leftMargin">
      <number>3</number>
@@ -44,7 +50,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1308</width>
+     <width>1320</width>
      <height>21</height>
     </rect>
    </property>

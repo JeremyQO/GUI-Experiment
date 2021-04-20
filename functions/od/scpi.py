@@ -144,7 +144,7 @@ class Scpi (object):
     
 
 class Redpitaya (Scpi):
-    def __init__(self, host, timeout=None, port=5000, decimation=8, trigger_delay=-40000, trigger_source='EXT_PE'):
+    def __init__(self, host, timeout=None, port=5000, decimation=8, trigger_delay=0, trigger_source='EXT_PE'):
         super().__init__(host, timeout, port)
         self.sampling_rate = 125e6
         self.decimation = decimation
@@ -158,7 +158,7 @@ class Redpitaya (Scpi):
         print("Trigger status is " + self.get_triggerStatus())
         self.set_averaging('OFF')
         print("Averaging mode is " + self.get_averaging())
-        self.set_triggerDelay(trigger_delay*decimation)
+        self.set_triggerDelay(trigger_delay)
         print("Trigger delay at %s ns" % (self.get_triggerDelay()))
         self.set_triggerLevel(1000)
         print("Trigger level at %.2f mV" % (float(self.get_triggerLevel())*1000))
@@ -171,7 +171,8 @@ class Redpitaya (Scpi):
         """Set decimation factor."""
         options = (1, 8, 64, 1024, 8192, 65536)
         if d in options:
-            self.set_triggerDelay(40000 * d)
+            newTriggDelay = self.trigger_delay/self.decimation * d
+            self.set_triggerDelay(newTriggDelay)
             self.decimation = d
             return self.tx_txt('ACQ:DEC '+str(d))
         else:
@@ -212,6 +213,7 @@ class Redpitaya (Scpi):
     
     def set_triggerDelay(self, t):
         """Set trigger delay in ns."""
+        self.trigger_delay = t
         return self.tx_txt("ACQ:TRIG:DLY:NS " +str(t))
     
     def get_triggerLevel(self):
@@ -327,6 +329,7 @@ class redPitayaCluster :
             rp.set_decimation(d)
         # self.set_triggerDelay(self.triggerDelay / d)
         self.decimation = d
+        self.triggerDelay = self.Sigma.trigger_delay
 
     def get_triggerDelay(self):
         """Get trigger delay in ns."""
@@ -368,8 +371,6 @@ class redPitayaCluster :
             data.append(buff2)
 
         self.bufferDuration = (len(data[0]) / self.sampling_rate) * self.rplist[0].decimation
-        data[5] = data[4]
-        data[4] = np.array(data[2]) + np.array(data[3])
         return data
 
 

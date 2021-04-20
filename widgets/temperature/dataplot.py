@@ -80,7 +80,7 @@ class PlotWindow(QDialog):
         plt.tight_layout()
         self.canvas.draw()
 
-    def plot_traces(self, data, time, truthiness, labels, autoscale=True):
+    def plot_traces(self, data, time, truthiness, labels, cursors, autoscale=True):
         ymin, ymax = plt.ylim()
         xmin, xmax = plt.xlim()
         self.figure.clear()
@@ -92,6 +92,8 @@ class PlotWindow(QDialog):
         if not autoscale:
             plt.ylim(ymin, ymax)
             plt.xlim(xmin, xmax)
+        for curs in cursors:
+            plt.axvline(curs, c='r')
 
         plt.xlabel('Time ($\mu$s)')
         plt.ylabel('Voltage (V)')
