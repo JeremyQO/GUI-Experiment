@@ -386,6 +386,9 @@
      <property name="text">
       <string>STIRAP</string>
      </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
     </widget>
    </item>
   </layout>

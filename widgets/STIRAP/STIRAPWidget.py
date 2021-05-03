@@ -79,6 +79,7 @@ class STIRAP_gui (QuantumWidget):
         self.last_data1_Sigma, self.last_data2_Sigma = [], []
         self.last_data1_Pi, self.last_data2_Pi = [], []
         self.last_data_CH1CH2Sum, self.last_data_Pi = [], []
+        self.last_data_repump = []
         self.rptimes = []
         self.cursors_data = []
         self.datafile = None
@@ -192,8 +193,8 @@ class STIRAP_gui (QuantumWidget):
                             CH2_Depump=self.last_data2_OD,
                             CH1_Sigma=self.last_data1_Sigma,
                             CH2_Sigma=self.last_data2_Sigma,
-                            CH1_Pi=self.last_data1_Pi,
-                            CH2_Pi=self.last_data2_Pi,
+                            CH1_Pi_Pi=self.last_data1_Pi,
+                            CH2_Pi_repump=self.last_data_repump,
                             times=self.rptimes, 
                             meta=meta
                             )
@@ -239,7 +240,10 @@ class STIRAP_gui (QuantumWidget):
         b_opt = res.x[0]
         print([a, a + d, b_opt, b_opt + d])
         self.print_to_dialogue("Minimized down to Nat = %.0f * 1e3"%(res.fun/1e3))
+        added_interval = 5
         cursors = np.array([a, a + d, b_opt, b_opt + d])/self.rp.sampling_rate*self.rp.decimation*1e6
+        cursors[1]+=added_interval
+        cursors[3]+=added_interval
         return cursors
 
     def enable_interface(self, v):
@@ -261,43 +265,53 @@ class STIRAP_gui (QuantumWidget):
 
     def display_traces(self):
         data = self.rp.get_traces()
-        dataPlot = data
+        dataPlot = [data[i] for i in range(len(data))]
         dataPlot[5] = data[4]
         dataPlot[4] = np.array(data[2]) + np.array(data[3])
+        dataPlot.append(data[5])
         self.last_data1_OD, self.last_data2_OD = data[0], data[1]
         self.last_data1_Sigma, self.last_data2_Sigma = data[2], data[3]
         self.last_data1_Pi, self.last_data2_Pi = data[4], data[5]
         self.last_data_CH1CH2Sum, self.last_data_Pi = dataPlot[4], dataPlot[5]
+        self.last_data_repump = self.last_data2_Pi
         self.rptimes = np.arange(0, self.rp.bufferDuration, 1. / self.rp.sampling_rate * self.rp.OD.decimation) * 1e6
         self.rptimes = np.linspace(0, self.rp.bufferDuration, len(self.last_data1_OD)) * 1e6
         truthiness = [self.checkBox_OD.isChecked(),
-                      self.checkBox_Repump.isChecked(),
+                      self.checkBox_Depump.isChecked(),
                       self.checkBox_CH1.isChecked(),
                       self.checkBox_CH2.isChecked(),
                       self.checkBox_CH1CH2Sum.isChecked(),
                       self.checkBox_Pi.isChecked(),
+                      self.checkBox_Repump.isChecked(),
                       ]
-        labels = ["OD", "Depump", "CH1", "CH2", "CH1+CH2", "Pi"]
+        labels = ["OD", "Depump", "CH1", "CH2", "CH1+CH2", "Pi", "Repump"]
         self.widgetPlot.plot_traces(dataPlot, self.rptimes, truthiness, labels, self.cursors, autoscale=self.checkBox_plotAutoscale.isChecked())
         if self.checkBox_saveData.isChecked():
             self.saveCurrentDataClicked()
         if self.checkBox_displayNat.isChecked():
-            boxText = str(self.comboBox_cursors.currentText())
-            if boxText == "Sigma":
-                self.cursors_data = np.array(self.last_data_CH1CH2Sum)
-                avg_photons = 1.5
-            if boxText == "Pi":
-                self.cursors_data = np.array(self.last_data_Pi)
-                avg_photons = 1.5
-            if boxText == "Depump":
-                self.cursors_data = np.array(self.last_data2_OD)
-                avg_photons = 2.0
-            if boxText == "OD":
-                self.cursors_data = np.array(self.last_data1_OD)
-                avg_photons = 2.0
-            natoms = NAtoms()
-            Nat = natoms.calculate_Nat(self.cursors, self.rptimes, trace=self.cursors_data, avg_photons=avg_photons)
-            self.print_to_dialogue("Number of atoms = %.1f *1e6" % (Nat / 1e6))
+            try:
+                boxText = str(self.comboBox_cursors.currentText())
+                if boxText == "Sigma":
+                    self.cursors_data = np.array(self.last_data_CH1CH2Sum)
+                    avg_photons = 1.5
+                    sensitivity = 8998.0/2 + 8506.0/2
+                if boxText == "Pi":
+                    self.cursors_data = np.array(self.last_data_Pi)
+                    avg_photons = 1.5
+                    sensitivity = 8476
+                if boxText == "Depump":
+                    self.cursors_data = np.array(self.last_data2_OD)
+                    avg_photons = 2.0
+                    sensitivity = 8063
+                if boxText == "OD":
+                    self.cursors_data = np.array(self.last_data1_OD)
+                    avg_photons = 2.0
+                    sensitivity = 75e3  # This is a h'irtut
+                natoms = NAtoms()
+                Nat = natoms.calculate_Nat(self.cursors, self.rptimes, trace=self.cursors_data, avg_photons=avg_photons, sensitivity=sensitivity)
+                self.print_to_dialogue("Number of atoms = %.1f *1e6" % (Nat / 1e6))
+            except IndexError:
+                self.print_to_dialogue("Display Nat: List index out of range")
 
     def utils_connect_worker(self):
         worker = Worker(self.utils_connect)

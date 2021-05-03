@@ -18,9 +18,9 @@ if matplotlib.get_backend()!='Qt5Agg':
 from PyQt5.QtCore import QThreadPool
 import time
 try:
-    import MvCamera
+    from functions.pgc import MvCamera
     # from OPXcontrol.OPX_control_New_v1 import OPX
-    from mvIMPACT import acquire
+    # from mvIMPACT import acquire
 except:
     pass
 import os

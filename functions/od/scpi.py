@@ -356,7 +356,6 @@ class redPitayaCluster :
             self.rplist[0].tx_txt('ACQ:TRIG:STAT?')
             if self.rplist[0].rx_txt() == 'TD':
                 break
-
         data = []
         for el in self.rplist:
             el.tx_txt('ACQ:SOUR%i:DATA?' % (1))

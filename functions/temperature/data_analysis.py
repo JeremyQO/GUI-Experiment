@@ -69,7 +69,7 @@ class image:
         plt.plot(self.xaxis, gaussian(self.xaxis, *self.popt_x),label='STD=%.0f'%(self.std_x))
         plt.legend()
         plt.subplot(212)
-        plt.plot(self.yaxis, self.line_y,label='y axis' )
+        plt.plot(self.yaxis, self.line_y,label='y axis')
         plt.plot(self.yaxis, gaussian(self.yaxis, *self.popt_y),label='STD=%.0f'%(self.std_y))
         plt.legend()
         
