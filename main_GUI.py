@@ -14,6 +14,7 @@ from widgets.temperature import temperatureWidget
 from widgets.od import ODWidget
 from widgets.STIRAP import STIRAPWidget
 from widgets.config_OPX import configWidget
+from widgets.MWSpectro import MWSpectroWidget
 import sys
 sys._excepthook = sys.excepthook
 
@@ -52,6 +53,7 @@ class Experiment_gui(QMainWindow):
         self.actionOD.triggered.connect(self.OD_open_tab)
         self.actionConfigure.triggered.connect(self.conf_open_tab)
         self.actionSTIRAP.triggered.connect(self.STIRAP_open_tab)
+        self.actionMW_Spectroscopy.triggered.connect(self.MW_open_tab)
 
         # Start Threadpool for multi-threading 
         self.simulation = simulation
@@ -67,6 +69,14 @@ class Experiment_gui(QMainWindow):
             if self.OPX is not None :
                 self.STIRAP_tab.enable_interface(True)
                 self.STIRAP_tab.OPX = self.OPX
+
+    def MW_open_tab(self):
+        self.MW_spectro_tab = MWSpectroWidget.MWSpectroWidget(Parent=self, simulation=self.simulation)
+        self.MW_spectro_tab.threadpool = self.threadpool
+        self.tabwidget.addTab(self.MW_spectro_tab, "MWSpectro")
+        if self.OPX is not None:
+            self.MW_spectro_tab.enable_interface(True)
+            self.MW_spectro_tab.OPX = self.OPX
 
     def pgc_open_tab(self):
         if not hasattr(self, 'pgc_tab'):

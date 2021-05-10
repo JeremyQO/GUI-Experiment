@@ -35,7 +35,7 @@ class PlotWindow(QDialog):
         ax3 = plt.subplot2grid((2,2),(1,0), colspan=1, rowspan=1)
         ax4 = plt.subplot2grid((2, 2), (0,0),  colspan=1, rowspan=1)
         plt.tight_layout()
-      
+
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
@@ -80,24 +80,42 @@ class PlotWindow(QDialog):
         plt.tight_layout()
         self.canvas.draw()
 
-    def plot_traces(self, data, time, truthiness, labels, cursors, autoscale=True):
-        ymin, ymax = plt.ylim()
-        xmin, xmax = plt.xlim()
+    def plot_traces(self, data, time, truthiness, labels, cursors, autoscale=True, sensitivity=None, nathistory=None):
+        try:
+            y1min, y1max = self.ax1.get_ylim()
+            x1min, x1max = self.ax1.get_xlim()
+            y2min, y2max = self.ax2.get_ylim()
+        except AttributeError:
+            autoscale = True
         self.figure.clear()
-        colors = ['b', 'g', 'r', 'c', 'k', 'm', 'y']
+        self.ax1 = plt.subplot2grid((3, 1), (0, 0), colspan=1, rowspan=2)
+        self.ax3 = plt.subplot2grid((3, 1), (2, 0), colspan=1, rowspan=1)
+        colors = ['b', 'g', 'r', 'c', 'k', 'm', 'y', 'darkorange']
         for i, el in enumerate(data):
             if truthiness[i]:
-                plt.plot(time, el, color=colors[i], label=labels[i])
+                self.ax1.plot(time, el, color=colors[i], label=labels[i])
 
         if not autoscale:
-            plt.ylim(ymin, ymax)
-            plt.xlim(xmin, xmax)
+            self.ax1.set_ylim(y1min, y1max)
+            self.ax1.set_xlim(x1min, x1max)
+            self.ax2.set_ylim(y2min, y2max)
         for curs in cursors:
-            plt.axvline(curs, c='r')
+            self.ax1.axvline(curs, c='r', linestyle='--', alpha=0.4)
 
-        plt.xlabel('Time ($\mu$s)')
-        plt.ylabel('Voltage (V)')
-        plt.legend()
+        if sensitivity is not None:
+            self.ax2 = self.ax1.twinx()
+            self.ax2.set_ylabel('Power (uW)')
+            y1min, y1max = self.ax1.get_ylim()
+            self.ax2.set_ylim(y1min/sensitivity*1e6, y1max/sensitivity*1e6)
+
+        if nathistory is not None:
+            self.ax3.plot([int(el/1e6) for el in nathistory])
+            self.ax3.plot([int(el/1e6) for el in nathistory], 'or')
+            self.ax3.set_ylabel('$N_{\mathrm{at}}$ (milions)')
+
+        self.ax1.set_xlabel('Time ($\mu$s)')
+        self.ax1.set_ylabel('Voltage (V)')
+        self.ax1.legend()
         # plt.legend(loc='upper right')
         plt.tight_layout()
         # refresh canvas

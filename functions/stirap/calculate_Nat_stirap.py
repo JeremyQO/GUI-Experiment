@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.signal import find_peaks
 
 
 class NAtoms:
@@ -27,4 +28,13 @@ class NAtoms:
         fl = 384.2304844685 * THz  # Laser frequency
         res = (np.average(d2)-np.average(d1))/sensitivity/avg_photons/h/fl * (cursor_times[1]-cursor_times[0])*1e-6
         return res
+
+
+    def get_delay(self, data):
+        datamax = data.max()
+        datamin = data.min()
+        dataclipped = np.array([max(min(el,datamax/2.0), datamin+(datamax-datamin)/8) for el in data])-(datamin+(datamax-datamin)/8)
+        corr = np.correlate(dataclipped, dataclipped, mode='same')
+        peaks, _ = find_peaks(corr, height=0)
+        return peaks[1] - peaks[0]
 

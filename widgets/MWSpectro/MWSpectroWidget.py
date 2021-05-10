@@ -18,6 +18,7 @@ from PyQt5.QtCore import QThreadPool
 from datetime import date, datetime
 from widgets.worker import Worker
 from functions.stirap.calculate_Nat_stirap import NAtoms
+
 try:
     from functions.od.calculate_OD import OD_exp
 except:
@@ -28,12 +29,12 @@ if matplotlib.get_backend() != 'Qt5Agg':
 from widgets.quantumWidget import QuantumWidget
 
 
-class STIRAP_gui (QuantumWidget):
+class MWSpectroWidget(QuantumWidget):
     def __init__(self, Parent=None, ui=None, simulation=True):
         if Parent is not None:
             self.Parent = Parent
         ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
-        ui_stirap_sequence = os.path.join(os.path.dirname(__file__), "STIRAP_sequence.ui")  # if ui is None else ui
+        ui_stirap_sequence = os.path.join(os.path.dirname(__file__), "MWSpectro_sequence.ui")  # if ui is None else ui
         super().__init__(ui, simulation)
         uic.loadUi(ui_stirap_sequence, self.frame_STIRAP_sequence)
         if __name__ == "__main__":
@@ -42,7 +43,7 @@ class STIRAP_gui (QuantumWidget):
         self.widgetPlot.plot([None], [None])
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
         self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
-        
+
         self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
         self.pushButton_update.clicked.connect(self.change_probe_frequency)
         self.pushButton_Cursor.clicked.connect(self.positionCursorsList)
@@ -52,24 +53,29 @@ class STIRAP_gui (QuantumWidget):
         self.pushButton_saveCurrentData.clicked.connect(self.saveCurrentDataClicked)
         self.enable_interface(False)
         self.frame_STIRAP_sequence.hide()
-        
+
         # STIRAP sequence update parameters
-        self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.clicked.connect(self.updateParameters_sequence_workers)
-        self.frame_STIRAP_sequence.checkBox_preparation_pi.clicked.connect(self.update_preparation)
-        self.frame_STIRAP_sequence.checkBox_preparation_sigma_p.clicked.connect(self.update_preparation)
-        self.frame_STIRAP_sequence.checkBox_preparation_sigma_m.clicked.connect(self.update_preparation)
-        self.frame_STIRAP_sequence.doubleSpinBox_preparation_amplitude.editingFinished.connect(self.update_preparation_amplitude)
-        self.frame_STIRAP_sequence.spinBox_T1.editingFinished.connect(self.update_T1)
-        self.frame_STIRAP_sequence.checkBox_depump_pi.clicked.connect(self.update_depump)
-        self.frame_STIRAP_sequence.checkBox_depump_sigma_p.clicked.connect(self.update_depump)
-        self.frame_STIRAP_sequence.checkBox_depump_sigma_m.clicked.connect(self.update_depump)
-        self.frame_STIRAP_sequence.doubleSpinBox_depump_amplitude.editingFinished.connect(self.update_depump_amplitude)
-        self.frame_STIRAP_sequence.checkBox_depump12p_onOff.clicked.connect(self.update_depump12p_onOff)
-        self.frame_STIRAP_sequence.spinBox_T2.editingFinished.connect(self.update_reference_wait_time)
-        self.frame_STIRAP_sequence.checkBox_depumpRef_pi.clicked.connect(self.update_reference)
-        self.frame_STIRAP_sequence.checkBox_depumpRef_sigma_p.clicked.connect(self.update_reference)
-        self.frame_STIRAP_sequence.checkBox_depumpRef_sigma_m.clicked.connect(self.update_reference)
-        self.frame_STIRAP_sequence.spinBox_pulse_length.editingFinished.connect(self.update_pulse_length)
+        # self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.clicked.connect(
+        #     self.updateParameters_sequence_workers)
+        # self.frame_STIRAP_sequence.checkBox_preparation_pi.clicked.connect(self.update_preparation)
+        # self.frame_STIRAP_sequence.checkBox_preparation_sigma_p.clicked.connect(self.update_preparation)
+        # self.frame_STIRAP_sequence.checkBox_preparation_sigma_m.clicked.connect(self.update_preparation)
+        # self.frame_STIRAP_sequence.doubleSpinBox_preparation_amplitude.editingFinished.connect(
+        #     self.update_preparation_amplitude)
+        # self.frame_STIRAP_sequence.spinBox_T1.editingFinished.connect(self.update_T1)
+        # self.frame_STIRAP_sequence.checkBox_depump_pi.clicked.connect(self.update_depump)
+        # self.frame_STIRAP_sequence.checkBox_depump_sigma_p.clicked.connect(self.update_depump)
+        # self.frame_STIRAP_sequence.checkBox_depump_sigma_m.clicked.connect(self.update_depump)
+        # self.frame_STIRAP_sequence.doubleSpinBox_depump_amplitude.editingFinished.connect(self.update_depump_amplitude)
+        # self.frame_STIRAP_sequence.checkBox_depump12p_onOff.clicked.connect(self.update_depump12p_onOff)
+        # self.frame_STIRAP_sequence.spinBox_T2.editingFinished.connect(self.update_reference_wait_time)
+        # self.frame_STIRAP_sequence.checkBox_depumpRef_pi.clicked.connect(self.update_reference)
+        # self.frame_STIRAP_sequence.checkBox_depumpRef_sigma_p.clicked.connect(self.update_reference)
+        # self.frame_STIRAP_sequence.checkBox_depumpRef_sigma_m.clicked.connect(self.update_reference)
+        # self.frame_STIRAP_sequence.spinBox_pulse_length.editingFinished.connect(self.update_pulse_length)
+
+        # MW spectroscopy parameters :
+        self.pushButton_update_MW_pulse_duration.clicked.connect(self.updateMWpulseDurationWorker)
 
         # self.decimation = 8
         # self.cursors = list(np.array([145, 312, 535, 705]))
@@ -88,26 +94,42 @@ class STIRAP_gui (QuantumWidget):
         # self.enable_interface(True)
 
         self.odexp = OD_exp()
-        
+
+    def updateMWpulseDuration_done(self):
+        duration = self.doubleSpinBox_MW_pulse_duration.value()
+        self.print_to_dialogue("MW pulse duration updated to %i us" % int(duration))
+        self.pushButton_update_MW_pulse_duration.setEnabled(True)
+
+    def updateMWpulseDurationWorker(self):
+        self.pushButton_update_MW_pulse_duration.setEnabled(False)
+        worker = Worker(self.updateMWpulseDuration)
+        worker.signals.finished.connect(self.updateMWpulseDuration_done)
+        self.threadpool.start(worker)
+
+    def updateMWpulseDuration(self, progress_callback):
+        duration = self.doubleSpinBox_MW_pulse_duration.value()
+        self.OPX.MW_spec_MW_pulse_duration(int(duration))
+        self.OPX.update_parameters()
+
     def update_pulse_length(self):
         duration = self.frame_STIRAP_sequence.spinBox_pulse_length.value()
         self.OPX.STIRAP_pulse_duration(duration)
         self.print_to_dialogue("Updated pulse duration")
-        
+
     def update_reference(self):
         fr = self.frame_STIRAP_sequence
         a = "1" if fr.checkBox_depumpRef_pi.isChecked() else "0"
         b = "1" if fr.checkBox_depumpRef_sigma_p.isChecked() else "0"
         c = "1" if fr.checkBox_depumpRef_sigma_m.isChecked() else "0"
-        self.OPX.STIRAP_reference_pulses(a+b+c)
-        self.print_to_dialogue("Reference: "+a+b+c)
-        
+        self.OPX.STIRAP_reference_pulses(a + b + c)
+        self.print_to_dialogue("Reference: " + a + b + c)
+
     def update_reference_wait_time(self):
         t2 = self.frame_STIRAP_sequence.spinBox_T2.value()
         self.OPX.STIRAP_reference_wait_time(t2)
         self.print_to_dialogue("Update T2")
-        
-    def update_depump12p_onOff (self):
+
+    def update_depump12p_onOff(self):
         v = 1 if self.frame_STIRAP_sequence.checkBox_depump12p_onOff.isChecked() else 0
         self.OPX.STIRAP_2nd_pump_pulses(v)
 
@@ -115,33 +137,33 @@ class STIRAP_gui (QuantumWidget):
         amp = self.frame_STIRAP_sequence.doubleSpinBox_depump_amplitude.value()
         self.OPX.STIRAP_depump_amplitude(amp)
         self.print_to_dialogue("Updated Depump Amplitude")
-        
+
     def update_depump(self):
         fr = self.frame_STIRAP_sequence
         a = "1" if fr.checkBox_depump_pi.isChecked() else "0"
         b = "1" if fr.checkBox_depump_sigma_p.isChecked() else "0"
         c = "1" if fr.checkBox_depump_sigma_m.isChecked() else "0"
-        self.OPX.STIRAP_depump_pulses(a+b+c)
-        self.print_to_dialogue("Depump: "+a+b+c)
-        
+        self.OPX.STIRAP_depump_pulses(a + b + c)
+        self.print_to_dialogue("Depump: " + a + b + c)
+
     def update_T1(self):
         t1 = self.frame_STIRAP_sequence.spinBox_T1.value()
         self.OPX.STIRAP_depump_wait_time(t1)
         self.print_to_dialogue("Update T1")
-        
+
     def update_preparation(self):
         fr = self.frame_STIRAP_sequence
         a = "1" if fr.checkBox_preparation_pi.isChecked() else "0"
         b = "1" if fr.checkBox_preparation_sigma_p.isChecked() else "0"
         c = "1" if fr.checkBox_preparation_sigma_m.isChecked() else "0"
-        self.OPX.STIRAP_1st_pump_pulses(a+b+c)
-        self.print_to_dialogue("Preparation:"+ a+b+c)
-        
+        self.OPX.STIRAP_1st_pump_pulses(a + b + c)
+        self.print_to_dialogue("Preparation:" + a + b + c)
+
     def update_preparation_amplitude(self):
         amp = self.frame_STIRAP_sequence.doubleSpinBox_preparation_amplitude.value()
         self.OPX.STIRAP_pump_amplitude(amp)
         self.print_to_dialogue("Updated Preparation Amplitude")
-    
+
     def updateParameters_sequence_workers(self):
         self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.setEnabled(False)
         worker = Worker(self.updateParameters_sequence)
@@ -164,11 +186,11 @@ class STIRAP_gui (QuantumWidget):
     def updateDecimation(self):
         dec = int(self.comboBox_decimation.currentText())
         self.rp.set_decimation(dec)
-        self.lineEdit_triggerDelay.setText(str(int(self.rp.triggerDelay)*1e-3))
+        self.lineEdit_triggerDelay.setText(str(int(self.rp.triggerDelay) * 1e-3))
         self.print_to_dialogue("Decimation changed to %i" % dec)
 
     def updateTriggerDelay(self):
-        t = int(float(self.lineEdit_triggerDelay.text())*1e3)
+        t = int(float(self.lineEdit_triggerDelay.text()) * 1e3)
         self.rp.set_triggerDelay(t)
         self.print_to_dialogue("Trigger delay changed to %i ns" % t)
 
@@ -187,18 +209,19 @@ class STIRAP_gui (QuantumWidget):
             self.print_to_dialogue("Data Saved")
 
         self.datafile = os.path.join(todaydatadir, nowformated + ".txt")
-        meta = "Traces from the RedPitaya, obtained on %s at %s.\n" % (todayformated, nowformated)
+        meta = "Traces from the RedPitaya, obtained on %s at %s.\nMW_pulse_duration contains the duration of the MW pulse in us." % (todayformated, nowformated)
 
         # np.savetxt(self.datafile, np.transpose([self.rplastdata1, self.rplastdata2]),  fmt='%.6e', header=header)
-        np.savez_compressed(os.path.join(todaydatadir, nowformated), 
-                            CH1_OD=self.last_data1_OD, 
+        np.savez_compressed(os.path.join(todaydatadir, nowformated),
+                            CH1_OD=self.last_data1_OD,
                             CH2_Depump=self.last_data2_OD,
                             CH1_Sigma=self.last_data1_Sigma,
                             CH2_Sigma=self.last_data2_Sigma,
                             CH1_Pi_Pi=self.last_data1_Pi,
                             CH2_Pi_repump=self.last_data_repump,
-                            times=self.rptimes, 
-                            meta=meta
+                            times=self.rptimes,
+                            MW_pulse_duration=self.doubleSpinBox_MW_pulse_duration.value(),
+                            meta=meta,
                             )
 
     def positionCursorsList(self):
@@ -221,28 +244,28 @@ class STIRAP_gui (QuantumWidget):
     def positionCursors(self, dat):
         nat = np.array(dat)
         dy = nat.max() - nat.min()
-        tresholdlevel = nat.min()+dy/2
+        tresholdlevel = nat.min() + dy / 2
         d_threshold = 150  # position before the threshold position on which we want to place the cursor
         a, b, d = 0, 0, 0
         for i, el in enumerate(nat):
-            if el>=tresholdlevel:
-                a = int(i-d_threshold)
+            if el >= tresholdlevel:
+                a = int(i - d_threshold)
                 break
-        for i, el in enumerate(nat[a+100+d_threshold:]):
-            if el<=tresholdlevel:
+        for i, el in enumerate(nat[a + 100 + d_threshold:]):
+            if el <= tresholdlevel:
                 d = int(i)
                 break
-        for i, el in enumerate(nat[a+d+400:]):
-            if el>=tresholdlevel:
-                b = int(i+a+d+400 - d_threshold)
+        for i, el in enumerate(nat[a + d + 400:]):
+            if el >= tresholdlevel:
+                b = int(i + a + d + 400 - d_threshold)
                 break
         res = optimize.minimize(self.odexp.tominimizeNat, np.array([b]), args=(a, d, nat))
         print(res)
         b_opt = res.x[0]
         print([a, a + d, b_opt, b_opt + d])
-        self.print_to_dialogue("Minimized down to Nat = %.0f * 1e3"%(res.fun/1e3))
+        self.print_to_dialogue("Minimized down to Nat = %.0f * 1e3" % (res.fun / 1e3))
         added_interval = 5
-        cursors = np.array([a, a + d, b_opt, b_opt + d])/self.rp.sampling_rate*self.rp.decimation*1e6
+        cursors = np.array([a, a + d, b_opt, b_opt + d]) / self.rp.sampling_rate * self.rp.decimation * 1e6
         cursors[1] += added_interval
         cursors[3] += added_interval
         Nat = NAtoms()
@@ -255,8 +278,8 @@ class STIRAP_gui (QuantumWidget):
 
     def change_probe_frequency(self):
         detuning = self.doubleSpinBox_frequency.value()
-        self.OPX.qm.set_intermediate_frequency("AOM_2-3'",(93 + detuning)*1e6)
-        self.print_to_dialogue("Detuning set to %.1f MHz"%(detuning))
+        self.OPX.qm.set_intermediate_frequency("AOM_2-3'", (93 + detuning) * 1e6)
+        self.print_to_dialogue("Detuning set to %.1f MHz" % (detuning))
 
     def display_traces_worker(self):
         worker = Worker(self.display_traces_loop)
@@ -310,7 +333,8 @@ class STIRAP_gui (QuantumWidget):
         if self.checkBox_displayNat.isChecked():
             try:
                 natoms = NAtoms()
-                Nat = natoms.calculate_Nat(self.cursors, self.rptimes, trace=self.cursors_data, avg_photons=avg_photons, sensitivity=sensitivity)
+                Nat = natoms.calculate_Nat(self.cursors, self.rptimes, trace=self.cursors_data, avg_photons=avg_photons,
+                                           sensitivity=sensitivity)
                 self.print_to_dialogue("Number of atoms = %.1f *1e6" % (Nat / 1e6))
                 self.nathistory.append(Nat)
                 if len(self.nathistory) > 30:
@@ -333,48 +357,46 @@ class STIRAP_gui (QuantumWidget):
     def utils_connect_finished(self):
         self.enable_interface(True)
         self.pushButton_utils_Connect.setEnabled(True)
+        self.doubleSpinBox_MW_pulse_duration.setValue(self.OPX.Pulse_Length_MW)
 
-    def update_STIRAP_buttons_display(self):
-        opx = self.OPX
-        frame = self.frame_STIRAP_sequence
-        frame.doubleSpinBox_preparation_amplitude.setValue(opx.STIRAP_pump_amp)
-        frame.doubleSpinBox_depump_amplitude.setValue(opx.STIRAP_depump_amp)
-        frame.spinBox_pulse_length.setValue(opx.STIRAP_Pulse_Length)
-        frame.spinBox_T1.setValue(opx.STIRAP_Wait_Depump)
-        frame.spinBox_T2.setValue(opx.STIRAP_Wait_Reference)
-        frame.checkBox_depump12p_onOff.setChecked(opx.Drain_F1)
-
-        preparation = bin(opx.Preperation_Pulses)[2:].zfill(3)
-        v1 = [int(el) for el in preparation]
-        frame.checkBox_preparation_pi.setChecked(v1[0])
-        frame.checkBox_preparation_sigma_p.setChecked(v1[1])
-        frame.checkBox_preparation_sigma_m.setChecked(v1[2])
-
-        depump = bin(opx.STIRAP_Depump_Pulse)[2:].zfill(3)
-        v2 = [int(el) for el in depump]
-        frame.checkBox_depump_pi.setChecked(v2[0])
-        frame.checkBox_depump_sigma_p.setChecked(v2[1])
-        frame.checkBox_depump_sigma_m.setChecked(v2[2])
-
-        reference = bin(opx.STIRAP_Reference_Pulse)[2:].zfill(3)
-        v3 = [int(el) for el in reference]
-        frame.checkBox_depumpRef_pi.setChecked(v3[0])
-        frame.checkBox_depumpRef_sigma_p.setChecked(v3[1])
-        frame.checkBox_depumpRef_sigma_m.setChecked(v3[2])
-
-
-
+    # def update_STIRAP_buttons_display(self):
+    #     opx = self.OPX
+    #     frame = self.frame_STIRAP_sequence
+    #     frame.doubleSpinBox_preparation_amplitude.setValue(opx.STIRAP_pump_amp)
+    #     frame.doubleSpinBox_depump_amplitude.setValue(opx.STIRAP_depump_amp)
+    #     frame.spinBox_pulse_length.setValue(opx.STIRAP_Pulse_Length)
+    #     frame.spinBox_T1.setValue(opx.STIRAP_Wait_Depump)
+    #     frame.spinBox_T2.setValue(opx.STIRAP_Wait_Reference)
+    #     frame.checkBox_depump12p_onOff.setChecked(opx.Drain_F1)
+    #
+    #     preparation = bin(opx.Preperation_Pulses)[2:].zfill(3)
+    #     v1 = [int(el) for el in preparation]
+    #     frame.checkBox_preparation_pi.setChecked(v1[0])
+    #     frame.checkBox_preparation_sigma_p.setChecked(v1[1])
+    #     frame.checkBox_preparation_sigma_m.setChecked(v1[2])
+    #
+    #     depump = bin(opx.STIRAP_Depump_Pulse)[2:].zfill(3)
+    #     v2 = [int(el) for el in depump]
+    #     frame.checkBox_depump_pi.setChecked(v2[0])
+    #     frame.checkBox_depump_sigma_p.setChecked(v2[1])
+    #     frame.checkBox_depump_sigma_m.setChecked(v2[2])
+    #
+    #     reference = bin(opx.STIRAP_Reference_Pulse)[2:].zfill(3)
+    #     v3 = [int(el) for el in reference]
+    #     frame.checkBox_depumpRef_pi.setChecked(v3[0])
+    #     frame.checkBox_depumpRef_sigma_p.setChecked(v3[1])
+    #     frame.checkBox_depumpRef_sigma_m.setChecked(v3[2])
 
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to RedPitayas...")
         trigger_delay = 170000
-        self.lineEdit_triggerDelay.setText(str(trigger_delay*1e-3))
+        self.lineEdit_triggerDelay.setText(str(trigger_delay * 1e-3))
         decimation = int(self.comboBox_decimation.currentText())
         self.rp = scpi.redPitayaCluster(trigger_delay=trigger_delay, decimation=decimation)
         self.print_to_dialogue("RedPitayas are connected.")
         time.sleep(0.1)
         self.connectOPX()
-        self.update_STIRAP_buttons_display()
+        # self.update_STIRAP_buttons_display()
         self.display_traces_worker()
         self.updateDecimation()
         self.updateTriggerDelay()
@@ -383,7 +405,7 @@ class STIRAP_gui (QuantumWidget):
 if __name__ == "__main__":
     app = QApplication([])
     simulation = False if os.getlogin() == 'orelb' else True
-    window = STIRAP_gui(simulation=simulation)
+    window = MWSpectroWidget(simulation=simulation)
     window.show()
     app.exec_()
     sys.exit(app.exec_())
