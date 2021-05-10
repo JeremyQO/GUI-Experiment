@@ -277,7 +277,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QFrame" name="frame_STIRAP_sequence">
+       <widget class="QFrame" name="frame_muwave_sequence">
         <property name="minimumSize">
          <size>
           <width>0</width>

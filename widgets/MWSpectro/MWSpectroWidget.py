@@ -34,15 +34,16 @@ class MWSpectroWidget(QuantumWidget):
         if Parent is not None:
             self.Parent = Parent
         ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
-        ui_stirap_sequence = os.path.join(os.path.dirname(__file__), "MWSpectro_sequence.ui")  # if ui is None else ui
+        ui_muwave_sequence = os.path.join(os.path.dirname(__file__), "MWSpectro_sequence.ui")  # if ui is None else ui
         super().__init__(ui, simulation)
-        uic.loadUi(ui_stirap_sequence, self.frame_STIRAP_sequence)
+        uic.loadUi(ui_muwave_sequence, self.frame_muwave_sequence)
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         self.widgetPlot.plot([None], [None])
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
         self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
+        self.continuous_display_traces = True  # Display the traces from RedPitaya continuously 
 
         self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
         self.pushButton_update.clicked.connect(self.change_probe_frequency)
@@ -52,30 +53,15 @@ class MWSpectroWidget(QuantumWidget):
         self.checkBox_sequence.clicked.connect(self.showHideSequence)
         self.pushButton_saveCurrentData.clicked.connect(self.saveCurrentDataClicked)
         self.enable_interface(False)
-        self.frame_STIRAP_sequence.hide()
-
-        # STIRAP sequence update parameters
-        # self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.clicked.connect(
-        #     self.updateParameters_sequence_workers)
-        # self.frame_STIRAP_sequence.checkBox_preparation_pi.clicked.connect(self.update_preparation)
-        # self.frame_STIRAP_sequence.checkBox_preparation_sigma_p.clicked.connect(self.update_preparation)
-        # self.frame_STIRAP_sequence.checkBox_preparation_sigma_m.clicked.connect(self.update_preparation)
-        # self.frame_STIRAP_sequence.doubleSpinBox_preparation_amplitude.editingFinished.connect(
-        #     self.update_preparation_amplitude)
-        # self.frame_STIRAP_sequence.spinBox_T1.editingFinished.connect(self.update_T1)
-        # self.frame_STIRAP_sequence.checkBox_depump_pi.clicked.connect(self.update_depump)
-        # self.frame_STIRAP_sequence.checkBox_depump_sigma_p.clicked.connect(self.update_depump)
-        # self.frame_STIRAP_sequence.checkBox_depump_sigma_m.clicked.connect(self.update_depump)
-        # self.frame_STIRAP_sequence.doubleSpinBox_depump_amplitude.editingFinished.connect(self.update_depump_amplitude)
-        # self.frame_STIRAP_sequence.checkBox_depump12p_onOff.clicked.connect(self.update_depump12p_onOff)
-        # self.frame_STIRAP_sequence.spinBox_T2.editingFinished.connect(self.update_reference_wait_time)
-        # self.frame_STIRAP_sequence.checkBox_depumpRef_pi.clicked.connect(self.update_reference)
-        # self.frame_STIRAP_sequence.checkBox_depumpRef_sigma_p.clicked.connect(self.update_reference)
-        # self.frame_STIRAP_sequence.checkBox_depumpRef_sigma_m.clicked.connect(self.update_reference)
-        # self.frame_STIRAP_sequence.spinBox_pulse_length.editingFinished.connect(self.update_pulse_length)
+        self.frame_muwave_sequence.hide()
 
         # MW spectroscopy parameters :
-        self.pushButton_update_MW_pulse_duration.clicked.connect(self.updateMWpulseDurationWorker)
+        # self.pushButton_update_MW_pulse_duration.clicked.connect(self.updateMWpulseDurationWorker)
+        self.frame_muwave_sequence.doubleSpinBox_pulse_duration.editingFinished.connect(self.updateMWpulseDuration)
+        self.frame_muwave_sequence.doubleSpinBox_detuning.editingFinished.connect(self.updateMWfrequencyDetuning)
+        self.frame_muwave_sequence.doubleSpinBox_repetitions.editingFinished.connect(self.updateMWpulseRep)
+        self.frame_muwave_sequence.pushButton_update_muwave.clicked.connect(self.updateParameters_sequence_workers)
+        self.frame_muwave_sequence.pushButton_start_scan.clicked.connect(self.startScanWorker)
 
         # self.decimation = 8
         # self.cursors = list(np.array([145, 312, 535, 705]))
@@ -91,81 +77,53 @@ class MWSpectroWidget(QuantumWidget):
         self.rptimes = []
         self.cursors_data = []
         self.datafile = None
+        self.current_frequency = 0
+        self.df = 0
+        self.minf = 0
+        self.maxf = 0
         # self.enable_interface(True)
 
-        self.odexp = OD_exp()
-
-    def updateMWpulseDuration_done(self):
-        duration = self.doubleSpinBox_MW_pulse_duration.value()
-        self.print_to_dialogue("MW pulse duration updated to %i us" % int(duration))
-        self.pushButton_update_MW_pulse_duration.setEnabled(True)
-
-    def updateMWpulseDurationWorker(self):
-        self.pushButton_update_MW_pulse_duration.setEnabled(False)
-        worker = Worker(self.updateMWpulseDuration)
-        worker.signals.finished.connect(self.updateMWpulseDuration_done)
+        # self.odexp = OD_exp()
+    
+    def startScanWorker(self):
+        worker = Worker(self.scanMW)
+        worker.signals.finished.connect(self.scanMWfinished)
+        # worker.signals.progress.connect(self.scanMWprogress)
         self.threadpool.start(worker)
-
-    def updateMWpulseDuration(self, progress_callback):
-        duration = self.doubleSpinBox_MW_pulse_duration.value()
-        self.OPX.MW_spec_MW_pulse_duration(int(duration))
+        
+    def scanMW(self, progress_callback):
+        self.frame_muwave_sequence.pushButton_start_scan.setEnabled(False)
+        minf = self.frame_muwave_sequence.doubleSpinBox_start_scan.value()
+        maxf = self.frame_muwave_sequence.doubleSpinBox_stop_scan.value()
+        df = self.frame_muwave_sequence.doubleSpinBox_d_f_scan.value()
+        self.OPX.MW_spec_scan(minf, maxf, df)
+        self.current_frequency = minf
+        self.df = df
+        self.minf = minf
+        self.maxf = maxf
         self.OPX.update_parameters()
-
-    def update_pulse_length(self):
-        duration = self.frame_STIRAP_sequence.spinBox_pulse_length.value()
-        self.OPX.STIRAP_pulse_duration(duration)
-        self.print_to_dialogue("Updated pulse duration")
-
-    def update_reference(self):
-        fr = self.frame_STIRAP_sequence
-        a = "1" if fr.checkBox_depumpRef_pi.isChecked() else "0"
-        b = "1" if fr.checkBox_depumpRef_sigma_p.isChecked() else "0"
-        c = "1" if fr.checkBox_depumpRef_sigma_m.isChecked() else "0"
-        self.OPX.STIRAP_reference_pulses(a + b + c)
-        self.print_to_dialogue("Reference: " + a + b + c)
-
-    def update_reference_wait_time(self):
-        t2 = self.frame_STIRAP_sequence.spinBox_T2.value()
-        self.OPX.STIRAP_reference_wait_time(t2)
-        self.print_to_dialogue("Update T2")
-
-    def update_depump12p_onOff(self):
-        v = 1 if self.frame_STIRAP_sequence.checkBox_depump12p_onOff.isChecked() else 0
-        self.OPX.STIRAP_2nd_pump_pulses(v)
-
-    def update_depump_amplitude(self):
-        amp = self.frame_STIRAP_sequence.doubleSpinBox_depump_amplitude.value()
-        self.OPX.STIRAP_depump_amplitude(amp)
-        self.print_to_dialogue("Updated Depump Amplitude")
-
-    def update_depump(self):
-        fr = self.frame_STIRAP_sequence
-        a = "1" if fr.checkBox_depump_pi.isChecked() else "0"
-        b = "1" if fr.checkBox_depump_sigma_p.isChecked() else "0"
-        c = "1" if fr.checkBox_depump_sigma_m.isChecked() else "0"
-        self.OPX.STIRAP_depump_pulses(a + b + c)
-        self.print_to_dialogue("Depump: " + a + b + c)
-
-    def update_T1(self):
-        t1 = self.frame_STIRAP_sequence.spinBox_T1.value()
-        self.OPX.STIRAP_depump_wait_time(t1)
-        self.print_to_dialogue("Update T1")
-
-    def update_preparation(self):
-        fr = self.frame_STIRAP_sequence
-        a = "1" if fr.checkBox_preparation_pi.isChecked() else "0"
-        b = "1" if fr.checkBox_preparation_sigma_p.isChecked() else "0"
-        c = "1" if fr.checkBox_preparation_sigma_m.isChecked() else "0"
-        self.OPX.STIRAP_1st_pump_pulses(a + b + c)
-        self.print_to_dialogue("Preparation:" + a + b + c)
-
-    def update_preparation_amplitude(self):
-        amp = self.frame_STIRAP_sequence.doubleSpinBox_preparation_amplitude.value()
-        self.OPX.STIRAP_pump_amplitude(amp)
-        self.print_to_dialogue("Updated Preparation Amplitude")
-
+        
+    def scanMWfinished(self):
+        self.frame_muwave_sequence.pushButton_start_scan.setEnabled(True)
+        self.print_to_dialogue("Starting Scan")
+        
+    # def scanMWprogress(self, n):
+    #     self.frame_muwave_sequence.progressBar.setValue(n)
+    
+    def updateMWpulseDuration(self):
+        duration = self.frame_muwave_sequence.doubleSpinBox_pulse_duration.value()
+        self.OPX.MW_spec_MW_pulse_duration(int(duration))
+            
+    def updateMWfrequencyDetuning(self):
+        det = self.frame_muwave_sequence.doubleSpinBox_detuning.value()
+        self.OPX.MW_spec_detuning(int(det))
+            
+    def updateMWpulseRep(self):
+        nrep = self.frame_muwave_sequence.doubleSpinBox_repetitions.value()
+        self.OPX.MW_spec_Repetition_times(int(nrep))
+    
     def updateParameters_sequence_workers(self):
-        self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.setEnabled(False)
+        self.frame_muwave_sequence.pushButton_update_muwave.setEnabled(False)
         worker = Worker(self.updateParameters_sequence)
         worker.signals.finished.connect(self.update_stirap_sequence_done)
         self.threadpool.start(worker)
@@ -175,13 +133,13 @@ class MWSpectroWidget(QuantumWidget):
 
     def update_stirap_sequence_done(self):
         self.print_to_dialogue("Parameters updated.")
-        self.frame_STIRAP_sequence.pushButton_update_stirap_sequence.setEnabled(True)
+        self.frame_muwave_sequence.pushButton_update_muwave.setEnabled(True)
 
     def showHideSequence(self):
         if self.checkBox_sequence.isChecked():
-            self.frame_STIRAP_sequence.show()
+            self.frame_muwave_sequence.show()
         else:
-            self.frame_STIRAP_sequence.hide()
+            self.frame_muwave_sequence.hide()
 
     def updateDecimation(self):
         dec = int(self.comboBox_decimation.currentText())
@@ -221,6 +179,7 @@ class MWSpectroWidget(QuantumWidget):
                             CH2_Pi_repump=self.last_data_repump,
                             times=self.rptimes,
                             MW_pulse_duration=self.doubleSpinBox_MW_pulse_duration.value(),
+                            MW_frequency=self.current_frequency,
                             meta=meta,
                             )
 
@@ -286,7 +245,7 @@ class MWSpectroWidget(QuantumWidget):
         self.threadpool.start(worker)
 
     def display_traces_loop(self, progress_callback):
-        while True:
+        while self.continuous_display_traces:
             self.display_traces()
 
     def display_traces(self):
@@ -346,6 +305,9 @@ class MWSpectroWidget(QuantumWidget):
         self.widgetPlot.plot_traces(dataPlot, self.rptimes, truthiness, labels, self.cursors,
                                     autoscale=self.checkBox_plotAutoscale.isChecked(), sensitivity=sensitivity,
                                     nathistory=self.nathistory)
+        self.current_frequency += self.df
+        if self.current_frequency<self.maxf:
+            self.print_to_dialogue("f = %.1f kHz" % (float(self.current_frequency)/1000))
 
     def utils_connect_worker(self):
         worker = Worker(self.utils_connect)
@@ -358,34 +320,6 @@ class MWSpectroWidget(QuantumWidget):
         self.enable_interface(True)
         self.pushButton_utils_Connect.setEnabled(True)
         self.doubleSpinBox_MW_pulse_duration.setValue(self.OPX.Pulse_Length_MW)
-
-    # def update_STIRAP_buttons_display(self):
-    #     opx = self.OPX
-    #     frame = self.frame_STIRAP_sequence
-    #     frame.doubleSpinBox_preparation_amplitude.setValue(opx.STIRAP_pump_amp)
-    #     frame.doubleSpinBox_depump_amplitude.setValue(opx.STIRAP_depump_amp)
-    #     frame.spinBox_pulse_length.setValue(opx.STIRAP_Pulse_Length)
-    #     frame.spinBox_T1.setValue(opx.STIRAP_Wait_Depump)
-    #     frame.spinBox_T2.setValue(opx.STIRAP_Wait_Reference)
-    #     frame.checkBox_depump12p_onOff.setChecked(opx.Drain_F1)
-    #
-    #     preparation = bin(opx.Preperation_Pulses)[2:].zfill(3)
-    #     v1 = [int(el) for el in preparation]
-    #     frame.checkBox_preparation_pi.setChecked(v1[0])
-    #     frame.checkBox_preparation_sigma_p.setChecked(v1[1])
-    #     frame.checkBox_preparation_sigma_m.setChecked(v1[2])
-    #
-    #     depump = bin(opx.STIRAP_Depump_Pulse)[2:].zfill(3)
-    #     v2 = [int(el) for el in depump]
-    #     frame.checkBox_depump_pi.setChecked(v2[0])
-    #     frame.checkBox_depump_sigma_p.setChecked(v2[1])
-    #     frame.checkBox_depump_sigma_m.setChecked(v2[2])
-    #
-    #     reference = bin(opx.STIRAP_Reference_Pulse)[2:].zfill(3)
-    #     v3 = [int(el) for el in reference]
-    #     frame.checkBox_depumpRef_pi.setChecked(v3[0])
-    #     frame.checkBox_depumpRef_sigma_p.setChecked(v3[1])
-    #     frame.checkBox_depumpRef_sigma_m.setChecked(v3[2])
 
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to RedPitayas...")

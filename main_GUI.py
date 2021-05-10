@@ -86,7 +86,7 @@ class Experiment_gui(QMainWindow):
             if self.OPX is not None:
                 self.pgc_tab.enable_interface(True)
                 self.pgc_tab.OPX = self.OPX
-            
+
     def temperature_open_tab(self):
         if not hasattr(self, 'temperature_tab'):
             self.temperature_tab = temperatureWidget.Temperature_gui(Parent=self, simulation=self.simulation)
@@ -95,7 +95,7 @@ class Experiment_gui(QMainWindow):
             if self.OPX is not None :
                 self.temperature_tab.enable_interface(True)
                 self.temperature_tab.OPX = self.OPX
-            
+
     def OD_open_tab(self):
         if not hasattr(self, 'OD_tab'):
             self.OD_tab = ODWidget.OD_gui(Parent=self, simulation=self.simulation)
