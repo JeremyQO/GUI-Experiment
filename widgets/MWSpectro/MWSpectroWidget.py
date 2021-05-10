@@ -81,6 +81,7 @@ class MWSpectroWidget(QuantumWidget):
         self.df = 0
         self.minf = 0
         self.maxf = 0
+        self.rep = 4
         # self.enable_interface(True)
 
         # self.odexp = OD_exp()
@@ -101,6 +102,7 @@ class MWSpectroWidget(QuantumWidget):
         self.df = df
         self.minf = minf
         self.maxf = maxf
+        self.rep = rep
         self.OPX.update_parameters()
         
     def scanMWfinished(self):
@@ -305,7 +307,7 @@ class MWSpectroWidget(QuantumWidget):
         self.widgetPlot.plot_traces(dataPlot, self.rptimes, truthiness, labels, self.cursors,
                                     autoscale=self.checkBox_plotAutoscale.isChecked(), sensitivity=sensitivity,
                                     nathistory=self.nathistory)
-        self.current_frequency += self.df
+        self.current_frequency += self.df*self.rep
         if self.current_frequency<self.maxf:
             self.print_to_dialogue("f = %.1f kHz" % (float(self.current_frequency)/1000))
 
