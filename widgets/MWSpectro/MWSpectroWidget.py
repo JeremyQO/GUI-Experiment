@@ -84,7 +84,7 @@ class MWSpectroWidget(QuantumWidget):
         self.rep = 4
         # self.enable_interface(True)
 
-        # self.odexp = OD_exp()
+        self.odexp = OD_exp()
     
     def startScanWorker(self):
         worker = Worker(self.scanMW)
@@ -97,8 +97,8 @@ class MWSpectroWidget(QuantumWidget):
         minf = self.frame_muwave_sequence.doubleSpinBox_start_scan.value()
         maxf = self.frame_muwave_sequence.doubleSpinBox_stop_scan.value()
         df = self.frame_muwave_sequence.doubleSpinBox_d_f_scan.value()
-        self.OPX.MW_spec_scan(minf, maxf, df)
-        self.current_frequency = minf
+        rep = self.frame_muwave_sequence.doubleSpinBox_repetitions.value()
+        self.OPX.MW_spec_scan(minf, maxf, df, rep)
         self.df = df
         self.minf = minf
         self.maxf = maxf
@@ -108,6 +108,7 @@ class MWSpectroWidget(QuantumWidget):
     def scanMWfinished(self):
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(True)
         self.print_to_dialogue("Starting Scan")
+        self.current_frequency = self.minf
         
     # def scanMWprogress(self, n):
     #     self.frame_muwave_sequence.progressBar.setValue(n)
@@ -308,7 +309,7 @@ class MWSpectroWidget(QuantumWidget):
                                     autoscale=self.checkBox_plotAutoscale.isChecked(), sensitivity=sensitivity,
                                     nathistory=self.nathistory)
         self.current_frequency += self.df*self.rep
-        if self.current_frequency<self.maxf:
+        if self.current_frequency < self.maxf:
             self.print_to_dialogue("f = %.1f kHz" % (float(self.current_frequency)/1000))
 
     def utils_connect_worker(self):
