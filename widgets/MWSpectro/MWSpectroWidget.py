@@ -62,6 +62,7 @@ class MWSpectroWidget(QuantumWidget):
         self.frame_muwave_sequence.doubleSpinBox_repetitions.editingFinished.connect(self.updateMWpulseRep)
         self.frame_muwave_sequence.pushButton_update_muwave.clicked.connect(self.updateParameters_sequence_workers)
         self.frame_muwave_sequence.pushButton_start_scan.clicked.connect(self.startScanWorker)
+        self.frame_muwave_sequence.checkBox_continuous.clicked.connect(self.continuousMode)
 
         # self.decimation = 8
         # self.cursors = list(np.array([145, 312, 535, 705]))
@@ -82,10 +83,17 @@ class MWSpectroWidget(QuantumWidget):
         self.minf = 0
         self.maxf = 0
         self.rep = 4
+        self.frame_muwave_sequence.doubleSpinBox_repetitions.setValue(self.rep)
         # self.enable_interface(True)
-
         self.odexp = OD_exp()
-    
+
+    def continuousMode(self):
+        button = self.frame_muwave_sequence.checkBox_continuous
+        if button.isChecked():
+            self.OPX.MW_switch(True)
+        else:
+            self.OPX.MW_switch(False)
+
     def startScanWorker(self):
         worker = Worker(self.scanMW)
         worker.signals.finished.connect(self.scanMWfinished)
@@ -109,9 +117,6 @@ class MWSpectroWidget(QuantumWidget):
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(True)
         self.print_to_dialogue("Starting Scan")
         self.current_frequency = self.minf
-        
-    # def scanMWprogress(self, n):
-    #     self.frame_muwave_sequence.progressBar.setValue(n)
     
     def updateMWpulseDuration(self):
         duration = self.frame_muwave_sequence.doubleSpinBox_pulse_duration.value()
@@ -333,7 +338,6 @@ class MWSpectroWidget(QuantumWidget):
         self.print_to_dialogue("RedPitayas are connected.")
         time.sleep(0.1)
         self.connectOPX()
-        # self.update_STIRAP_buttons_display()
         self.display_traces_worker()
         self.updateDecimation()
         self.updateTriggerDelay()
