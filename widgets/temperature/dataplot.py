@@ -80,7 +80,8 @@ class PlotWindow(QDialog):
         plt.tight_layout()
         self.canvas.draw()
 
-    def plot_traces(self, data, time, truthiness, labels, cursors, autoscale=True, sensitivity=None, nathistory=None):
+    def plot_traces(self, data, time, truthiness, labels, cursors, autoscale=True, sensitivity=None, 
+                    nathistory=None, xaxis_history=None):
         try:
             y1min, y1max = self.ax1.get_ylim()
             x1min, x1max = self.ax1.get_xlim()
@@ -109,9 +110,14 @@ class PlotWindow(QDialog):
             self.ax2.set_ylim(y1min/sensitivity*1e6, y1max/sensitivity*1e6)
 
         if nathistory is not None:
-            self.ax3.plot([float(el/1e6) for el in nathistory])
-            self.ax3.plot([float(el/1e6) for el in nathistory], 'or')
-            self.ax3.set_ylabel('$N_{\mathrm{at}}$ (milions)')
+            if xaxis_history==None:
+                self.ax3.plot([float(el/1e6) for el in nathistory])
+                self.ax3.plot([float(el/1e6) for el in nathistory], 'or')
+                self.ax3.set_ylabel('$N_{\mathrm{at}}$ (milions)')
+            else:
+                self.ax3.plot(xaxis_history[:len(nathistory)], nathistory)
+                self.ax3.plot(xaxis_history[:len(nathistory)], nathistory, 'or')
+                self.ax3.set_ylabel('Transmission')
 
         self.ax1.set_xlabel('Time ($\mu$s)')
         self.ax1.set_ylabel('Voltage (V)')

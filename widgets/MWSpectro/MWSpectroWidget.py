@@ -63,6 +63,7 @@ class MWSpectroWidget(QuantumWidget):
         self.frame_muwave_sequence.pushButton_update_muwave.clicked.connect(self.updateParameters_sequence_workers)
         self.frame_muwave_sequence.pushButton_start_scan.clicked.connect(self.startScanWorker)
         self.frame_muwave_sequence.checkBox_continuous.clicked.connect(self.continuousMode)
+        self.frame_muwave_sequence.pushButton_stop_scan.clicked.connect(self.stop_scanWorker)
 
         # self.decimation = 8
         # self.cursors = list(np.array([145, 312, 535, 705]))
@@ -84,8 +85,17 @@ class MWSpectroWidget(QuantumWidget):
         self.maxf = 0
         self.rep = 4
         self.frame_muwave_sequence.doubleSpinBox_repetitions.setValue(self.rep)
+        self.scanIsRunning = False
         # self.enable_interface(True)
         self.odexp = OD_exp()
+
+    def stop_scanWorker(self):
+        worker = Worker(self.stop_scan)
+        self.threadpool.start(worker)
+        
+    def stop_scan(self):
+        self.scanIsRunning = False
+        self.print_to_dialogue("Stopped scanning")
 
     def continuousMode(self):
         button = self.frame_muwave_sequence.checkBox_continuous
@@ -101,7 +111,10 @@ class MWSpectroWidget(QuantumWidget):
         self.threadpool.start(worker)
         
     def scanMW(self, progress_callback):
+        self.scanIsRunning = True
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(False)
+        self.frame_muwave_sequence.checkBox_continuous.setEnabled(False)
+        time.sleep(5)  # To let enough time for the OPX to stop outputing triggers
         minf = self.frame_muwave_sequence.doubleSpinBox_start_scan.value()*1000
         maxf = self.frame_muwave_sequence.doubleSpinBox_stop_scan.value()*1000
         df = self.frame_muwave_sequence.doubleSpinBox_d_f_scan.value()*1000
@@ -111,8 +124,19 @@ class MWSpectroWidget(QuantumWidget):
         self.df = df
         self.minf = minf
         self.maxf = maxf
+        self.current_frequency = minf
         self.rep = rep
         self.OPX.update_parameters()
+        
+        while self.scanIsRunning==True:
+            a = self.display_traces()
+            xaxis_history = np.arange(self.minf, self.maxf+self.df, self.df)
+            self.widgetPlot.plot_traces(*a, xaxis_history=xaxis_history)
+            self.print_to_dialogue("f = %.1f kHz" % (float(self.current_frequency)/1000))
+            self.current_frequency += self.df * self.rep
+            if self.current_frequency>self.maxf:
+                self.scanIsRunning=False
+        self.frame_muwave_sequence.checkBox_continuous.setEnabled(True)
         
     def scanMWfinished(self):
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(True)
@@ -255,7 +279,10 @@ class MWSpectroWidget(QuantumWidget):
 
     def display_traces_loop(self, progress_callback):
         while self.continuous_display_traces:
-            self.display_traces()
+            a = self.display_traces()
+            a[7] = a[7][-30:]
+            self.widgetPlot.plot_traces(*a)
+            
 
     def display_traces(self):
         data = self.rp.get_traces([True, False, False])
@@ -301,22 +328,15 @@ class MWSpectroWidget(QuantumWidget):
         if self.checkBox_displayNat.isChecked():
             try:
                 natoms = NAtoms()
-                Nat = natoms.calculate_Nat(self.cursors, self.rptimes, trace=self.cursors_data, avg_photons=avg_photons,
-                                           sensitivity=sensitivity)
-                self.print_to_dialogue("Number of atoms = %.1f *1e6" % (Nat / 1e6))
-                self.nathistory.append(Nat)
-                if len(self.nathistory) > 30:
-                    self.nathistory.pop(0)
+                T = natoms.calculateTransmission(self.cursors, self.rptimes, trace=self.cursors_data)
+                self.print_to_dialogue("Transmission = %.3f" % T)
+                self.nathistory.append(T)
             except IndexError:
                 self.print_to_dialogue("Display Nat: List index out of range")
-        dataPlot.append(self.cursors_data - np.roll(self.cursors_data, self.pulsesDelay))
+        dataPlot.append(self.cursors_data - np.roll(self.cursors_data, self.pulsesDelay))  # Display difference
         labels = ["OD", "Depump", "CH1", "CH2", "CH1+CH2", "Pi", "Repump", "Difference"]
-        self.widgetPlot.plot_traces(dataPlot, self.rptimes, truthiness, labels, self.cursors,
-                                    autoscale=self.checkBox_plotAutoscale.isChecked(), sensitivity=sensitivity,
-                                    nathistory=self.nathistory)
-        if self.current_frequency <= self.maxf:
-            self.print_to_dialogue("f = %.1f kHz" % (float(self.current_frequency)/1000))
-        self.current_frequency += self.df * self.rep
+        return dataPlot, self.rptimes, truthiness, labels, self.cursors,\
+            self.checkBox_plotAutoscale.isChecked(), sensitivity, self.nathistory
 
     def utils_connect_worker(self):
         worker = Worker(self.utils_connect)
