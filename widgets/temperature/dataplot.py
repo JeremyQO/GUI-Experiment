@@ -109,8 +109,8 @@ class PlotWindow(QDialog):
             self.ax2.set_ylim(y1min/sensitivity*1e6, y1max/sensitivity*1e6)
 
         if nathistory is not None:
-            self.ax3.plot([int(el/1e6) for el in nathistory])
-            self.ax3.plot([int(el/1e6) for el in nathistory], 'or')
+            self.ax3.plot([float(el/1e6) for el in nathistory])
+            self.ax3.plot([float(el/1e6) for el in nathistory], 'or')
             self.ax3.set_ylabel('$N_{\mathrm{at}}$ (milions)')
 
         self.ax1.set_xlabel('Time ($\mu$s)')

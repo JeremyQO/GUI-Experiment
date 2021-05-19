@@ -66,7 +66,7 @@ class MWSpectroWidget(QuantumWidget):
 
         # self.decimation = 8
         # self.cursors = list(np.array([145, 312, 535, 705]))
-        self.cursors = []
+        self.cursors = [1, 36, 221, 256]
         self.pulsesDelay = 0
         self.nathistory = []
 
@@ -102,11 +102,12 @@ class MWSpectroWidget(QuantumWidget):
         
     def scanMW(self, progress_callback):
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(False)
-        minf = self.frame_muwave_sequence.doubleSpinBox_start_scan.value()
-        maxf = self.frame_muwave_sequence.doubleSpinBox_stop_scan.value()
-        df = self.frame_muwave_sequence.doubleSpinBox_d_f_scan.value()
+        minf = self.frame_muwave_sequence.doubleSpinBox_start_scan.value()*1000
+        maxf = self.frame_muwave_sequence.doubleSpinBox_stop_scan.value()*1000
+        df = self.frame_muwave_sequence.doubleSpinBox_d_f_scan.value()*1000
         rep = self.frame_muwave_sequence.doubleSpinBox_repetitions.value()
         self.OPX.MW_spec_scan(minf, maxf, df, rep)
+        self.OPX.MW_switch(True)
         self.df = df
         self.minf = minf
         self.maxf = maxf
@@ -124,7 +125,7 @@ class MWSpectroWidget(QuantumWidget):
             
     def updateMWfrequencyDetuning(self):
         det = self.frame_muwave_sequence.doubleSpinBox_detuning.value()
-        self.OPX.MW_spec_detuning(int(det))
+        self.OPX.MW_spec_detuning(int(det*1000))
             
     def updateMWpulseRep(self):
         nrep = self.frame_muwave_sequence.doubleSpinBox_repetitions.value()
@@ -257,7 +258,7 @@ class MWSpectroWidget(QuantumWidget):
             self.display_traces()
 
     def display_traces(self):
-        data = self.rp.get_traces()
+        data = self.rp.get_traces([True, False, False])
         dataPlot = [data[i] for i in range(len(data))]
         dataPlot[5] = data[4]
         dataPlot[4] = np.array(data[2]) + np.array(data[3])
@@ -313,9 +314,9 @@ class MWSpectroWidget(QuantumWidget):
         self.widgetPlot.plot_traces(dataPlot, self.rptimes, truthiness, labels, self.cursors,
                                     autoscale=self.checkBox_plotAutoscale.isChecked(), sensitivity=sensitivity,
                                     nathistory=self.nathistory)
-        self.current_frequency += self.df*self.rep
-        if self.current_frequency < self.maxf:
+        if self.current_frequency <= self.maxf:
             self.print_to_dialogue("f = %.1f kHz" % (float(self.current_frequency)/1000))
+        self.current_frequency += self.df * self.rep
 
     def utils_connect_worker(self):
         worker = Worker(self.utils_connect)
@@ -331,8 +332,7 @@ class MWSpectroWidget(QuantumWidget):
 
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to RedPitayas...")
-        trigger_delay = 170000
-        self.lineEdit_triggerDelay.setText(str(trigger_delay * 1e-3))
+        trigger_delay = int(self.lineEdit_triggerDelay.text())*1000
         decimation = int(self.comboBox_decimation.currentText())
         self.rp = scpi.redPitayaCluster(trigger_delay=trigger_delay, decimation=decimation)
         self.print_to_dialogue("RedPitayas are connected.")

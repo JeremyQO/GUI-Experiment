@@ -33,7 +33,7 @@
          <double>-2000.000000000000000</double>
         </property>
         <property name="maximum">
-         <double>2000.000000000000000</double>
+         <double>20000000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -71,7 +71,7 @@
          <double>1.000000000000000</double>
         </property>
         <property name="maximum">
-         <double>2000.000000000000000</double>
+         <double>2000000.000000000000000</double>
         </property>
         <property name="value">
          <double>200.000000000000000</double>
@@ -250,10 +250,13 @@
          <number>1</number>
         </property>
         <property name="minimum">
-         <double>-2000.000000000000000</double>
+         <double>-2000000.000000000000000</double>
         </property>
         <property name="maximum">
-         <double>2000.000000000000000</double>
+         <double>2000000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>-1000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -263,10 +266,13 @@
          <number>1</number>
         </property>
         <property name="minimum">
-         <double>-2000.000000000000000</double>
+         <double>-2000000.000000000000000</double>
         </property>
         <property name="maximum">
-         <double>2000.000000000000000</double>
+         <double>2000000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>1000.000000000000000</double>
         </property>
        </widget>
       </item>
@@ -289,7 +295,10 @@
          <number>1</number>
         </property>
         <property name="maximum">
-         <double>2000.000000000000000</double>
+         <double>2000000.000000000000000</double>
+        </property>
+        <property name="value">
+         <double>100.000000000000000</double>
         </property>
        </widget>
       </item>

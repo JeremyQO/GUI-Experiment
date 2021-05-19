@@ -150,6 +150,7 @@ class Redpitaya (Scpi):
         self.decimation = decimation
         self.trigger_delay = trigger_delay
         self.set_decimation(decimation)
+        # self.set_triggerDelay(trigger_delay)
         print(self.idn_q())
         print("Decimation is set to " + self.get_decimation())
         # self.set_triggerSource('CH2_PE')
@@ -348,7 +349,7 @@ class redPitayaCluster :
                 ]
         return data
 
-    def get_traces(self):
+    def get_traces(self, which=[True, True, True]):
         for el in self.rplist:
             el.start_acquisition()
             el.set_triggerSource(el.trigger_source)
@@ -357,17 +358,21 @@ class redPitayaCluster :
             if self.rplist[0].rx_txt() == 'TD':
                 break
         data = []
-        for el in self.rplist:
-            el.tx_txt('ACQ:SOUR%i:DATA?' % (1))
-            buff_string = el.rx_txt()
-            buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-            buff1 = list(map(float, buff_string))
-            data.append(buff1)
-            el.tx_txt('ACQ:SOUR%i:DATA?' % (2))
-            buff_string = el.rx_txt()
-            buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
-            buff2 = list(map(float, buff_string))
-            data.append(buff2)
+        for i, el in enumerate(self.rplist):
+            if which[i] is True:
+                el.tx_txt('ACQ:SOUR%i:DATA?' % (1))
+                buff_string = el.rx_txt()
+                buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+                buff1 = list(map(float, buff_string))
+                data.append(buff1)
+                el.tx_txt('ACQ:SOUR%i:DATA?' % (2))
+                buff_string = el.rx_txt()
+                buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
+                buff2 = list(map(float, buff_string))
+                data.append(buff2)
+            else:
+                data.append(np.zeros(16384))
+                data.append(np.zeros(16384))
 
         self.bufferDuration = (len(data[0]) / self.sampling_rate) * self.rplist[0].decimation
         return data

@@ -367,9 +367,10 @@ class STIRAP_gui (QuantumWidget):
 
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to RedPitayas...")
-        trigger_delay = 170000
-        self.lineEdit_triggerDelay.setText(str(trigger_delay*1e-3))
+        # trigger_delay = 170000
+        # self.lineEdit_triggerDelay.setText(str(trigger_delay*1e-3))
         decimation = int(self.comboBox_decimation.currentText())
+        trigger_delay = int(self.lineEdit_triggerDelay.currentText())
         self.rp = scpi.redPitayaCluster(trigger_delay=trigger_delay, decimation=decimation)
         self.print_to_dialogue("RedPitayas are connected.")
         time.sleep(0.1)
