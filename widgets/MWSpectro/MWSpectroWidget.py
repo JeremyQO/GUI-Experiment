@@ -83,7 +83,7 @@ class MWSpectroWidget(QuantumWidget):
         self.df = 0
         self.minf = 0
         self.maxf = 0
-        self.rep = 4
+        self.rep = 1
         self.frame_muwave_sequence.doubleSpinBox_repetitions.setValue(self.rep)
         self.scanIsRunning = False
         # self.enable_interface(True)
@@ -93,7 +93,7 @@ class MWSpectroWidget(QuantumWidget):
         worker = Worker(self.stop_scan)
         self.threadpool.start(worker)
         
-    def stop_scan(self):
+    def stop_scan(self, progress_callback):
         self.scanIsRunning = False
         self.print_to_dialogue("Stopped scanning")
 
@@ -101,8 +101,11 @@ class MWSpectroWidget(QuantumWidget):
         button = self.frame_muwave_sequence.checkBox_continuous
         if button.isChecked():
             self.OPX.MW_switch(True)
+            self.continuous_display_traces = True
+            self.display_traces_worker()
         else:
             self.OPX.MW_switch(False)
+            self.continuous_display_traces = False
 
     def startScanWorker(self):
         worker = Worker(self.scanMW)
@@ -112,9 +115,10 @@ class MWSpectroWidget(QuantumWidget):
         
     def scanMW(self, progress_callback):
         self.scanIsRunning = True
+        self.nathistory = []
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(False)
         self.frame_muwave_sequence.checkBox_continuous.setEnabled(False)
-        time.sleep(5)  # To let enough time for the OPX to stop outputing triggers
+        self.frame_muwave_sequence.checkBox_continuous.setChecked(False)
         minf = self.frame_muwave_sequence.doubleSpinBox_start_scan.value()*1000
         maxf = self.frame_muwave_sequence.doubleSpinBox_stop_scan.value()*1000
         df = self.frame_muwave_sequence.doubleSpinBox_d_f_scan.value()*1000
@@ -127,21 +131,23 @@ class MWSpectroWidget(QuantumWidget):
         self.current_frequency = minf
         self.rep = rep
         self.OPX.update_parameters()
-        
+        # time.sleep(5)  # To let enough time for the OPX to stop outputing triggers
+
         while self.scanIsRunning==True:
             a = self.display_traces()
-            xaxis_history = np.arange(self.minf, self.maxf+self.df, self.df)
+            xaxis_history = np.arange(self.minf, self.maxf+self.df, self.df)/1000
             self.widgetPlot.plot_traces(*a, xaxis_history=xaxis_history)
             self.print_to_dialogue("f = %.1f kHz" % (float(self.current_frequency)/1000))
             self.current_frequency += self.df * self.rep
             if self.current_frequency>self.maxf:
-                self.scanIsRunning=False
+                self.scanIsRunning = False
         self.frame_muwave_sequence.checkBox_continuous.setEnabled(True)
         
     def scanMWfinished(self):
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(True)
-        self.print_to_dialogue("Starting Scan")
+        self.print_to_dialogue("Finished Scan")
         self.current_frequency = self.minf
+        # self.frame_muwave_sequence.checkBox_continuous.setEnabled(True)
     
     def updateMWpulseDuration(self):
         duration = self.frame_muwave_sequence.doubleSpinBox_pulse_duration.value()
@@ -280,12 +286,18 @@ class MWSpectroWidget(QuantumWidget):
     def display_traces_loop(self, progress_callback):
         while self.continuous_display_traces:
             a = self.display_traces()
-            a[7] = a[7][-30:]
+            al = [el for el in a]
+            ee = np.array(al[7])*1e6
+            try:
+                ee = ee[-40:]  # Display 40 points
+            except TypeError:
+                pass
+            al[7] = ee
+            a = tuple(i for i in al)
             self.widgetPlot.plot_traces(*a)
-            
 
     def display_traces(self):
-        data = self.rp.get_traces([True, False, False])
+        data = self.rp.get_traces([True, False, False])        
         dataPlot = [data[i] for i in range(len(data))]
         dataPlot[5] = data[4]
         dataPlot[4] = np.array(data[2]) + np.array(data[3])
@@ -329,7 +341,7 @@ class MWSpectroWidget(QuantumWidget):
             try:
                 natoms = NAtoms()
                 T = natoms.calculateTransmission(self.cursors, self.rptimes, trace=self.cursors_data)
-                self.print_to_dialogue("Transmission = %.3f" % T)
+                # self.print_to_dialogue("Transmission = %.3f" % T)
                 self.nathistory.append(T)
             except IndexError:
                 self.print_to_dialogue("Display Nat: List index out of range")
@@ -368,6 +380,10 @@ if __name__ == "__main__":
     simulation = False if os.getlogin() == 'orelb' else True
     window = MWSpectroWidget(simulation=simulation)
     window.show()
+    window.checkCheckBoxParameters()
+    window.utils_connect_worker()
+    window.checkBox_sequence.setEnabled(True)
+    window.showHideSequence()
     app.exec_()
     sys.exit(app.exec_())
 

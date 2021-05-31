@@ -81,7 +81,7 @@ class PlotWindow(QDialog):
         self.canvas.draw()
 
     def plot_traces(self, data, time, truthiness, labels, cursors, autoscale=True, sensitivity=None, 
-                    nathistory=None, xaxis_history=None):
+                    nathistory=None, xaxis_history=[]):
         try:
             y1min, y1max = self.ax1.get_ylim()
             x1min, x1max = self.ax1.get_xlim()
@@ -110,7 +110,7 @@ class PlotWindow(QDialog):
             self.ax2.set_ylim(y1min/sensitivity*1e6, y1max/sensitivity*1e6)
 
         if nathistory is not None:
-            if xaxis_history==None:
+            if xaxis_history==[]:
                 self.ax3.plot([float(el/1e6) for el in nathistory])
                 self.ax3.plot([float(el/1e6) for el in nathistory], 'or')
                 self.ax3.set_ylabel('$N_{\mathrm{at}}$ (milions)')

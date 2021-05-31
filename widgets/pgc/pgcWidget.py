@@ -20,7 +20,7 @@ import time
 try:
     from functions.pgc import MvCamera
     # from OPXcontrol.OPX_control_New_v1 import OPX
-    # from mvIMPACT import acquire
+    from mvIMPACT import acquire
 except:
     pass
 import os
@@ -29,6 +29,7 @@ from functions.pgc.data_analysis import image, images
 from widgets.worker import Worker 
 
 from widgets.quantumWidget import QuantumWidget
+
 
 class Pgc_gui (QuantumWidget):
     def __init__(self, Parent=None, ui=None, simulation=True):
