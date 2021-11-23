@@ -213,7 +213,7 @@
       <double>1.000000000000000</double>
      </property>
      <property name="singleStep">
-      <double>0.020000000000000</double>
+      <double>0.010000000000000</double>
      </property>
      <property name="value">
       <double>0.250000000000000</double>
@@ -343,7 +343,7 @@
    <item row="12" column="0">
     <widget class="QDoubleSpinBox" name="doubleSpinBox_FinalPGCFreq">
      <property name="minimum">
-      <double>80.000000000000000</double>
+      <double>0.000000000000000</double>
      </property>
      <property name="maximum">
       <double>130.000000000000000</double>
@@ -385,6 +385,16 @@
     <widget class="QCheckBox" name="checkBox_STIRAP_ON">
      <property name="text">
       <string>STIRAP</string>
+     </property>
+     <property name="checked">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QCheckBox" name="checkBox_uwavespectro_ON">
+     <property name="text">
+      <string>uWave Spectro</string>
      </property>
      <property name="checked">
       <bool>true</bool>

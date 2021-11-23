@@ -1,0 +1,190 @@
+Metadata-Version: 2.1
+Name: pyqtconsole
+Version: 1.2.1
+Summary: Light weight python interpreter, easy to embed into Qt applications
+Home-page: https://github.com/marcus-oscarsson/pyqtconsole
+Author: Marcus Oskarsson
+Author-email: marcus.oscarsson@esrf.fr
+License: MIT
+Keywords: interactive interpreter console shell autocompletion jedi qt
+Platform: UNKNOWN
+Classifier: Environment :: X11 Applications :: Qt
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Topic :: Software Development :: Interpreters
+Classifier: Topic :: Software Development :: User Interfaces
+Requires-Python: >=2.7
+Description-Content-Type: text/x-rst
+Requires-Dist: qtpy
+Requires-Dist: jedi
+
+pyqtconsole
+===========
+
+|Version| |Python| |License| |Tests|
+
+pyqtconsole is a lightweight python console for Qt applications. It's made to
+be easy to embed in other Qt applications and comes with some examples that
+show how this can be done. The interpreter can run in a separate thread, in
+the UI main thread or in a gevent task.
+
+Installing
+~~~~~~~~~~
+
+Simply type::
+
+    pip install pyqtconsole
+
+Or to install a development version from local checkout, type::
+
+    pip install -e .
+
+Simple usage
+~~~~~~~~~~~~
+
+The following snippet shows how to create a console that will execute user
+input in a separate thread. Be aware that long running tasks will still block
+the main thread due to the GIL. See the ``examples`` directory for more
+examples.
+
+.. code-block:: python
+
+    import sys
+    from threading import Thread
+    from PyQt5.QtWidgets import QApplication
+
+    from pyqtconsole.console import PythonConsole
+
+    app = QApplication([])
+    console = PythonConsole()
+    console.show()
+    console.eval_in_thread()
+
+    sys.exit(app.exec_())
+
+Embedding
+~~~~~~~~~
+
+* *Separate thread* - Runs the interpreter in a separate thread, see the
+  example threaded.py_. Running the interpreter in a separate thread obviously
+  limits the interaction with the Qt application. The parts of Qt that needs
+  to be called from the main thread will not work properly, but is excellent
+  way for having a 'plain' python console in your Qt app.
+
+* *main thread* - Runs the interpreter in the main thread, see the example
+  inuithread.py_. Makes full interaction with Qt possible, lenghty operations
+  will of course freeze the UI (as any lenghty operation that is called from
+  the main thread). This is a great alternative for people who does not want
+  to use the gevent based approach but still wants full interactivity with Qt.
+
+* *gevent* - Runs the interpreter in a gevent task, see the example
+  `_gevent.py`_. Allows for full interactivity with Qt without special
+  consideration (at least to some extent) for longer running processes. The
+  best method if you want to use pyQtgraph, Matplotlib, PyMca or similar.
+
+Customizing syntax highlighting
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The coloring of the syntax highlighting can be customized by passing a
+``formats`` dictionary to the ``PythonConsole`` constructer. This dictionary
+must be shaped as follows:
+
+.. code-block:: python
+
+    import pyqtconsole.highlighter as hl
+    console = PythonConsole(formats={
+        'keyword':    hl.format('blue', 'bold'),
+        'operator':   hl.format('red'),
+        'brace':      hl.format('darkGray'),
+        'defclass':   hl.format('black', 'bold'),
+        'string':     hl.format('magenta'),
+        'string2':    hl.format('darkMagenta'),
+        'comment':    hl.format('darkGreen', 'italic'),
+        'self':       hl.format('black', 'italic'),
+        'numbers':    hl.format('brown'),
+        'inprompt':   hl.format('darkBlue', 'bold'),
+        'outprompt':  hl.format('darkRed', 'bold'),
+    })
+
+All keys are optional and default to the value shown above if left unspecified.
+
+Credits
+~~~~~~~
+
+This module depends on QtPy which provides a compatibility layer for
+Qt4 and Qt5. The console is tested under both Qt4 and Qt5.
+
+
+.. _threaded.py: https://github.com/marcus-oscarsson/pyqtconsole/blob/master/examples/threaded.py
+.. _inuithread.py: https://github.com/marcus-oscarsson/pyqtconsole/blob/master/examples/inuithread.py
+.. _`_gevent.py`: https://github.com/marcus-oscarsson/pyqtconsole/blob/master/examples/_gevent.py
+.. _QtPy: https://github.com/spyder-ide/qtpy
+
+
+.. Badges:
+
+.. |Version| image::    https://img.shields.io/pypi/v/pyqtconsole.svg
+   :target:             https://pypi.org/project/pyqtconsole
+   :alt:                Latest Version
+
+.. |Python| image::     https://img.shields.io/pypi/pyversions/pyqtconsole.svg
+   :target:             https://pypi.org/project/pyqtconsole#files
+   :alt:                Python versions
+
+.. |License| image::    https://img.shields.io/pypi/l/pyqtconsole.svg
+   :target:             https://github.com/marcus-oscarsson/pyqtconsole/blob/master/LICENSE
+   :alt:                License: MIT
+
+.. |Tests| image::      https://api.travis-ci.org/marcus-oscarsson/pyqtconsole.svg?branch=master
+   :target:             https://travis-ci.org/marcus-oscarsson/pyqtconsole
+   :alt:                Test status
+
+Changelog
+~~~~~~~~~
+
+v1.2.1
+------
+Date: 17.03.2020
+
+- fix accepting input with AltGr modifier on win10 (#53)
+
+
+v1.2.0
+------
+Date: 17.03.2020
+
+- add PySide2 compatibility
+- add Ctrl-U shortcut to clear the input buffer
+- use standard QtPy package to provide the compatibility layer
+- hide the cursor during the execution of a python command
+- mimic shell behaviour when using up and down key to go to end of history
+- fix crash when closing the interpreter window of the threaded example
+- disable excepthook on displaying exception
+- write '\n' before syntax errors for consistency
+
+Thanks to @roberthdevries and @irgolic for their contributions!
+
+
+v1.1.5
+------
+Date: 25.11.2019
+
+- fix TypeError in highlighter when called without formats
+
+
+v1.1.4
+------
+Date: 21.11.2019
+
+- fix AttributeError due to QueuedConnection on PyQt<5.11 (#23)
+- fix exception on import when started within spyder (#26)
+- fix gevent example to incorporate interoperability code for gevent/Qt (#28)
+- fix not waiting for empty line when entering code blocks before applying input (#30)
+- fix TypeError during compilation step on python 3.8
+- allow user to override syntax highlighting color preferences (#29)
+  note that this is provisional API
+- automate release process (#34)
+
+

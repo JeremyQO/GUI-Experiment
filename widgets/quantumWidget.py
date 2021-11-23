@@ -22,7 +22,7 @@ import widgets.temperature.dataplot as dataplot
 from pyqtconsole.console import PythonConsole
 # try:
 # from OPXcontrol.OPX_control_New_v2 import OPX
-from OPXcontrol.OPX_control_MW import OPX
+from OPX_control_MW import OPX
 # except:
 #     print("Could not load pgc_macro_with_OD")
 
@@ -63,6 +63,7 @@ class QuantumWidget (QWidget):
         self.frame_parameters.checkBox_OD_ON.clicked.connect(self.OD_switch_connect)
         self.frame_parameters.checkBox_Depump_ON.clicked.connect(self.Depump_switch_connect)
         self.frame_parameters.checkBox_STIRAP_ON.clicked.connect(self.STIRAP_switch_connect)
+        self.frame_parameters.checkBox_uwavespectro_ON.clicked.connect(self.uwavespectro_switch_connect)
         self.frame_parameters.pushButton_Update_FPGCAmp.clicked.connect(self.Update_FPGCAmp_connect)
         self.frame_parameters.pushButton_AOM_0_AMP.clicked.connect(self.update_fountain_AOM_0_amplitude_connect)
         self.frame_parameters.pushButton_AOM_P_AMP.clicked.connect(self.update_fountain_AOM_P_amplitude_connect)
@@ -111,10 +112,13 @@ class QuantumWidget (QWidget):
     def STIRAP_switch_connect(self):
         # self.OPX.STIRAP_switch(self.frame_parameters.checkBox_STIRAP_ON.isChecked())
         self.OPX.STIRAP_operation_switch(self.frame_parameters.checkBox_STIRAP_ON.isChecked())
+        
+    def uwavespectro_switch_connect(self):
+        self.OPX.MW_switch(self.frame_parameters.checkBox_uwavespectro_ON.isChecked())
 
     def FinalPGCFreq_connect(self):
         f = self.frame_parameters.doubleSpinBox_FinalPGCFreq.value()
-        self.OPX.update_pgc_final_freq(f)
+        self.OPX.update_pgc_final_freq(f*1e6)
 
     def Update_FPGCAmp_connect(self):
         a = self.frame_parameters.doubleSpinBox_Update_FPGCAmp.value()
@@ -218,6 +222,9 @@ class QuantumWidget (QWidget):
                 self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
+        self.frame_parameters.doubleSpinBox_Update_FPGCAmp.setValue(self.OPX.PGC_final_amp)
+        self.frame_parameters.doubleSpinBox_FinalPGCFreq.setValue(self.OPX.IF_TOP1_PGC*1e-6)
+
 
 
 if __name__=="__main__":

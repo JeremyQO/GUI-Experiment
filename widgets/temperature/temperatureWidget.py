@@ -157,7 +157,7 @@ class Temperature_gui (QuantumWidget):
         sucess = True
         for i in range(1, N_snap + 1):
             self.print_to_dialogue("Snap at %.2f ms" % (i))
-            progress_callback.emit(i * 100 / N_snap)
+            progress_callback.emit(int(i * 100 / N_snap))
             im, _ = self.camera.CaptureImage()
             imnp = np.asarray(im.convert(mode='L'), dtype=float)
             try:

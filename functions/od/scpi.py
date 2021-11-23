@@ -10,6 +10,7 @@ SCPI access to Red Pitaya.
 import socket
 import numpy as np
 import time
+#from functions.od.RSCurrentGenerator.RSCurrentGenerator import RSCurrentGenerator
 
 
 class Scpi (object):
@@ -252,7 +253,7 @@ class Redpitaya (Scpi):
             self.tx_txt('ACQ:TRIG:STAT?')
             if self.rx_txt() == 'TD':
                 break
-        
+        #RSCurrentGenerator.Config_Currents(0.2, 0.05, 1)  # assaf added
         self.tx_txt('ACQ:SOUR%i:DATA?' % (channel))
         buff_string = self.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
@@ -312,8 +313,11 @@ class Redpitaya (Scpi):
 
 class redPitayaCluster :
     def __init__(self, trigger_delay=-40000, decimation=8):
+        print("Connecting to rp-f08a95.local")
         self.Sigma = Redpitaya("rp-f08a95.local", trigger_delay=trigger_delay, decimation=decimation)  # sigma +/-
+        print("Connecting to rp-f08c22.local")
         self.Pi = Redpitaya("rp-f08c22.local", trigger_delay=trigger_delay, decimation=decimation)  # Pi
+        print("Connecting to rp-f0629e.local")
         self.OD = Redpitaya("rp-f0629e.local", trigger_delay=trigger_delay, decimation=decimation, trigger_source='EXT_NE')  # OD
         self.rplist = [self.OD, self.Sigma, self.Pi]
         self.triggerDelay = trigger_delay
@@ -380,7 +384,7 @@ class redPitayaCluster :
 
 if __name__ == "__main__":
     # rp1 = Redpitaya("rp-f08a95.local")  # sigma +/-
-    # rp2 = Redpitaya("rp-f08c22.local")
+    # rp2 = Redpitaya("rp-f08c22.local")  # Pi
     # rp3 = Redpitaya("rp-f0629e.local")  # OD
     rp = redPitayaCluster()
 

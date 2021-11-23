@@ -130,9 +130,9 @@ class Pgc_gui (QuantumWidget):
             return
 
         self.print_to_dialogue("Snapping Background...")
-        self.OPX.update_snap_time(50)
+        # self.OPX.update_snap_time(10)
         # self.OPX.Imaging_switch(True)
-        self.OPX.update_parameters()
+        # self.OPX.update_parameters()
         backgroundim, _ = self.camera.CaptureImage()
         # time.sleep(5)
         self.background = np.asarray(backgroundim.convert(mode='L'), dtype=float)

@@ -407,7 +407,11 @@
              </widget>
             </item>
             <item row="7" column="1" colspan="2">
-             <widget class="QLineEdit" name="lineEdit_triggerDelay"/>
+             <widget class="QLineEdit" name="lineEdit_triggerDelay">
+              <property name="text">
+               <string>540</string>
+              </property>
+             </widget>
             </item>
             <item row="4" column="1" colspan="2">
              <widget class="QComboBox" name="comboBox_decimation">

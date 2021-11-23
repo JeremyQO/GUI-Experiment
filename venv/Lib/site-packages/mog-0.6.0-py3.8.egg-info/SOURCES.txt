@@ -1,0 +1,9 @@
+setup.cfg
+setup.py
+mog/__init__.py
+mog.egg-info/PKG-INFO
+mog.egg-info/SOURCES.txt
+mog.egg-info/dependency_links.txt
+mog.egg-info/entry_points.txt
+mog.egg-info/requires.txt
+mog.egg-info/top_level.txt

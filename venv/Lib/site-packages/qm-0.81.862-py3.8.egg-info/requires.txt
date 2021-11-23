@@ -1,0 +1,5 @@
+grpcio<2,>=1.26.0
+protobuf<4,>=3.7.1
+marshmallow<4,>=3.0.0
+marshmallow-polyfield<6,>=5.7
+numpy>=1.17.0

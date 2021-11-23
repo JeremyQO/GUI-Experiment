@@ -22,7 +22,7 @@ def fit_TOF(t, t0, s_0, T):
     # m = 2.206230502536E-25
     #m = 2.20694657E-25
     m = 86.9091835 * 1.660538782e-27 # Rubidium 87
-    a=kb*T/m 
+    a = kb*T/m
     return np.sqrt(s_0**2+a*(t-t0)**2)
 
 class image:
@@ -200,7 +200,8 @@ def run_exp():
         print('t')
 
 if __name__=="__main__":
-    dirname = 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\23-12-2020'
+    # dirname = 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\23-12-2020'
+    dirname = 'C:\\Pycharm\\Expriements\\DATA\\Image_Temperature\\16-june-2021'
     ims = images(dirname, imrange=[0,19], pixelCal = 124.6)
     # ims.images[0].optimizing()
     plt.figure()

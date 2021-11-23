@@ -81,7 +81,7 @@ class PlotWindow(QDialog):
         self.canvas.draw()
 
     def plot_traces(self, data, time, truthiness, labels, cursors, autoscale=True, sensitivity=None, 
-                    nathistory=None, xaxis_history=[]):
+                    nathistory=None, boxText="", xaxis_history=[]):
         try:
             y1min, y1max = self.ax1.get_ylim()
             x1min, x1max = self.ax1.get_xlim()

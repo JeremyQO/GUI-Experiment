@@ -56,7 +56,6 @@ class MWSpectroWidget(QuantumWidget):
         self.frame_muwave_sequence.hide()
 
         # MW spectroscopy parameters :
-        # self.pushButton_update_MW_pulse_duration.clicked.connect(self.updateMWpulseDurationWorker)
         self.frame_muwave_sequence.doubleSpinBox_pulse_duration.editingFinished.connect(self.updateMWpulseDuration)
         self.frame_muwave_sequence.doubleSpinBox_detuning.editingFinished.connect(self.updateMWfrequencyDetuning)
         self.frame_muwave_sequence.doubleSpinBox_repetitions.editingFinished.connect(self.updateMWpulseRep)
@@ -67,7 +66,7 @@ class MWSpectroWidget(QuantumWidget):
 
         # self.decimation = 8
         # self.cursors = list(np.array([145, 312, 535, 705]))
-        self.cursors = [1, 36, 221, 256]
+        self.cursors = [1, 36, 421, 456]
         self.pulsesDelay = 0
         self.nathistory = []
 
@@ -146,6 +145,26 @@ class MWSpectroWidget(QuantumWidget):
     def scanMWfinished(self):
         self.frame_muwave_sequence.pushButton_start_scan.setEnabled(True)
         self.print_to_dialogue("Finished Scan")
+        
+        
+        now = datetime.now()
+        today = date.today()
+        datadir = os.path.join("C:\\", "Pycharm", "Expriements", "DATA", "MW_scans")
+        todayformated = today.strftime("%B-%d-%Y")
+        todaydatadir = os.path.join(datadir, todayformated)
+        nowformated = now.strftime("%Hh%Mm%Ss")
+        try:
+            os.makedirs(todaydatadir)
+            self.print_to_dialogue("Created folder DATA/MW_scans/%s" % (todayformated))
+            self.print_to_dialogue("Scan Data Saved")
+        except FileExistsError:
+            self.print_to_dialogue("Scan Data Saved")
+
+        datafile = os.path.join(todaydatadir, nowformated + ".txt")       
+        
+        if self.frame_muwave_sequence.checkBox_save.isChecked():
+            with open(datafile, "ab") as f:
+                np.savetxt(f, self.nathistory, header=self.lineEdit_label.text())
         self.current_frequency = self.minf
         # self.frame_muwave_sequence.checkBox_continuous.setEnabled(True)
     
@@ -217,7 +236,7 @@ class MWSpectroWidget(QuantumWidget):
                             CH1_Pi_Pi=self.last_data1_Pi,
                             CH2_Pi_repump=self.last_data_repump,
                             times=self.rptimes,
-                            MW_pulse_duration=self.doubleSpinBox_MW_pulse_duration.value(),
+                            MW_pulse_duration=self.frame_muwave_sequence.doubleSpinBox_pulse_duration.value(),
                             MW_frequency=self.current_frequency,
                             meta=meta,
                             )
@@ -339,16 +358,23 @@ class MWSpectroWidget(QuantumWidget):
             sensitivity = 75e3  # This is a h'irtut
         if self.checkBox_displayNat.isChecked():
             try:
-                natoms = NAtoms()
-                T = natoms.calculateTransmission(self.cursors, self.rptimes, trace=self.cursors_data)
-                # self.print_to_dialogue("Transmission = %.3f" % T)
-                self.nathistory.append(T)
+                if boxText == "Depump":
+                    natoms = NAtoms()
+                    Nat = natoms.calculate_Nat(self.cursors, self.rptimes, trace=self.cursors_data,
+                                               avg_photons=avg_photons, sensitivity=sensitivity)
+                    # self.print_to_dialogue("Number of atoms = %.1f *1e6" % (Nat / 1e6))
+                    self.nathistory.append(Nat)
+                else:
+                    natoms = NAtoms()
+                    T = natoms.calculateTransmission(self.cursors, self.rptimes, trace=self.cursors_data)
+                    # self.print_to_dialogue("Transmission = %.3f" % T)
+                    self.nathistory.append(T)
             except IndexError:
                 self.print_to_dialogue("Display Nat: List index out of range")
         dataPlot.append(self.cursors_data - np.roll(self.cursors_data, self.pulsesDelay))  # Display difference
         labels = ["OD", "Depump", "CH1", "CH2", "CH1+CH2", "Pi", "Repump", "Difference"]
         return dataPlot, self.rptimes, truthiness, labels, self.cursors,\
-            self.checkBox_plotAutoscale.isChecked(), sensitivity, self.nathistory
+            self.checkBox_plotAutoscale.isChecked(), sensitivity, self.nathistory, boxText
 
     def utils_connect_worker(self):
         worker = Worker(self.utils_connect)
@@ -360,7 +386,8 @@ class MWSpectroWidget(QuantumWidget):
     def utils_connect_finished(self):
         self.enable_interface(True)
         self.pushButton_utils_Connect.setEnabled(True)
-        self.doubleSpinBox_MW_pulse_duration.setValue(self.OPX.Pulse_Length_MW)
+        self.frame_muwave_sequence.doubleSpinBox_pulse_duration.setValue(int(self.OPX.Pulse_Length_MW))
+
 
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to RedPitayas...")

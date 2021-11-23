@@ -21,7 +21,7 @@ import numpy
 import os
 import glob
 from datetime import date, datetime
-import cv2
+# import cv2
 from os.path import isfile, join
 import numpy as np
 import matplotlib.pyplot as mtl
