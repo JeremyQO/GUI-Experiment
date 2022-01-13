@@ -9,8 +9,8 @@ This class should be used as a parent to all the widgets of the various experime
 
 import time
 from PyQt5 import uic
-from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QShortcut
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtWidgets import QWidget, QApplication, QMessageBox, QShortcut, QListWidgetItem
+from PyQt5.QtGui import QKeySequence, QColor
 import matplotlib
 if matplotlib.get_backend()!='Qt5Agg':
     matplotlib.use('Qt5Agg')
@@ -22,7 +22,7 @@ import widgets.temperature.dataplot as dataplot
 from pyqtconsole.console import PythonConsole
 # try:
 # from OPXcontrol.OPX_control_New_v2 import OPX
-from OPX_control_MW import OPX
+from OPX_control_with_QuadRF import OPX
 # except:
 #     print("Could not load pgc_macro_with_OD")
 
@@ -191,10 +191,15 @@ class QuantumWidget (QWidget):
         else:
             self.frame_3.hide()
 
-    def print_to_dialogue (self, s):
-        now = datetime.now()
-        dt_string = now.strftime("%H:%M:%S")
-        self.listWidget_dialogue.addItem(dt_string+" - "+s)
+    def print_to_dialogue (self, s, color = 'black'):
+        s = str(s)
+        if color not in ['black','green','red','blue']:
+            color = 'black'
+            s = s + ' You must choose colour from: %s' %str(color)
+        dt_string =  datetime.now().strftime("%H:%M:%S")
+        listItem = QListWidgetItem(dt_string+" - "+s)
+        listItem.setForeground(QColor(color))
+        self.listWidget_dialogue.addItem(listItem)
         print(dt_string+" - "+s)
         self.listWidget_dialogue.scrollToBottom()
 
@@ -222,8 +227,8 @@ class QuantumWidget (QWidget):
                 self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
-        self.frame_parameters.doubleSpinBox_Update_FPGCAmp.setValue(self.OPX.PGC_final_amp)
-        self.frame_parameters.doubleSpinBox_FinalPGCFreq.setValue(self.OPX.IF_TOP1_PGC*1e-6)
+        #self.frame_parameters.doubleSpinBox_Update_FPGCAmp.setValue(self.OPX.PGC_final_amp)
+        #self.frame_parameters.doubleSpinBox_FinalPGCFreq.setValue(self.OPX.IF_TOP1_PGC*1e-6)
 
 
 

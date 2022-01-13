@@ -9,7 +9,8 @@ SCPI access to Red Pitaya.
 
 import socket
 import numpy as np
-import time
+from datetime import datetime
+import matplotlib.pyplot as plt
 #from functions.od.RSCurrentGenerator.RSCurrentGenerator import RSCurrentGenerator
 
 
@@ -34,6 +35,7 @@ class Scpi (object):
             self._socket.connect((host, port))
 
         except socket.error as e:
+            print(host,':', port)
             print('SCPI >> connect({:s}:{:d}) failed: {:s}'.format(host, port, e))
 
     def __del__(self):
@@ -148,6 +150,7 @@ class Redpitaya (Scpi):
     def __init__(self, host, timeout=None, port=5000, decimation=8, trigger_delay=0, trigger_source='EXT_PE'):
         super().__init__(host, timeout, port)
         self.sampling_rate = 125e6
+        self.bufferDuration = 16384
         self.decimation = decimation
         self.trigger_delay = trigger_delay
         self.set_decimation(decimation)
@@ -173,9 +176,10 @@ class Redpitaya (Scpi):
         """Set decimation factor."""
         options = (1, 8, 64, 1024, 8192, 65536)
         if d in options:
-            newTriggDelay = self.trigger_delay/self.decimation * d
-            self.set_triggerDelay(newTriggDelay)
+            # newTriggDelay = self.trigger_delay/self.decimation * d
+            # self.set_triggerDelay(newTriggDelay)
             self.decimation = d
+            self.sampling_rate = 125e6 / d
             return self.tx_txt('ACQ:DEC '+str(d))
         else:
             print("Please choose decimation from "+str(options))
@@ -224,8 +228,8 @@ class Redpitaya (Scpi):
     
     def set_triggerLevel(self, lvl):
         """Set trigger level in V."""
-        return self.tx_txt('ACQ:TRIG:LEV '+ str(lvl) + ' mV')
-    
+        return self.tx_txt('ACQ:TRIG:LEV ' + str(lvl) + ' mV')
+
     def get_data(self,start, end, source):
         return self.txrx_txt('ACQ:SOUR%i:GET:DATA:%i:%i?'%(int(source), int(start), int(end)))
     
@@ -253,12 +257,12 @@ class Redpitaya (Scpi):
             self.tx_txt('ACQ:TRIG:STAT?')
             if self.rx_txt() == 'TD':
                 break
+
         #RSCurrentGenerator.Config_Currents(0.2, 0.05, 1)  # assaf added
         self.tx_txt('ACQ:SOUR%i:DATA?' % (channel))
         buff_string = self.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff = list(map(float, buff_string))
-        self.sampling_rate = (len(buff)/13*100000) / self.decimation
         return buff
 
     def get_traces(self):
@@ -268,9 +272,10 @@ class Redpitaya (Scpi):
             self.tx_txt('ACQ:TRIG:STAT?')
             if self.rx_txt() == 'TD':
                 break
-
         self.tx_txt('ACQ:SOUR%i:DATA?' % (1))
+        # print(str(datetime.now()))
         buff_string = self.rx_txt()
+        # print(str(datetime.now()))
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff1 = list(map(float, buff_string))
 
@@ -278,9 +283,7 @@ class Redpitaya (Scpi):
         buff_string = self.rx_txt()
         buff_string = buff_string.strip('{}\n\r').replace("  ", "").split(',')
         buff2 = list(map(float, buff_string))
-
-        self.sampling_rate = (len(buff1) / 12.5 * 100000) / self.decimation
-        return buff1, buff2
+        return [buff1, buff2]
 
     def get_fullbufferFormated(self, s):
         buff_string = self.get_fullBuffer(s)
@@ -311,10 +314,11 @@ class Redpitaya (Scpi):
 #     if s == 2:
 #         np.savetxt("homodyne_electronics_CH2.txt", data)
 
-class redPitayaCluster :
+class redPitayaCluster:
     def __init__(self, trigger_delay=-40000, decimation=8):
         print("Connecting to rp-f08a95.local")
-        self.Sigma = Redpitaya("rp-f08a95.local", trigger_delay=trigger_delay, decimation=decimation)  # sigma +/-
+        # self.Sigma = Redpitaya("rp-f08a95.local", trigger_delay=trigger_delay, decimation=decimation)  # sigma +/-
+        self.Sigma = Redpitaya("rp-f08c36.local", trigger_delay=trigger_delay, decimation=decimation)  # sigma +/-
         print("Connecting to rp-f08c22.local")
         self.Pi = Redpitaya("rp-f08c22.local", trigger_delay=trigger_delay, decimation=decimation)  # Pi
         print("Connecting to rp-f0629e.local")
@@ -335,6 +339,12 @@ class redPitayaCluster :
         # self.set_triggerDelay(self.triggerDelay / d)
         self.decimation = d
         self.triggerDelay = self.Sigma.trigger_delay
+
+    def set_triggerSource(self, s):
+        """Disable triggering, trigger immediately or set trigger source & edge."""
+        for rp in self.rplist:
+            rp.set_triggerSource(s)
+
 
     def get_triggerDelay(self):
         """Get trigger delay in ns."""
@@ -382,9 +392,40 @@ class redPitayaCluster :
         return data
 
 
+def get_frequency_shift():
+    pass
+
+
+import matplotlib.pyplot as plt # TODO for debugging
+
 if __name__ == "__main__":
     # rp1 = Redpitaya("rp-f08a95.local")  # sigma +/-
+    # rp1 = Redpitaya("127.0.0.1")  # sigma +/-
+
     # rp2 = Redpitaya("rp-f08c22.local")  # Pi
+    rp2 = Redpitaya("rp-f08c22.local", trigger_delay=25e6, decimation=64)  # Pi
+    # rp2.set_decimation(64)
+    #
+    #
+    # plt.show()
+    #
+    # fig = plt.figure()
+    # ax = fig.add_subplot(111)
+    # data = rp2.get_traces()
+    # rptimes = np.arange(0, rp2.bufferDuration / rp2.sampling_rate, 1. / rp2.sampling_rate) * 1e6
+    # line1, = ax.plot(rptimes, data[0], 'r-')  # Returns a tuple of line objects, thus the comma
+    # line2, = ax.plot(rptimes, data[1], 'r-')  # Returns a tuple of line objects, thus the comma
+    #
+    # while True:
+    #     data = rp2.get_traces()
+    #
+    #     line1.set_ydata(data[0])
+    #     line2.set_ydata(data[1])
+    #     fig.canvas.draw()
+    #     fig.canvas.flush_events()
+
     # rp3 = Redpitaya("rp-f0629e.local")  # OD
-    rp = redPitayaCluster()
+    # rp = redPitayaCluster()
+    # a, b = rp2.get_traces()
+
 
