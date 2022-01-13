@@ -8,6 +8,7 @@ Created on Mon Dec 28 16:52:30 2020
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QVBoxLayout
 import matplotlib
+
 if matplotlib.get_backend() != 'Qt5Agg':
     matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -25,21 +26,21 @@ class PlotWindow(QDialog):
         super(PlotWindow, self).__init__(parent)
 
         # a figure instance to plot on
-        # plt.ioff()
-        plt.ion()
-        self.figure = plt.figure()
+        plt.ioff()
+        self.figure = plt.figure(1)
         self.ax1 = self.figure.add_subplot(111)
-        self.scatter = None # Placeholder
-        self.annotations = None
-        self.lines = []
-        for i in range(4): # in principle, hold 4 places for lines. With good coding, this is not neccessary
-            line1, = self.ax1.plot([1], [1], 'r-')  # Returns a tuple of line objects, thus the comma
-            self.lines.append(line1)
+        line1, = self.ax1.plot([1], [1], 'r-')  # Returns a tuple of line objects, thus the comma
+        self.line1 = line1
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
 
+        # ax1 = plt.subplot2grid((2, 2), (1, 1), colspan=1, rowspan=1)
+        # ax2 = plt.subplot2grid((2, 2), (0, 1), colspan=1, rowspan=1)
+        # ax3 = plt.subplot2grid((2, 2), (1, 0), colspan=1, rowspan=1)
+        # ax4 = plt.subplot2grid((2, 2), (0, 0), colspan=1, rowspan=1)
+        # plt.tight_layout()
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
@@ -81,95 +82,13 @@ class PlotWindow(QDialog):
         plt.tight_layout()
         self.canvas.draw()
 
-    def plot_Scope(self, x_data,y_data, autoscale = False, redraw = False, **kwargs):
-        if not redraw:  # meanning - merely update data, without redrawing all.
-            for i, line in enumerate(self.lines):
-                self.lines[0].set_ydata(y_data[0])
-                # self.ax1.set_ylim(min(kwargs['y_ticks']), max(kwargs['y_ticks']))
-            if autoscale:
-                miny, maxy = min(y_data[0]), max(y_data[0])
-                headroom = np.abs(maxy - miny) * 0.05 # leaving some room atop and below data in graph
-                self.ax1.set_ylim(min(y_data[0]) - headroom, max(y_data[0]) + headroom)
-                ticks = np.linspace(miny, maxy, 10)
-                self.ax1.set_yticks(ticks)
-                self.ax1.set_yticklabels(['{:5.3f}'.format(t) for t in ticks])  # 10 divisions for autoscale
-            if 'aux_plotting_func' in kwargs:
-                kwargs['aux_plotting_func'](**kwargs)  # This is a general way of calling this function
-            return
-
-        if 'labels' not in kwargs:
-            kwargs['legend'] = False
-            kwargs['labels'] = [''] * 10 # to prevent glitches
-
-        self.ax1 = None
-        self.figure.clear()
-        self.scatter = None
-        self.ax1 = self.figure.add_subplot(111)
-
-        for i, el in enumerate(np.array(y_data)):
-            line1, = self.ax1.plot(x_data, el, label=kwargs['labels'][i])  # Returns a tuple of line objects, thus the comma
-            self.lines[i] = line1
-
-        # ------ legend ----------------
-        if 'legend' in kwargs and kwargs['legend'] or 'legend' not in kwargs: # by default, legend on
-            self.ax1.legend(loc = 'lower left') # defualt
-            if 'legend_loc' in kwargs: self.ax1.legend(loc = kwargs['legend_loc'])
-
-        # --------  Secondary scale ---------
-        if 'secondary_x_axis_func' in kwargs and kwargs['secondary_x_axis_func']:
-            sec_ax = self.ax1.secondary_xaxis('top',xlabel=kwargs['secondary_x_axis_label'], functions = kwargs['secondary_x_axis_func'])
-
-        # ------ grid ----------------
-        if 'grid' in kwargs and kwargs['grid'] or 'grid' not in kwargs: # by default, grid on
-            if 'x_ticks' in kwargs:
-                self.ax1.set_xticks(kwargs['x_ticks'])
-            if 'y_ticks' in kwargs:
-                self.ax1.set_yticks(kwargs['y_ticks'])
-            self.ax1.grid()
-
-        # ------ limits ----------------
-        if autoscale:
-            self.ax1.set_ylim(min(y_data[0]), max(y_data[0]) * 1.1)
-        elif 'y_ticks' in kwargs:
-            self.ax1.set_ylim(kwargs['y_ticks'][0], kwargs['y_ticks'][-1])
-
-        self.ax1.set_xlim(x_data[0], x_data[-1])
-
-        self.ax1.set_ylabel('Voltage [V]')
-        self.ax1.set_xlabel('Time [ms]')
-        if 'aux_plotting_func' in kwargs:
-            kwargs['aux_plotting_func'](**kwargs) # This is a general way of calling this function
-        plt.tight_layout()
-        self.canvas.draw()
-
-    def plot_Scatter(self, **kwargs):
-        # first - check we have what we need
-        if 'scatter_x_data' and 'scatter_y_data' in kwargs and 'scatter_tags' in kwargs :
-            x_data, y_data = kwargs['scatter_x_data'], kwargs['scatter_y_data']
-            # if not annotations exist - annotate for the first time
-            if not self.scatter:
-                # draw scatter + define style
-                self.scatter = self.ax1.scatter(kwargs['scatter_x_data'], kwargs['scatter_y_data'], marker="x", color="b")
-                self.annotations = []
-                for i, x in enumerate(x_data):
-                    # annotate scatter + define style
-                    self.annotations.append(self.ax1.annotate(kwargs['scatter_tags'][i], xy = (x, y_data[i]), weight='bold' ))
-            # If they exist - update location
-            else:
-                self.scatter.set_offsets(np.c_[x_data, y_data])  # this seems to work.
-                if self.annotations:
-                    for i, s in enumerate(self.annotations): s.set_position((x_data[i], y_data[i]))
-
-
-        # for j, tag in enumerate(peak_tags):
-        #     plt.annotate(tag, (Rb_peaks[j], el[Rb_peaks[j]]))
-
     def plot_Cavity_Spec(self, data, freq, Rb_peaks, Rb_peaks_properties, indx_to_freq, chns_to_show, labels, cursors,
                          scaletype, autoscale=True, redraw=False):
-        if not redraw:  # meanning - merely update data, without redrawing all.
-            self.line1.set_ydata(data[0])
-            return
-
+        # if not redraw:  # meanning - merely update data, without redrawing all.
+        #     self.line1.set_ydata(data[0])
+        #     self.canvas.draw()
+        #     return
+        # print('Redrawing!')
         # ymin, ymax = plt.ylim()
         # xmin, xmax = plt.xlim()
         colors = ['b', 'g', 'r', 'c', 'k', 'm', 'y', 'darkorange']
@@ -215,13 +134,56 @@ class PlotWindow(QDialog):
         # plt.ylabel('Voltage [V]')
         # plt.xlabel('Time [ms]')
         # # plt.xlabel('Frequency [$MHz$]')
-        plt.legend(loc = 'lower left')
-        self.ax1.grid()
-        self.ax1.grid()
+        # plt.legend(loc = 'lower left')
+        plt.grid()
         plt.tight_layout()
         self.canvas.draw()
 
-
+    # def plot_Cavity_Spec(self, data, freq, Rb_peaks, Rb_peaks_properties, indx_to_freq, chns_to_show, labels,
+    #                      cursors, scaletype, autoscale=True, redraw=False):
+    #     ymin, ymax = plt.ylim()
+    #     xmin, xmax = plt.xlim()
+    #     colors = ['b', 'g', 'r', 'c', 'k', 'm', 'y', 'darkorange']
+    #     peak_tags = ['1-0', '1-0/1', '1-1', '1-0/2', '1-1/2', '1-2']
+    #     self.figure.clear()
+    #     for i, el in enumerate(np.array(data)):
+    #         if chns_to_show[i]:
+    #             if scaletype:
+    #                 plt.plot(freq, el, color=colors[i], label=labels[i])
+    #                 if labels[i] == "CH1 - Vortex Rb lines":
+    #                     plt.scatter(freq[Rb_peaks], el[Rb_peaks], marker="x", color="C1")
+    #                     # plt.vlines(x=freq[Rb_peaks], ymin=el[Rb_peaks] - Rb_peaks_properties["prominences"],
+    #                     #            ymax=el[Rb_peaks], color="C1")
+    #                     # plt.hlines(y=Rb_peaks_properties["width_heights"], xmin=(Rb_peaks_properties["left_ips"] * indx_to_freq),
+    #                     #            xmax=(Rb_peaks_properties["right_ips"] * indx_to_freq), color="C1")
+    #                     for j, tag in enumerate(peak_tags):
+    #                         plt.annotate(tag, (freq[Rb_peaks[j]], el[Rb_peaks[j]]))
+    #             else:
+    #                 plt.plot(el, color=colors[i], label=labels[i])
+    #                 if labels[i] == "CH1 - Vortex Rb lines":
+    #                     plt.scatter(Rb_peaks, el[Rb_peaks], marker="x", color="C1")
+    #                     # plt.vlines(x=freq[Rb_peaks], ymin=el[Rb_peaks] - Rb_peaks_properties["prominences"],
+    #                     #            ymax=el[Rb_peaks], color="C1")
+    #                     # plt.hlines(y=Rb_peaks_properties["width_heights"], xmin=(Rb_peaks_properties["left_ips"] * indx_to_freq),
+    #                     #            xmax=(Rb_peaks_properties["right_ips"] * indx_to_freq), color="C1")
+    #                     for j, tag in enumerate(peak_tags):
+    #                         plt.annotate(tag, (Rb_peaks[j], el[Rb_peaks[j]]))
+    #
+    #     if not autoscale:
+    #         plt.ylim(ymin, ymax)
+    #         plt.xlim(xmin, xmax)
+    #     if cursors:
+    #         for curs in cursors:
+    #             plt.axvline(curs, c='r')
+    #     plt.ylabel('Voltage [V]')
+    #     if scaletype:
+    #         plt.xlabel('Frequency [$MHz$]')
+    #     else:
+    #         plt.xlabel('Indx')
+    #     plt.legend(loc = 'lower left')
+    #     plt.grid()
+    #     plt.tight_layout()
+    #     self.canvas.draw()
 
     def plotData(self, ims):
         self.figure.clear()
