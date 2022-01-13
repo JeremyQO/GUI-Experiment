@@ -96,7 +96,7 @@ class PlotWindow(QDialog):
             if 'aux_plotting_func' in kwargs:
                 kwargs['aux_plotting_func'](**kwargs)  # This is a general way of calling this function
             return
-
+        # comment
         if 'labels' not in kwargs:
             kwargs['legend'] = False
             kwargs['labels'] = [''] * 10 # to prevent glitches
