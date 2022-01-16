@@ -27,10 +27,11 @@ class PlotWindow(QDialog):
         # a figure instance to plot on
         # plt.ioff()
         plt.ion()
-        self.figure = plt.figure()
+        self.figure = plt.figure(1)
         self.ax1 = self.figure.add_subplot(111)
         self.scatter = None # Placeholder
         self.annotations = None
+        self.arrow = None
         self.lines = []
         for i in range(4): # in principle, hold 4 places for lines. With good coding, this is not neccessary
             line1, = self.ax1.plot([1], [1], 'r-')  # Returns a tuple of line objects, thus the comma
@@ -95,8 +96,12 @@ class PlotWindow(QDialog):
                 self.ax1.set_yticklabels(['{:5.3f}'.format(t) for t in ticks])  # 10 divisions for autoscale
             if 'aux_plotting_func' in kwargs:
                 kwargs['aux_plotting_func'](**kwargs)  # This is a general way of calling this function
+            if 'mark_peak' in kwargs and kwargs['mark_peak'] is not None:
+                if self.arrow is None:
+                    self.annotateWithArrow(kwargs['mark_peak'][0], kwargs['mark_peak'][1])
+                self.arrow.xy =  (kwargs['mark_peak'][0],kwargs['mark_peak'][1])
             return
-
+        self.arrow = None
         if 'labels' not in kwargs:
             kwargs['legend'] = False
             kwargs['labels'] = [''] * 10 # to prevent glitches
@@ -140,6 +145,7 @@ class PlotWindow(QDialog):
         if 'aux_plotting_func' in kwargs:
             kwargs['aux_plotting_func'](**kwargs) # This is a general way of calling this function
         plt.tight_layout()
+
         self.canvas.draw()
 
     def plot_Scatter(self, **kwargs):
@@ -163,6 +169,11 @@ class PlotWindow(QDialog):
 
         # for j, tag in enumerate(peak_tags):
         #     plt.annotate(tag, (Rb_peaks[j], el[Rb_peaks[j]]))
+    def annotateWithArrow(self, x,y):
+        self.arrow = self.ax1.annotate('', xy=(x, y),  xycoords='data',
+            xytext=(0.8, 0.95), textcoords='axes fraction',
+            arrowprops=dict(facecolor='black', shrink=0.05),
+            horizontalalignment='right', verticalalignment='top')
 
     def plot_Cavity_Spec(self, data, freq, Rb_peaks, Rb_peaks_properties, indx_to_freq, chns_to_show, labels, cursors,
                          scaletype, autoscale=True, redraw=False):
