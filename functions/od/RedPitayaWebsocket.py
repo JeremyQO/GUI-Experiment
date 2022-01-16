@@ -198,20 +198,28 @@ class Redpitaya:
         else:
             print("Please choose average from "+str(options))
 
-    def get_averaging(self):
-        """Get averaging status."""
-        return self.txrx_txt('ACQ:AVG?')
+    def set_outputFunction(self, output = 1, function = 0):
+        functionsMap = ['SINE', 'SQUARE', 'TRIANGLE','SAWU','SAWD', 'DC', 'DC NEG', 'PWM']
+        if type(function) is str and function in functionsMap: function = functionsMap.index(function)
+        self.new_parameters['SOUR%d_FUNC' % output] = {'value': str(function)}
+        self.print('Output %d changed to %s.' % (int(output), functionsMap[function]))
 
-    def get_triggerDelay(self):
-        """Get trigger delay in ns."""
-        return self.txrx_txt("ACQ:TRIG:DLY:NS?")
-    
+    def set_outputAmplitude(self, output = 1, v = 0):  # Set output amplitude, in volts.
+        if v > 5 or v < 0: return
+        self.new_parameters['SOUR%d_VOLT' % output] = {'value': str(v)}
+        self.print('Output %d amp changed to %s volts.' % (int(output), str(v)))
 
-    
-    def get_triggerLevel(self):
-        """Get trigger level in V."""
-        return self.txrx_txt('ACQ:TRIG:LEV?')
+    def set_outputOffset(self, output = 1, v = 0): # Set output offset, in volts.
+        if v > 5 or v < 0: return
+        self.new_parameters['SOUR%d_VOLT_OFFS' % output] = {'value': str(v)}
 
+    def set_outputFrequency(self, output = 1, freq = 50): # set frequency, in HZ
+        if freq < 0: return
+        self.new_parameters['SOUR%d_FREQ_FIX' % output] = {'value': str(freq)}
+
+    def set_outputPhase(self, output = 1, deg = 0): # set phase, in DEGREES (engineers.. )
+        if v > 360 or v < 0: return
+        self.new_parameters['SOUR%d_PHAS' % output] = {'value': str(deg)}
 
 
 import matplotlib.pyplot as plt # TODO for debugging

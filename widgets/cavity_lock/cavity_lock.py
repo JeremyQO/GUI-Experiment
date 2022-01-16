@@ -59,6 +59,7 @@ class Cavity_lock_GUI(QuantumWidget):
         self.checkBox_Cavity_transm.clicked.connect(self.chns_update)
         # self.checkBox_Rb_lines.clicked.connect(self.acquire_traces_worker)
         self.pushButton_updatePlotDisplay.clicked.connect(self.updatePlotDisplay)
+        self.pushButton_StartLock.clicked.connect(self.updatePID)
         self.checkBox_FreqScale.clicked.connect(self.chns_update)
 
         self.pushButton_updateFitParams.clicked.connect(self.update_plot_params)
@@ -98,6 +99,13 @@ class Cavity_lock_GUI(QuantumWidget):
         self.updateTriggerDelay()
         self.updateTimeScale()
         self.updateAveraging()
+
+    def updatePID(self):
+        self.rp.set_outputFunction(output = 1, function = int(self.doubleSpinBox_P.value()))
+        self.rp.set_outputAmplitude(output = 1, v = float(self.doubleSpinBox_I.value()))
+        self.rp.set_outputFrequency(output = 1, freq = float(self.doubleSpinBox_D.value()))
+
+        print('Warning: connecting output via PID buttons. ask Natan.')
 
     def chns_update(self):
         self.CHsUpdated = True
@@ -156,7 +164,9 @@ class Cavity_lock_GUI(QuantumWidget):
         self.threadpool.start(worker)
 
     def redPitayaConnect(self, progress_callback):
-        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c22.local", got_data_callback=self.update_scope, dialogue_print_callback = self.print_to_dialogue)
+        # self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c22.local", got_data_callback=self.update_scope, dialogue_print_callback = self.print_to_dialogue)
+        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c36.local", got_data_callback=self.update_scope,
+                                               dialogue_print_callback=self.print_to_dialogue)
         if self.rp.connected:
             self.connection_attempt = 0 # connection
             self.print_to_dialogue("RedPitayas are connected.", color = 'green')
@@ -212,7 +222,7 @@ class Cavity_lock_GUI(QuantumWidget):
         # TODO: any reason to keep the entire fit? seems only [0] is used.
         # print(np.polyfit(Rb_peaks, self.Rb_peak_freq, 5))
         # print(['%3.1f' %i for i in self.indx_to_freq(Rb_peaks)])
-        print(Rb_peaks)
+        # print(Rb_peaks)
         # Save Data:
         if self.checkBox_saveData.isChecked():
             self.saveCurrentDataClicked()
