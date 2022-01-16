@@ -598,23 +598,6 @@
               <property name="bottomMargin">
                <number>1</number>
               </property>
-              <item row="0" column="1">
-               <widget class="QLabel" name="label_4">
-                <property name="font">
-                 <font>
-                  <pointsize>10</pointsize>
-                  <weight>75</weight>
-                  <bold>true</bold>
-                 </font>
-                </property>
-                <property name="text">
-                 <string>PID controller</string>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignCenter</set>
-                </property>
-               </widget>
-              </item>
               <item row="1" column="0">
                <widget class="QLabel" name="label">
                 <property name="sizePolicy">
@@ -622,6 +605,12 @@
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>34</width>
+                  <height>0</height>
+                 </size>
                 </property>
                 <property name="font">
                  <font>
@@ -652,6 +641,12 @@
               </item>
               <item row="3" column="0">
                <widget class="QLabel" name="label_2">
+                <property name="minimumSize">
+                 <size>
+                  <width>34</width>
+                  <height>0</height>
+                 </size>
+                </property>
                 <property name="font">
                  <font>
                   <pointsize>10</pointsize>
@@ -683,7 +678,7 @@
                <widget class="QLabel" name="label_3">
                 <property name="minimumSize">
                  <size>
-                  <width>0</width>
+                  <width>34</width>
                   <height>0</height>
                  </size>
                 </property>
@@ -705,18 +700,6 @@
                 </property>
                </widget>
               </item>
-              <item row="4" column="1">
-               <widget class="QDoubleSpinBox" name="doubleSpinBox_D">
-                <property name="font">
-                 <font>
-                  <pointsize>10</pointsize>
-                 </font>
-                </property>
-                <property name="singleStep">
-                 <double>0.010000000000000</double>
-                </property>
-               </widget>
-              </item>
               <item row="5" column="1">
                <widget class="QPushButton" name="pushButton_StartLock">
                 <property name="font">
@@ -731,7 +714,19 @@
                 </property>
                </widget>
               </item>
-              <item row="0" column="2">
+              <item row="4" column="1">
+               <widget class="QDoubleSpinBox" name="doubleSpinBox_D">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                 </font>
+                </property>
+                <property name="singleStep">
+                 <double>0.010000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2" colspan="2">
                <widget class="QLabel" name="label_15">
                 <property name="font">
                  <font>
@@ -743,10 +738,30 @@
                 <property name="text">
                  <string>Pick a Peak</string>
                 </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
+                </property>
                </widget>
               </item>
-              <item row="5" column="2">
-               <widget class="QComboBox" name="comboBox_2">
+              <item row="1" column="2">
+               <widget class="QCheckBox" name="checkBox">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>F=1-&gt;F'=</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="3">
+               <widget class="QComboBox" name="comboBox_excitedstate">
                 <property name="font">
                  <font>
                   <pointsize>10</pointsize>
@@ -785,7 +800,21 @@
                </widget>
               </item>
               <item row="3" column="2">
-               <widget class="QComboBox" name="comboBox">
+               <widget class="QCheckBox" name="checkBox_2">
+                <property name="font">
+                 <font>
+                  <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>F=2-&gt;F'=</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="3">
+               <widget class="QComboBox" name="comboBox_groundstate">
                 <property name="font">
                  <font>
                   <pointsize>10</pointsize>
@@ -798,32 +827,59 @@
                 </item>
                 <item>
                  <property name="text">
+                  <string>1/2</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
                   <string>2</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>1/3</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>2/3</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>3</string>
                  </property>
                 </item>
                </widget>
               </item>
-              <item row="1" column="2">
-               <widget class="QLabel" name="label_16">
+              <item row="0" column="0" colspan="2">
+               <widget class="QLabel" name="label_4">
                 <property name="font">
                  <font>
                   <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
                  </font>
                 </property>
                 <property name="text">
-                 <string>F:</string>
+                 <string>PID controller</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignCenter</set>
                 </property>
                </widget>
               </item>
-              <item row="4" column="2">
-               <widget class="QLabel" name="label_17">
+              <item row="5" column="2" colspan="2">
+               <widget class="QPushButton" name="pushButton_selectPeak">
                 <property name="font">
                  <font>
                   <pointsize>10</pointsize>
+                  <weight>75</weight>
+                  <bold>true</bold>
                  </font>
                 </property>
                 <property name="text">
-                 <string>F'</string>
+                 <string>Select Peak</string>
                 </property>
                </widget>
               </item>
