@@ -498,6 +498,16 @@
           <property name="text">
            <string>live</string>
           </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="7">
+         <widget class="QCheckBox" name="checkBox_fitLorentzian">
+          <property name="text">
+           <string>Fit Lorentizan</string>
+          </property>
          </widget>
         </item>
        </layout>
