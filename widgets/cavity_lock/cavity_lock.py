@@ -2,7 +2,7 @@
 from PyQt5 import uic
 import time
 from functions.od import RedPitayaWebsocket
-from scipy import optimize
+from scipy import optimize,spatial
 from scipy.signal import find_peaks
 import os
 import sys
@@ -33,11 +33,13 @@ class Cavity_lock_GUI(QuantumWidget):
         self.connection_attempt = 0  # This holds connection attmeps. As long as this is < than _CONNECTION_ATTMPTS, will try to reconnect
         self.scope_parameters = {'new_parameters': False, 'OSC_TIME_SCALE': {'value':'1'}, 'OSC_CH1_SCALE': {'value':'1'},'OSC_CH1_SCALE': {'value':'1'}, 'OSC_DATA_SIZE':{'value':1024}}
         self.CHsUpdated = False
+        self.listenForMouseClickCID = None
         self.rp = None  # Place holder
         self.signalLength = self.scope_parameters['OSC_DATA_SIZE']['value'] # 1024 by default
-        # Rb Peaks
+        # ---------- Rb Peaks ----------
         self.Rb_peaks_default_value = [172, 259, 346, 409, 496, 646]
         self.Rb_peak_freq = [0, 36.1, 72.2, 114.6, 150.7, 229]
+        self.selectedPeakXY = None
         self.indx_to_freq = [0]
 
         if Parent is not None:
@@ -49,7 +51,7 @@ class Cavity_lock_GUI(QuantumWidget):
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
-        self.widgetPlot.plot([None], [None])
+        # self.widgetPlot.plot([None], [None])
         # self.rp = scpi.Redpitaya("rp-f08c22.local", trigger_delay=28e6, decimation=64)
         self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
         # self.pushButton_utils_Connect.clicked.connect(self.redPitayaConnect)
@@ -60,6 +62,7 @@ class Cavity_lock_GUI(QuantumWidget):
         # self.checkBox_Rb_lines.clicked.connect(self.acquire_traces_worker)
         self.pushButton_updatePlotDisplay.clicked.connect(self.updatePlotDisplay)
         self.pushButton_StartLock.clicked.connect(self.updatePID)
+        self.pushButton_selectPeak.clicked.connect(self.scopeListenForMouseClick)
         self.checkBox_FreqScale.clicked.connect(self.chns_update)
 
         self.pushButton_updateFitParams.clicked.connect(self.update_plot_params)
@@ -164,9 +167,9 @@ class Cavity_lock_GUI(QuantumWidget):
         self.threadpool.start(worker)
 
     def redPitayaConnect(self, progress_callback):
-        # self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c22.local", got_data_callback=self.update_scope, dialogue_print_callback = self.print_to_dialogue)
-        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c36.local", got_data_callback=self.update_scope,
-                                               dialogue_print_callback=self.print_to_dialogue)
+        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c22.local", got_data_callback=self.update_scope, dialogue_print_callback = self.print_to_dialogue)
+        # self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c36.local", got_data_callback=self.update_scope,
+        #                                        dialogue_print_callback=self.print_to_dialogue)
         if self.rp.connected:
             self.connection_attempt = 0 # connection
             self.print_to_dialogue("RedPitayas are connected.", color = 'green')
@@ -181,6 +184,20 @@ class Cavity_lock_GUI(QuantumWidget):
                 self.connection_attempt = self.connection_attempt + 1
                 self.redPitayaConnect(progress_callback)
 
+    def scopeListenForMouseClick(self):
+        def mouseClickOnScope(event): # what should do on mouse click, when listening
+            # If clicked on canvas, stop listening for click
+            self.widgetPlot.canvas.mpl_disconnect(self.listenForMouseClickCID)
+            self.listenForMouseClickCID = None
+            # Find nearest peak
+            self.selectedPeakXY = (event.xdata,event.ydata)
+        if self.listenForMouseClickCID is None:  # start listening
+            self.listenForMouseClickCID = self.widgetPlot.canvas.mpl_connect('button_press_event', mouseClickOnScope)
+            self.selectedPeakXY = None
+        else: # stop listen
+            self.widgetPlot.canvas.mpl_disconnect(self.listenForMouseClickCID)
+            self.listenForMouseClickCID = None
+
 
     # Never call this method. this is called by RedPitaya
     def update_scope(self, data, parameters):
@@ -188,6 +205,7 @@ class Cavity_lock_GUI(QuantumWidget):
         if redraw:
             self.scope_parameters = parameters  # keep all the parameters. we need them.
             self.CHsUpdated = False
+            self.selectedPeakXY = None  # if it was necessary to redraw everything, peak will probably be lost
         self.Rb_lines_Data[self.avg_indx] = data[0]  # Insert new data
         self.Cavity_Transmission_Data[self.avg_indx] = data[1]  # Insert new data
         self.avg_indx = (self.avg_indx + 1) % self.Avg_num
@@ -208,22 +226,19 @@ class Cavity_lock_GUI(QuantumWidget):
             Transmission_peak, Transmission_properties = find_peaks(self.Cavity_Transmission_Avg_Data, prominence=float(
                                                                     self.doubleSpinBox_prominence.text()),
                                                                     width=float(self.spinBox_width.text()))
+
+        # ---------------- Handle Rb Peaks ----------------
         # Rescale index to frequency detuning[MHz] from transition F=1->F'=0:
         # First - see if 6 peaks are found
         if len(Rb_peaks) != 6:
             Rb_peaks = self.Rb_peaks_default_value  # if not - use previous values
         else:
             self.Rb_peaks_default_value = Rb_peaks
-        # self.indx_to_freq = 229/(Rb_peaks[-1]-Rb_peaks[0])
-        # print(self.indx_to_freq)
-        # print(Rb_peaks)
+
         # print(['%3.1f' %i for i in self.indx_to_freq * Rb_peaks-100.0])
-        self.indx_to_freq = np.poly1d(np.polyfit(Rb_peaks, self.Rb_peak_freq, 1))  # TODO: should really use 5 poly?
-        # TODO: any reason to keep the entire fit? seems only [0] is used.
-        # print(np.polyfit(Rb_peaks, self.Rb_peak_freq, 5))
-        # print(['%3.1f' %i for i in self.indx_to_freq(Rb_peaks)])
-        # print(Rb_peaks)
-        # Save Data:
+        self.indx_to_freq = np.poly1d(np.polyfit(Rb_peaks, self.Rb_peak_freq, 1))
+
+        # -------- Save Data  --------:
         if self.checkBox_saveData.isChecked():
             self.saveCurrentDataClicked()
 
@@ -253,19 +268,24 @@ class Cavity_lock_GUI(QuantumWidget):
         y_offset = float(self.doubleSpinBox_VOffset.text())
         y_ticks = np.arange(y_offset - y_scale * 5, y_offset + y_scale * 5, y_scale)
 
+        # --------- select peak -----------
+        if self.selectedPeakXY is not None:
+            peaksLocation = np.array([[x_axis[p],Avg_data[0][p]] for p in Rb_peaks]) # all the peaks as coordinates
+            nearestPeakIndex = spatial.KDTree(peaksLocation).query(self.selectedPeakXY)[1]
+            nearestPeakLocation = peaksLocation[nearestPeakIndex]# [0] would have given us distance
+            self.selectedPeakXY = nearestPeakLocation # update location of selected peak to BE the nearest peak
+
         # --------- plot ---------
         # Prepare data for display:
         labels = ["CH1 - Vortex Rb lines", "CH2 - Cavity transmission"]
         peaks_tags = ['1-0', '1-0/1', '1-1', '1-0/2', '1-1/2', '1-2']
-        # xaxis = np.linspace(0, 1024, 1024)
-        # print(self.indx_to_freq(xaxis).shape)
-        # print(Rb_peaks)
+
         # self.widgetPlot.plot_Scope(xaxis, [self.indx_to_freq(xaxis)], autoscale=self.checkBox_plotAutoscale.isChecked(),
         #                            redraw=redraw, aux_plotting_func = self.widgetPlot.plot_Scatter,
         #                            scatter_y_data = [self.indx_to_freq(Rb_peaks)], scatter_x_data = Rb_peaks)
         self.widgetPlot.plot_Scope(x_axis, Avg_data, autoscale=self.checkBox_plotAutoscale.isChecked(), redraw=redraw, labels = labels, x_ticks = x_ticks, y_ticks= y_ticks,
                                    aux_plotting_func = self.widgetPlot.plot_Scatter, scatter_y_data = Avg_data[0][Rb_peaks],scatter_x_data = x_axis[Rb_peaks], scatter_tags = peaks_tags,
-                                   secondary_x_axis_func = secondary_x_axis_func, secondary_x_axis_label = 'Ferquency [MHz]')
+                                   secondary_x_axis_func = secondary_x_axis_func, secondary_x_axis_label = 'Ferquency [MHz]', mark_peak = self.selectedPeakXY)
 
 
 
