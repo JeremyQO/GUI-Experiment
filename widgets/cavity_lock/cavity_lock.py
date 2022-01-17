@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 from functions.stirap.calculate_Nat_stirap import NAtoms
 _CONNECTION_ATTMPTS = 2
 
+
+
 Decimation_options = [1, 8, 64, 1024, 8192, 65536]
 
 try:
@@ -288,7 +290,19 @@ class Cavity_lock_GUI(QuantumWidget):
             self.selectedPeakXY = nearestPeakLocation # update location of selected peak to BE the nearest peak
         # ----------- text box -----------
         # to be printed in lower right corner
-        text_box_string = 'TEXT \n TEXT \n TEXT'
+        text_box_string = 'Text Box'
+        # def lorentzian(p, x, y):
+        #     x0, a, gam = p
+        #     return  (a * gam ** 2 / (gam ** 2 + (x - x0) ** 2)) -
+        def lorentzian(x, x0, a, g):
+            print(x0, a, g)
+            return  a / (1 + ((x-x0)/g)**2)
+
+        if self.checkBox_fitLorentzian.isChecked():
+            p0 = [x_axis[Rb_peaks][0],Avg_data[0][0],0] # initial guesses
+            # popt, ier = optimize.leastsq(lorentzian, p0, args =(x_axis,Avg_data[0]))
+            popt, ier = optimize.curve_fit(lorentzian, x_axis, Avg_data[0], p0)
+            text_box_string = str(popt)
         # --------- plot ---------
         # Prepare data for display:
         labels = ["CH1 - Vortex Rb lines", "CH2 - Cavity transmission"]

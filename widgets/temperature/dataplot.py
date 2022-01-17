@@ -18,8 +18,6 @@ import numpy as np
 
 def gaussian(x, amplitude, mean, stddev):
     return amplitude * np.exp(-((x - mean) ** 2 / 2 / stddev ** 2))
-def lorentzian( x, x0, a, gam ):
-    return a * gam**2 / ( gam**2 + ( x - x0 )**2)
 
 
 class PlotWindow(QDialog):
