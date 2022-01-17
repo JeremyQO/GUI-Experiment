@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 from functions.stirap.calculate_Nat_stirap import NAtoms
 _CONNECTION_ATTMPTS = 2
 
+
+
 Decimation_options = [1, 8, 64, 1024, 8192, 65536]
 
 try:
@@ -39,7 +41,9 @@ class Cavity_lock_GUI(QuantumWidget):
         # ---------- Rb Peaks ----------
         self.Rb_peaks_default_value = [172, 259, 346, 409, 496, 646]
         self.Rb_peak_freq = [0, 36.1, 72.2, 114.6, 150.7, 229]
+        # self.Rb_peak_freq_F2 = [0, 78.47, 156.95, 211.8, 290.27, 423.6]
         self.selectedPeakXY = None
+        self.calibrateRbPeaks = False # should calibrate peaks according to next data batch that arrives? calibration will be printed and saved in self.index_to_freq
         self.indx_to_freq = [0]
 
         if Parent is not None:
@@ -63,6 +67,7 @@ class Cavity_lock_GUI(QuantumWidget):
         self.pushButton_updatePlotDisplay.clicked.connect(self.updatePlotDisplay)
         self.pushButton_StartLock.clicked.connect(self.updatePID)
         self.pushButton_selectPeak.clicked.connect(self.scopeListenForMouseClick)
+        self.pushButton_calibratePeaks.clicked.connect(self.calibratePeaks)
         self.checkBox_FreqScale.clicked.connect(self.chns_update)
 
         self.pushButton_updateFitParams.clicked.connect(self.update_plot_params)
@@ -97,6 +102,9 @@ class Cavity_lock_GUI(QuantumWidget):
         self.avg_indx = 0
         self.print_to_dialogue("Data averaging changed to %i" % self.Avg_num)
 
+    def calibratePeaks(self):
+        self.checkBox_liveCalibratePeaks.setChecked(True) # make sure this is checked (true)
+        self.calibrateRbPeaks = True
 
     def updatePlotDisplay(self):
         self.updateTriggerDelay()
@@ -235,8 +243,14 @@ class Cavity_lock_GUI(QuantumWidget):
         else:
             self.Rb_peaks_default_value = Rb_peaks
 
+        # -------------- Rb calibration, index to Frequency ---------------
         # print(['%3.1f' %i for i in self.indx_to_freq * Rb_peaks-100.0])
-        self.indx_to_freq = np.poly1d(np.polyfit(Rb_peaks, self.Rb_peak_freq, 1))
+        if self.checkBox_liveCalibratePeaks.isChecked():
+            self.indx_to_freq = np.poly1d(np.polyfit(Rb_peaks, self.Rb_peak_freq, 1))
+            if self.calibrateRbPeaks:
+                self.calibrateRbPeaks = False # only need to calibrate once.
+                self.checkBox_liveCalibratePeaks.setChecked(False) # uncheck box.
+                self.printPeaksInformation()
 
         # -------- Save Data  --------:
         if self.checkBox_saveData.isChecked():
@@ -274,62 +288,37 @@ class Cavity_lock_GUI(QuantumWidget):
             nearestPeakIndex = spatial.KDTree(peaksLocation).query(self.selectedPeakXY)[1]
             nearestPeakLocation = peaksLocation[nearestPeakIndex]# [0] would have given us distance
             self.selectedPeakXY = nearestPeakLocation # update location of selected peak to BE the nearest peak
+        # ----------- text box -----------
+        # to be printed in lower right corner
+        text_box_string = 'Text Box'
+        # def lorentzian(p, x, y):
+        #     x0, a, gam = p
+        #     return  (a * gam ** 2 / (gam ** 2 + (x - x0) ** 2)) -
+        def lorentzian(x, x0, a, g):
+            print(x0, a, g)
+            return  a / (1 + ((x-x0)/g)**2)
 
+        if self.checkBox_fitLorentzian.isChecked():
+            p0 = [x_axis[Rb_peaks][0],Avg_data[0][0],0] # initial guesses
+            # popt, ier = optimize.leastsq(lorentzian, p0, args =(x_axis,Avg_data[0]))
+            popt, ier = optimize.curve_fit(lorentzian, x_axis, Avg_data[0], p0)
+            text_box_string = str(popt)
         # --------- plot ---------
         # Prepare data for display:
         labels = ["CH1 - Vortex Rb lines", "CH2 - Cavity transmission"]
         peaks_tags = ['1-0', '1-0/1', '1-1', '1-0/2', '1-1/2', '1-2']
+        # F2_peaks_tags = ['2-1', '2-1/2', '2-2', '2-1/3', '2-2/3', '2-3']
 
         # self.widgetPlot.plot_Scope(xaxis, [self.indx_to_freq(xaxis)], autoscale=self.checkBox_plotAutoscale.isChecked(),
         #                            redraw=redraw, aux_plotting_func = self.widgetPlot.plot_Scatter,
         #                            scatter_y_data = [self.indx_to_freq(Rb_peaks)], scatter_x_data = Rb_peaks)
         self.widgetPlot.plot_Scope(x_axis, Avg_data, autoscale=self.checkBox_plotAutoscale.isChecked(), redraw=redraw, labels = labels, x_ticks = x_ticks, y_ticks= y_ticks,
                                    aux_plotting_func = self.widgetPlot.plot_Scatter, scatter_y_data = Avg_data[0][Rb_peaks],scatter_x_data = x_axis[Rb_peaks], scatter_tags = peaks_tags,
-                                   secondary_x_axis_func = secondary_x_axis_func, secondary_x_axis_label = 'Ferquency [MHz]', mark_peak = self.selectedPeakXY)
+                                   secondary_x_axis_func = secondary_x_axis_func, secondary_x_axis_label = 'Ferquency [MHz]', mark_peak = self.selectedPeakXY,
+                                   text_box = text_box_string)
 
-
-
-        # self.Rb_lines_Avg_Data = np.average(self.Rb_lines_Avg_Data, axis=0)
-
-        # # Rb_peak_freq_diff = [36.1, 36.1, 42.4, 36.1, 78.3]
-        # Rb_peak_freq = [0, 36.1, 72.2, 114.6, 150.7, 229]
-        # Rb_indx_diff = np.diff(self.Rb_peaks)
-        # self.indx_to_freq = np.polyfit(self.Rb_peaks, Rb_peak_freq, 1)
-        # for i in range(4):
-        #     data = self.rp.get_traces()
-        #     self.Rb_lines_Data = data[0]
-        #     self.Rb_lines_Avg_Data = self.Rb_lines_Avg_Data + [self.Rb_lines_Data]
-        #     self.Cavity_Transmission_Data = data[1]
-        #
-        # self.display_traces(data)
-        # # self.Rb_lines_Avg_Data = []
-
-    #
-    # def display_traces_loop(self, progress_callback):
-    #     while True:
-    #         self.Rb_lines_Avg_Data = []
-    #         data = self.rp.get_traces()
-    #         self.Rb_lines_Data = data[0]
-    #         self.Rb_lines_Avg_Data = self.Rb_lines_Avg_Data + [self.Rb_lines_Data]
-    #         self.Cavity_Transmission_Data = data[1]
-    #         self.Rb_lines_Avg_Data = np.average(self.Rb_lines_Avg_Data, axis=0)
-    #         self.Rb_peaks, self.Rb_properties = find_peaks(self.Rb_lines_Avg_Data, distance=900, prominence=0.002, width=50)
-    #         Transmission_peak, Transmission_properties = find_peaks(self.Cavity_Transmission_Data, prominence=0.005,
-    #                                                                 width=1000)
-    #         # Rb_peak_freq_diff = [36.1, 36.1, 42.4, 36.1, 78.3]
-    #         Rb_peak_freq = [0, 36.1, 72.2, 114.6, 150.7, 229]
-    #         Rb_indx_diff = np.diff(self.Rb_peaks)
-    #         self.indx_to_freq = np.polyfit(self.Rb_peaks, Rb_peak_freq, 1)
-    #         for i in range(4):
-    #             data = self.rp.get_traces()
-    #             self.Rb_lines_Data = data[0]
-    #             self.Rb_lines_Avg_Data = self.Rb_lines_Avg_Data + [self.Rb_lines_Data]
-    #             self.Cavity_Transmission_Data = data[1]
-    #         self.display_traces(data)
-    #         # self.Rb_lines_Avg_Data = []
-    #         if self.checkBox_saveData.isChecked():
-    #             self.saveCurrentDataClicked()
-
+    def printPeaksInformation(self):
+        print('printPeaksInformation', str(self.indx_to_freq))
 
     def display_traces(self, data):
         self.rpfreqAxis = (np.arange(0, self.rp.bufferDuration * self.indx_to_freq[0], self.indx_to_freq[0])
