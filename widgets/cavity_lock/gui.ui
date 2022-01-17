@@ -593,7 +593,7 @@
          </widget>
         </item>
         <item row="3" column="8">
-         <widget class="QSpinBox" name="spinBox_prominence_ch1">
+         <widget class="QSpinBox" name="spinBox_prominence_ch2">
           <property name="font">
            <font>
             <pointsize>10</pointsize>
