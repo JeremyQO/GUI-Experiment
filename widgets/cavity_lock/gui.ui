@@ -179,6 +179,104 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout">
+        <item row="3" column="8">
+         <widget class="QSpinBox" name="spinBox_prominence_ch2">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="maximum">
+           <number>1024</number>
+          </property>
+          <property name="value">
+           <number>5</number>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QLabel" name="label_16">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Fit Peaks CH2:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="5">
+         <widget class="QDoubleSpinBox" name="doubleSpinBox_prominence_ch2">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="decimals">
+           <number>3</number>
+          </property>
+          <property name="singleStep">
+           <double>0.001000000000000</double>
+          </property>
+          <property name="value">
+           <double>0.002000000000000</double>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="9">
+         <widget class="QCheckBox" name="checkBox_fitLorentzian">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Fit Lorentizan</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="4">
+         <widget class="QLabel" name="label_18">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Prominence:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="7">
+         <widget class="QLabel" name="label_19">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="text">
+           <string>Width:</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QSpinBox" name="spinBox_distance_ch2">
+          <property name="font">
+           <font>
+            <pointsize>10</pointsize>
+           </font>
+          </property>
+          <property name="maximum">
+           <number>1024</number>
+          </property>
+          <property name="value">
+           <number>20</number>
+          </property>
+         </widget>
+        </item>
         <item row="2" column="3">
          <widget class="QSpinBox" name="spinBox_distance_ch1">
           <property name="font">
@@ -509,20 +607,6 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QLabel" name="label_16">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-            <weight>75</weight>
-            <bold>true</bold>
-           </font>
-          </property>
-          <property name="text">
-           <string>Fit Peaks CH2:</string>
-          </property>
-         </widget>
-        </item>
         <item row="3" column="1">
          <widget class="QLabel" name="label_17">
           <property name="font">
@@ -535,88 +619,26 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="4">
-         <widget class="QLabel" name="label_18">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
+        <item row="1" column="7">
+         <widget class="QComboBox" name="comboBox_triggerSource">
+          <property name="currentText">
+           <string>EXT</string>
           </property>
-          <property name="text">
-           <string>Prominence:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="7">
-         <widget class="QLabel" name="label_19">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Width:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QSpinBox" name="spinBox_distance_ch2">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="maximum">
-           <number>1024</number>
-          </property>
-          <property name="value">
-           <number>20</number>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="5">
-         <widget class="QDoubleSpinBox" name="doubleSpinBox_prominence_ch2">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="decimals">
-           <number>3</number>
-          </property>
-          <property name="singleStep">
-           <double>0.001000000000000</double>
-          </property>
-          <property name="value">
-           <double>0.002000000000000</double>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="8">
-         <widget class="QSpinBox" name="spinBox_prominence_ch2">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="maximum">
-           <number>1024</number>
-          </property>
-          <property name="value">
-           <number>5</number>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="9">
-         <widget class="QCheckBox" name="checkBox_fitLorentzian">
-          <property name="font">
-           <font>
-            <pointsize>10</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>Fit Lorentizan</string>
-          </property>
+          <item>
+           <property name="text">
+            <string>CH1</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>CH2</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>EXT</string>
+           </property>
+          </item>
          </widget>
         </item>
        </layout>
