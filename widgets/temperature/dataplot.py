@@ -102,9 +102,10 @@ class PlotWindow(QDialog):
                 self.arrow.xy =  (kwargs['mark_peak'][0],kwargs['mark_peak'][1])
             if 'text_box' in kwargs and kwargs['text_box'] is not None:
                 if self.textBox is None: self.addTextBox(textstr=kwargs['text_box'])
-                self.textBox.set_text = str(kwargs['text_box'])
-            return
+                self.textBox.set_text(str(kwargs['text_box']))
 
+            return
+        print('Redrawing all')
         self.arrow = None # reset arrow
         self.textBox = None # reset textbox
         if 'labels' not in kwargs:
@@ -183,6 +184,7 @@ class PlotWindow(QDialog):
         props = dict(boxstyle='round', facecolor='grey', alpha=0.1)
         self.textBox = self.ax1.text(0.05, 0.95, textstr, transform=self.ax1.transAxes, fontsize=14,
         verticalalignment='top', bbox=props)
+
     def plot_Cavity_Spec(self, data, freq, Rb_peaks, Rb_peaks_properties, indx_to_freq, chns_to_show, labels, cursors,
                          scaletype, autoscale=True, redraw=False):
         if not redraw:  # meanning - merely update data, without redrawing all.

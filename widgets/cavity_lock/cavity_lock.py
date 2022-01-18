@@ -38,10 +38,11 @@ class Cavity_lock_GUI(QuantumWidget):
         self.listenForMouseClickCID = None
         self.rp = None  # Place holder
         self.signalLength = self.scope_parameters['OSC_DATA_SIZE']['value'] # 1024 by default
+
         # ---------- Rb Peaks ----------
         self.Rb_peaks_default_value = [172, 259, 346, 409, 496, 646]
         self.Rb_peak_freq = [0, 36.1, 72.2, 114.6, 150.7, 229]
-        # self.Rb_peak_freq_F2 = [0, 78.47, 156.95, 211.8, 290.27, 423.6]
+        self.peaks_tags = ['1-0', '1-0/1', '1-1', '1-0/2', '1-1/2', '1-2']
         self.selectedPeakXY = None
         self.calibrateRbPeaks = False # should calibrate peaks according to next data batch that arrives? calibration will be printed and saved in self.index_to_freq
         self.indx_to_freq = [0]
@@ -55,10 +56,12 @@ class Cavity_lock_GUI(QuantumWidget):
         if __name__ == "__main__":
             self.threadpool = QThreadPool()
             print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+
         # self.widgetPlot.plot([None], [None])
         # self.rp = scpi.Redpitaya("rp-f08c22.local", trigger_delay=28e6, decimation=64)
         self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
         # self.pushButton_utils_Connect.clicked.connect(self.redPitayaConnect)
+        self.pushButton_saveCurrentData.clicked.connect(self.saveCurrentDataClicked)
         self.checkBox_iPython.clicked.connect(self.showHideConsole)
         self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
         self.checkBox_Rb_lines.clicked.connect(self.chns_update)
@@ -69,9 +72,24 @@ class Cavity_lock_GUI(QuantumWidget):
         self.pushButton_selectPeak.clicked.connect(self.scopeListenForMouseClick)
         self.pushButton_calibratePeaks.clicked.connect(self.calibratePeaks)
         self.checkBox_FreqScale.clicked.connect(self.chns_update)
-
+        self.checkBox_F1.clicked.connect(self.Rb_peak_freq_F1_update)
+        self.checkBox_F2.clicked.connect(self.Rb_peak_freq_F2_update)
         self.pushButton_updateFitParams.clicked.connect(self.update_plot_params)
         self.update_plot_params()
+
+    def Rb_peak_freq_F1_update(self):
+        if self.checkBox_F1.isChecked():
+            self.Rb_peak_freq = [0, 36.1, 72.2, 114.6, 150.7, 229]
+            self.peaks_tags = ['1-0', '1-0/1', '1-1', '1-0/2', '1-1/2', '1-2']
+            self.checkBox_F2.setChecked(False)
+            self.chns_update()
+
+    def Rb_peak_freq_F2_update(self):
+        if self.checkBox_F2.isChecked():
+            self.Rb_peak_freq = [0, 78.47, 156.95, 211.8, 290.27, 423.6]
+            self.peaks_tags = ['2-1', '2-1/2', '2-2', '2-1/3', '2-2/3', '2-3']
+            self.checkBox_F1.setChecked(False)
+            self.chns_update()
 
     def update_plot_params(self):
         self.Avg_num = int(self.spinBox_averaging.value())
@@ -86,6 +104,8 @@ class Cavity_lock_GUI(QuantumWidget):
         self.print_to_dialogue("Decimation changed to %i" % dec)
 
     def updateTriggerDelay(self):
+        # self.rp.set_triggerSource('CH2')
+        # self.print_to_dialogue("Trigger source CH2", color = 'red')
         t = float(self.doubleSpinBox_triggerDelay.text())
         self.rp.set_triggerDelay(t)
         self.print_to_dialogue("Trigger delay changed to %f ms" % t)
@@ -119,7 +139,8 @@ class Cavity_lock_GUI(QuantumWidget):
         print('Warning: connecting output via PID buttons. ask Natan.')
 
     def chns_update(self):
-        self.CHsUpdated = True
+        self.scope_parameters['new_parameters'] = True
+        # self.CHsUpdated = True
 
     def enable_interface(self, v):
         self.frame_4.setEnabled(v)
@@ -138,7 +159,6 @@ class Cavity_lock_GUI(QuantumWidget):
 
 
 
-
     def utils_connect(self, progress_callback):
         self.print_to_dialogue("Connecting to RedPitayas...")
         # trigger_delay = int(self.spinBox_triggerDelay.text())
@@ -152,6 +172,7 @@ class Cavity_lock_GUI(QuantumWidget):
         self.display_traces_worker()
 
     def saveCurrentDataClicked(self):
+        timeScale = np.linspace(0, float(self.scope_parameters['OSC_TIME_SCALE']['value']) * 10, num=int(self.scope_parameters['OSC_DATA_SIZE']['value']))
         now = datetime.now()
         today = date.today()
         datadir = os.path.join("C:\\", "Pycharm", "Expriements", "DATA", "CavityLock")
@@ -167,7 +188,7 @@ class Cavity_lock_GUI(QuantumWidget):
 
         self.datafile = os.path.join(todaydatadir, nowformated + ".txt")
         meta = "Traces from the RedPitaya, obtained on %s at %s.\n" % (todayformated, nowformated)
-        np.savez_compressed(os.path.join(todaydatadir, nowformated), CH1=self.Rb_lines_Avg_Data, CH2=self.Cavity_Transmission_Data, times=self.rptimes, meta=meta)
+        np.savez_compressed(os.path.join(todaydatadir, nowformated), CH1=self.Rb_lines_Avg_Data, CH2=self.Cavity_Transmission_Data, time=timeScale, meta=meta)
 
     def display_traces_worker(self):
         #worker = Worker(self.display_traces_loop)
@@ -175,9 +196,8 @@ class Cavity_lock_GUI(QuantumWidget):
         self.threadpool.start(worker)
 
     def redPitayaConnect(self, progress_callback):
-        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c22.local", got_data_callback=self.update_scope, dialogue_print_callback = self.print_to_dialogue)
-        # self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c36.local", got_data_callback=self.update_scope,
-        #                                        dialogue_print_callback=self.print_to_dialogue)
+        # self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c22.local", got_data_callback=self.update_scope, dialogue_print_callback = self.print_to_dialogue)
+        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-f08c36.local", got_data_callback=self.update_scope, dialogue_print_callback=self.print_to_dialogue)
         if self.rp.connected:
             self.connection_attempt = 0 # connection
             self.print_to_dialogue("RedPitayas are connected.", color = 'green')
@@ -225,15 +245,16 @@ class Cavity_lock_GUI(QuantumWidget):
             self.Rb_lines_Avg_Data = np.average(self.Rb_lines_Data, axis=0)
             Avg_data = Avg_data + [self.Rb_lines_Avg_Data]
             Rb_peaks, Rb_properties = find_peaks(self.Rb_lines_Avg_Data,
-                                                           distance=float(self.spinBox_distance.text()),
-                                                           prominence=float(self.doubleSpinBox_prominence.text()),
-                                                           width=float(self.spinBox_width.text()))
+                                                           distance=float(self.spinBox_distance_ch1.text()),
+                                                           prominence=float(self.doubleSpinBox_prominence_ch1.text()),
+                                                           width=float(self.spinBox_width_ch1.text()))
         if self.checkBox_Cavity_transm.isChecked():
             self.Cavity_Transmission_Avg_Data = np.average(self.Cavity_Transmission_Data, axis=0)
             Avg_data = Avg_data + [self.Cavity_Transmission_Avg_Data]
-            Transmission_peak, Transmission_properties = find_peaks(self.Cavity_Transmission_Avg_Data, prominence=float(
-                                                                    self.doubleSpinBox_prominence.text()),
-                                                                    width=float(self.spinBox_width.text()))
+            # Cavity_peak, Cavity_properties = find_peaks(self.Cavity_Transmission_Avg_Data,
+            #                                                 distance=float(self.spinBox_distance_ch2.text()),
+            #                                                 prominence=float(self.doubleSpinBox_prominence_ch2.text()),
+            #                                                 width=float(self.spinBox_width_ch2.text()))
 
         # ---------------- Handle Rb Peaks ----------------
         # Rescale index to frequency detuning[MHz] from transition F=1->F'=0:
@@ -259,6 +280,7 @@ class Cavity_lock_GUI(QuantumWidget):
         # ------- Scales -------
         # Set Values for x-axis frequency:
         time_scale = float(self.scope_parameters['OSC_TIME_SCALE']['value'])
+        indx_to_time = float(10 * time_scale / self.scope_parameters['OSC_DATA_SIZE']['value'])
         # time-scale
         x_axis = np.linspace(0, time_scale * 10, num=int(self.scope_parameters['OSC_DATA_SIZE']['value']))
         x_ticks = np.arange(x_axis[0], x_axis[-1], time_scale)
@@ -271,7 +293,7 @@ class Cavity_lock_GUI(QuantumWidget):
             return f / indx_to_freq + Rb_peaks[0]
 
         secondary_x_axis_func = None
-        if self.checkBox_FreqScale.isChecked(): # if should add secondary axis
+        if self.checkBox_FreqScale.isChecked():  # if should add secondary axis
             secondary_x_axis_func = (timeToFreqScale, freqToTimeScale)
             # freq-scale
             # x_axis = (np.arange(0, len(Avg_data[0]) * self.indx_to_freq[0], self.indx_to_freq[0]) - Rb_peaks[0] * self.indx_to_freq[0])
@@ -284,7 +306,7 @@ class Cavity_lock_GUI(QuantumWidget):
 
         # --------- select peak -----------
         if self.selectedPeakXY is not None:
-            peaksLocation = np.array([[x_axis[p],Avg_data[0][p]] for p in Rb_peaks]) # all the peaks as coordinates
+            peaksLocation = np.array([[x_axis[p], Avg_data[0][p]] for p in Rb_peaks])  # all the peaks as coordinates
             nearestPeakIndex = spatial.KDTree(peaksLocation).query(self.selectedPeakXY)[1]
             nearestPeakLocation = peaksLocation[nearestPeakIndex]# [0] would have given us distance
             self.selectedPeakXY = nearestPeakLocation # update location of selected peak to BE the nearest peak
@@ -294,32 +316,66 @@ class Cavity_lock_GUI(QuantumWidget):
         # def lorentzian(p, x, y):
         #     x0, a, gam = p
         #     return  (a * gam ** 2 / (gam ** 2 + (x - x0) ** 2)) -
-        def lorentzian(x, x0, a, g):
-            print(x0, a, g)
-            return  a / (1 + ((x-x0)/g)**2)
+        # def lorentzian(x, x0, a, g, c = 0): # TODO: replace this with multiple lorentzians.
+        #     print(x0, a, g)
+        #     return c + a / (1 + ((x-x0)/g)**2)
 
         if self.checkBox_fitLorentzian.isChecked():
-            p0 = [x_axis[Rb_peaks][0],Avg_data[0][0],0] # initial guesses
-            # popt, ier = optimize.leastsq(lorentzian, p0, args =(x_axis,Avg_data[0]))
-            popt, ier = optimize.curve_fit(lorentzian, x_axis, Avg_data[0], p0)
-            text_box_string = str(popt)
+            # TODO: inverse signal? talk to Tal.
+
+            popt = self.fitMultipleLorentzians(xData=x_axis, yData=Avg_data[0], peaks_indices=Rb_peaks,
+                                        peaks_init_width=(Rb_properties['widths'] * indx_to_time))  # just an attempt. this runs very slowly.
+            params_text = self.multipleLorentziansParamsToText(popt)
+            text_box_string = 'Calibration: \n' + str(self.indx_to_freq) +'\n'
+            text_box_string += 'Found %d Lorentzians: \n'%len(Rb_peaks) + params_text
+
+
         # --------- plot ---------
         # Prepare data for display:
         labels = ["CH1 - Vortex Rb lines", "CH2 - Cavity transmission"]
-        peaks_tags = ['1-0', '1-0/1', '1-1', '1-0/2', '1-1/2', '1-2']
-        # F2_peaks_tags = ['2-1', '2-1/2', '2-2', '2-1/3', '2-2/3', '2-3']
-
         # self.widgetPlot.plot_Scope(xaxis, [self.indx_to_freq(xaxis)], autoscale=self.checkBox_plotAutoscale.isChecked(),
         #                            redraw=redraw, aux_plotting_func = self.widgetPlot.plot_Scatter,
         #                            scatter_y_data = [self.indx_to_freq(Rb_peaks)], scatter_x_data = Rb_peaks)
         self.widgetPlot.plot_Scope(x_axis, Avg_data, autoscale=self.checkBox_plotAutoscale.isChecked(), redraw=redraw, labels = labels, x_ticks = x_ticks, y_ticks= y_ticks,
-                                   aux_plotting_func = self.widgetPlot.plot_Scatter, scatter_y_data = Avg_data[0][Rb_peaks],scatter_x_data = x_axis[Rb_peaks], scatter_tags = peaks_tags,
+                                   aux_plotting_func = self.widgetPlot.plot_Scatter, scatter_y_data = Avg_data[0][Rb_peaks],scatter_x_data = x_axis[Rb_peaks], scatter_tags = self.peaks_tags,
                                    secondary_x_axis_func = secondary_x_axis_func, secondary_x_axis_label = 'Ferquency [MHz]', mark_peak = self.selectedPeakXY,
                                    text_box = text_box_string)
 
     def printPeaksInformation(self):
         print('printPeaksInformation', str(self.indx_to_freq))
 
+    def fitMultipleLorentzians(self, xData, yData, peaks_indices, peaks_init_width):
+        # -- fit functions ---
+        def lorentzian(x, x0, a, gam):
+            return a * gam ** 2 / (gam ** 2 + (x - x0) ** 2)
+
+        def multi_lorentz_curve_fit(x, *params):
+            shift = params[0]  # Scalar shift
+            paramsRest = params[1:]  # These are the atcual parameters.
+            assert not (len(paramsRest) % 3)  # makes sure we have enough params
+            return shift + sum([lorentzian(x, *paramsRest[i: i + 3]) for i in range(0, len(paramsRest), 3)])
+
+        # -------- Begin fit: --------------
+        pub = [0.5, 1.5]  # peak_uncertain_bounds
+        startValues = []
+        for k, i in enumerate(peaks_indices):
+            startValues += [xData[i], yData[i], peaks_init_width[k] / 2]
+        lower_bounds = [-20] + [v * pub[0] for v in startValues]
+        upper_bounds = [20] + [v * pub[1] for v in startValues]
+        bounds = [lower_bounds, upper_bounds]
+        startValues = [min(yData)] + startValues  # This is the constant from which we start the Lorentzian fits - ideally, 0
+        popt, pcov = optimize.curve_fit(multi_lorentz_curve_fit, xData, yData, p0=startValues, maxfev=50000)
+        #ys = [multi_lorentz_curve_fit(x, popt) for x in xData]
+        return (popt)
+
+    def multipleLorentziansParamsToText(self, popt):
+        text = ''
+        params = popt[1:] # first param is a general shift
+        for i in range(0, len(params), 3):
+            text += 'X_0' +' = %.2f; ' % params[i]
+            text += 'I = %.2f; ' % params[i +1]
+            text += 'gamma' + ' = %.2f \n' %  params[i + 2]
+        return (text)
     def display_traces(self, data):
         self.rpfreqAxis = (np.arange(0, self.rp.bufferDuration * self.indx_to_freq[0], self.indx_to_freq[0])
                            - self.Rb_peaks[0] * self.indx_to_freq[0])
