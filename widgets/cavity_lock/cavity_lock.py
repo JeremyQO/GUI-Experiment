@@ -104,8 +104,7 @@ class Cavity_lock_GUI(QuantumWidget):
         self.print_to_dialogue("Decimation changed to %i" % dec)
 
     def updateTriggerDelay(self):
-        # self.rp.set_triggerSource('CH2')
-        # self.print_to_dialogue("Trigger source CH2", color = 'red')
+        self.rp.set_triggerSource(self.comboBox_triggerSource.currentText())
         t = float(self.doubleSpinBox_triggerDelay.text())
         self.rp.set_triggerDelay(t)
         self.print_to_dialogue("Trigger delay changed to %f ms" % t)
@@ -312,23 +311,15 @@ class Cavity_lock_GUI(QuantumWidget):
             self.selectedPeakXY = nearestPeakLocation # update location of selected peak to BE the nearest peak
         # ----------- text box -----------
         # to be printed in lower right corner
-        text_box_string = 'Text Box'
-        # def lorentzian(p, x, y):
-        #     x0, a, gam = p
-        #     return  (a * gam ** 2 / (gam ** 2 + (x - x0) ** 2)) -
-        # def lorentzian(x, x0, a, g, c = 0): # TODO: replace this with multiple lorentzians.
-        #     print(x0, a, g)
-        #     return c + a / (1 + ((x-x0)/g)**2)
+        text_box_string = None
 
         if self.checkBox_fitLorentzian.isChecked():
             # TODO: inverse signal? talk to Tal.
-
             popt = self.fitMultipleLorentzians(xData=x_axis, yData=Avg_data[0], peaks_indices=Rb_peaks,
                                         peaks_init_width=(Rb_properties['widths'] * indx_to_time))  # just an attempt. this runs very slowly.
             params_text = self.multipleLorentziansParamsToText(popt)
             text_box_string = 'Calibration: \n' + str(self.indx_to_freq) +'\n'
             text_box_string += 'Found %d Lorentzians: \n'%len(Rb_peaks) + params_text
-
 
         # --------- plot ---------
         # Prepare data for display:
