@@ -12,7 +12,6 @@ class Redpitaya:
         """Initialize object and open IP connection.
         Host IP should be a string in parentheses, like '192.168.1.100'.
         """
-
         self.time = time.time()
         # self.print("Initing Redpitayas class instance (%s)..." %host)
         self.host = host
@@ -21,11 +20,12 @@ class Redpitaya:
         self.received_parameters = {'new_parameters': True} # 'new_parameters' set to true, in order to redraw the plot for the first time
         self.sampling_rate = 125e6
         self.connected = False
+        self.firstRun = True
         self.ws = None
 
         # TODO: delete following two lines.
         self.set_triggerSource(trigger_source)  # By default, EXT
-        self.set_triggerLevel(1000)
+        self.set_triggerLevel(100)
         self.set_dataSize(1024)
 
         self.print = dialogue_print_callback
@@ -100,6 +100,7 @@ class Redpitaya:
             if 'OSC_TIME_SCALE' in data['parameters']:
                 self.received_parameters = data['parameters']
                 self.received_parameters['new_parameters'] = True
+                #print(data['parameters'])
         else:
             self.print('Unexpected response from RP: \n%s' %data, color = 'red')
 
@@ -120,7 +121,8 @@ class Redpitaya:
 
     # Regular print to console
     def print_data(self, data, parameters, color, *args):
-        print(data)
+        pass
+        # print(data)
 
     def set_dataSize(self, s =1024):
         # Size of data vector rceived from RP
@@ -142,13 +144,13 @@ class Redpitaya:
     def set_triggerSweep(self, s='NORMAL'):
         options = ('AUTO', 'NORMAL', 'SINGLE')
         if s in options:
-            print('Setting trigger-sweep to %s' %s)
+            # print('Setting trigger-sweep to %s' %s)
             self.new_parameters['OSC_TRIG_SWEEP'] = {'value': options.index(s)}
             self.new_parameters['OSC_RUN'] = {'value': True}
         else:
             self.print("Please choose source from " + str(options), color = 'red')
 
-    def set_triggerLevel(self, lvl):
+    def set_triggerLevel(self, lvl = 200):
         """Set trigger level in mV.""" # mV???
         if np.abs(lvl) < 2000:
             self.new_parameters['OSC_TRIG_LEVEL'] = {'value':lvl}
@@ -158,6 +160,9 @@ class Redpitaya:
     def set_triggerDelay(self, t):
         """Set trigger delay in mili-sec."""
         self.new_parameters['OSC_TIME_OFFSET'] = {'value': t}
+
+    def set_inverseChannel(self, value, ch):
+        self.new_parameters['CH%d_SHOW_INVERTED'% int(ch)] = {'value': bool(value)}
 
     def set_timeScale(self, t):
         """Set time scale in mili-sec."""
@@ -198,24 +203,36 @@ class Redpitaya:
         else:
             print("Please choose average from "+str(options))
 
+    def set_outputState(self, output = 1, state = True):
+        self.new_parameters['OUTPUT%d_STATE' % output] = {'value': bool(state)}
+        self.new_parameters['SOUR%d_IMPEDANCE' % output] = {'value': int(1)} # set high impedance; allows for higher outputs
+        print(self.new_parameters)
+
     def set_outputFunction(self, output = 1, function = 0):
+        # print('set_outputFunction',output,function)
         functionsMap = ['SINE', 'SQUARE', 'TRIANGLE','SAWU','SAWD', 'DC', 'DC NEG', 'PWM']
         if type(function) is str and function in functionsMap: function = functionsMap.index(function)
         self.new_parameters['SOUR%d_FUNC' % output] = {'value': str(function)}
-        self.print('Output %d changed to %s.' % (int(output), functionsMap[function]))
+        # self.print('Output %d changed to %s.' % (int(output), functionsMap[function]))
 
     def set_outputAmplitude(self, output = 1, v = 0):  # Set output amplitude, in volts.
-        if v > 5 or v < 0: return
+        if v > 5.01 or v < -5.01:
+            self.print("Warning! output voltage out of range!", color = 'red')
+            return
         self.new_parameters['SOUR%d_VOLT' % output] = {'value': str(v)}
-        self.print('Output %d amp changed to %s volts.' % (int(output), str(v)))
+        # self.print('Output %d amp changed to %s volts.' % (int(output), str(v)))
 
     def set_outputOffset(self, output = 1, v = 0): # Set output offset, in volts.
-        if v > 5 or v < 0: return
+        if v > 5.01 or v < -5.01:
+            self.print("Warning! output voltage out of range!", color='red')
+            return
         self.new_parameters['SOUR%d_VOLT_OFFS' % output] = {'value': str(v)}
+        # self.print('Output %d offset changed to %s volts.' % (int(output), str(v)))
 
     def set_outputFrequency(self, output = 1, freq = 50): # set frequency, in HZ
         if freq < 0: return
         self.new_parameters['SOUR%d_FREQ_FIX' % output] = {'value': str(freq)}
+        # self.print('Output %d freq changed to %s Hz.' % (int(output), str(freq)))
 
     def set_outputPhase(self, output = 1, deg = 0): # set phase, in DEGREES (engineers.. )
         if v > 360 or v < 0: return
@@ -232,3 +249,4 @@ if __name__ == "__main__":
     rp2 = Redpitaya("rp-f08c22.local")  # Pi
 
 
+#{'DEBUG_SIGNAL_PERIOD': {'value': 50, 'min': 0, 'max': 10000, 'access_mode': 0, 'fpga_update': 0}, 'DEBUG_PARAM_PERIOD': {'value': 50, 'min': 0, 'max': 10000, 'access_mode': 0, 'fpga_update': 0}, 'DIGITAL_LOOP': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_DATA_SIZE': {'value': 1024, 'min': 1, 'max': 16384, 'access_mode': 0, 'fpga_update': 0}, 'OSC_VIEV_PART': {'value': 0.074463, 'min': 0, 'max': 1, 'access_mode': 1, 'fpga_update': 0}, 'OSC_SAMPL_RATE': {'value': 1024, 'min': 1, 'max': 65536, 'access_mode': 0, 'fpga_update': 0}, 'CH1_SHOW': {'value': True, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'CH2_SHOW': {'value': True, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'MATH_SHOW': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'CH1_SHOW_INVERTED': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'CH2_SHOW_INVERTED': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'MATH_SHOW_INVERTED': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_RST': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_RUN': {'value': True, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_AUTOSCALE': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_SINGLE': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH1_OFFSET': {'value': 0, 'min': -40, 'max': 40, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH2_OFFSET': {'value': 0, 'min': -40, 'max': 40, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MATH_OFFSET': {'value': 0, 'min': -40, 'max': 40, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH1_SCALE': {'value': 1, 'min': 5e-05, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH2_SCALE': {'value': 1, 'min': 5e-05, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_OUTPUT1_SCALE': {'value': 0.2, 'min': 5e-05, 'max': 1000, 'access_mode': 3, 'fpga_update': 0}, 'OSC_OUTPUT2_SCALE': {'value': 1, 'min': 5e-05, 'max': 1000, 'access_mode': 3, 'fpga_update': 0}, 'OSC_MATH_SCALE': {'value': 1, 'min': 0, 'max': 1000000000000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MATH_SCALE_STR': {'value': '1.000000', 'min': '', 'max': '', 'access_mode': 0, 'fpga_update': 10}, 'OSC_MATH_SCALE_MULT': {'value': 1, 'min': 0, 'max': 1000000000000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH1_PROBE': {'value': 1, 'min': 0, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH2_PROBE': {'value': 1, 'min': 0, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TIME_OFFSET': {'value': 25, 'min': -100000, 'max': 100000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TIME_SCALE': {'value': '1.0000000', 'min': '', 'max': '', 'access_mode': 0, 'fpga_update': 10}, 'OSC_VIEW_START_POS': {'value': 0, 'min': 0, 'max': 16384, 'access_mode': 1, 'fpga_update': 0}, 'OSC_VIEW_END_POS': {'value': 1024, 'min': 0, 'max': 16384, 'access_mode': 1, 'fpga_update': 0}, 'OSC_CH1_IN_GAIN': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH2_IN_GAIN': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH1_IN_AC_DC': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH2_IN_AC_DC': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH1_OUT_GAIN': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CH2_OUT_GAIN': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TRIG_LEVEL': {'value': 1000, 'min': -2000, 'max': 2000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TRIG_LIMIT': {'value': 1, 'min': -2000, 'max': 2000, 'access_mode': 1, 'fpga_update': 0}, 'OSC_TRIG_SWEEP': {'value': 1, 'min': 0, 'max': 2, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TRIG_SOURCE': {'value': 0, 'min': 0, 'max': 2, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TRIG_SLOPE': {'value': 1, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TRIG_HYST': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MEAS_SELN': {'value': '[]', 'min': '', 'max': '', 'access_mode': 0, 'fpga_update': 0}, 'OSC_MEAS_SEL1': {'value': -1, 'min': -1, 'max': 23, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MEAS_SEL2': {'value': -1, 'min': -1, 'max': 23, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MEAS_SEL3': {'value': -1, 'min': -1, 'max': 23, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MEAS_SEL4': {'value': -1, 'min': -1, 'max': 23, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MEAS_VAL1': {'value': 0, 'min': -1000000, 'max': 1000000, 'access_mode': 3, 'fpga_update': 0}, 'OSC_MEAS_VAL2': {'value': 0, 'min': -1000000, 'max': 1000000, 'access_mode': 3, 'fpga_update': 0}, 'OSC_MEAS_VAL3': {'value': 0, 'min': -1000000, 'max': 1000000, 'access_mode': 3, 'fpga_update': 0}, 'OSC_MEAS_VAL4': {'value': 0, 'min': -1000000, 'max': 1000000, 'access_mode': 3, 'fpga_update': 0}, 'OSC_CURSOR_X1': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CURSOR_X2': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CURSOR_Y1': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CURSOR_Y2': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CURSOR_SRC': {'value': 0, 'min': 0, 'max': 2, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CUR1_V': {'value': -1, 'min': -1000, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CUR2_V': {'value': -1, 'min': -1000, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CUR1_T': {'value': -1, 'min': -1000, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_CUR2_T': {'value': -1, 'min': -1000, 'max': 1000, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MATH_OP': {'value': 1, 'min': 1, 'max': 7, 'access_mode': 0, 'fpga_update': 1}, 'OSC_MATH_SRC1': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_MATH_SRC2': {'value': 1, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'OSC_TRIG_INFO': {'value': 2, 'min': 0, 'max': 3, 'access_mode': 3, 'fpga_update': 0}, 'OUTPUT1_SHOW': {'value': True, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OUTPUT2_SHOW': {'value': True, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OUTPUT1_STATE': {'value': True, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'OUTPUT2_STATE': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_VOLT': {'value': 0.7, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_VOLT': {'value': 0.9, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_VOLT_OFFS': {'value': -0.004, 'min': -1, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_VOLT_OFFS': {'value': 0, 'min': -1, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_FREQ_FIX': {'value': 10, 'min': 5e-05, 'max': 62500000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_FREQ_FIX': {'value': 1000, 'min': 5e-05, 'max': 62500000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_SWEEP_FREQ_START': {'value': 1000, 'min': 1, 'max': 62500000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_SWEEP_FREQ_START': {'value': 1000, 'min': 1, 'max': 62500000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_SWEEP_FREQ_END': {'value': 10000, 'min': 1, 'max': 62500000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_SWEEP_FREQ_END': {'value': 10000, 'min': 1, 'max': 62500000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_SWEEP_MODE': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_SWEEP_MODE': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_SWEEP_DIR': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_SWEEP_DIR': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_SWEEP_TIME': {'value': 1000000, 'min': 1, 'max': 2000000000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_SWEEP_TIME': {'value': 1000000, 'min': 1, 'max': 2000000000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_SWEEP_STATE': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_SWEEP_STATE': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'SWEEP_RESET': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_PHAS': {'value': 180, 'min': -360, 'max': 360, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_PHAS': {'value': 0, 'min': -360, 'max': 360, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_DCYC': {'value': 50, 'min': 0, 'max': 100, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_DCYC': {'value': 50, 'min': 0, 'max': 100, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_FUNC': {'value': 0, 'min': 0, 'max': 9, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_FUNC': {'value': 0, 'min': 0, 'max': 9, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_TRIG_SOUR': {'value': 1, 'min': 1, 'max': 4, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_TRIG_SOUR': {'value': 1, 'min': 1, 'max': 4, 'access_mode': 0, 'fpga_update': 0}, 'OUTPUT1_SHOW_OFF': {'value': 0, 'min': -40, 'max': 40, 'access_mode': 0, 'fpga_update': 0}, 'OUTPUT2_SHOW_OFF': {'value': 0, 'min': -40, 'max': 40, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_TEMP_RUNTIME': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 3, 'fpga_update': 0}, 'SOUR2_TEMP_RUNTIME': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 3, 'fpga_update': 0}, 'SOUR1_TEMP_LATCHED': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 3, 'fpga_update': 0}, 'SOUR2_TEMP_LATCHED': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 3, 'fpga_update': 0}, 'SOUR1_IMPEDANCE': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_IMPEDANCE': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_BURST_STATE': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_BURST_STATE': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_BURST_COUNT': {'value': 1, 'min': 1, 'max': 50000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_BURST_COUNT': {'value': 1, 'min': 1, 'max': 50000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_BURST_REP': {'value': 1, 'min': 1, 'max': 50000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_BURST_REP': {'value': 1, 'min': 1, 'max': 50000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR1_BURST_DELAY': {'value': 100001, 'min': 1, 'max': 2000000000, 'access_mode': 0, 'fpga_update': 0}, 'SOUR2_BURST_DELAY': {'value': 1, 'min': 1, 'max': 2000000000, 'access_mode': 0, 'fpga_update': 0}, 'BURST_RESET': {'value': False, 'min': False, 'max': True, 'access_mode': 0, 'fpga_update': 0}, 'CPU_LOAD': {'value': 69.090912, 'min': 0, 'max': 100, 'access_mode': 0, 'fpga_update': 0}, 'TOTAL_RAM': {'value': 451956736, 'min': 0, 'max': 999999986991104, 'access_mode': 0, 'fpga_update': 0}, 'FREE_RAM': {'value': 289955840, 'min': 0, 'max': 999999986991104, 'access_mode': 0, 'fpga_update': 0}, 'RP_MODEL_STR': {'value': 'Z10', 'min': '', 'max': '', 'access_mode': 4, 'fpga_update': 10}, 'EXT_CLOCK_ENABLE': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 3, 'fpga_update': 0}, 'EXT_CLOCK_LOCKED': {'value': 0, 'min': 0, 'max': 1, 'access_mode': 4, 'fpga_update': 0}, 'out_command': {'value': '', 'min': '', 'max': '', 'access_mode': 1, 'fpga_update': 1}, 'new_parameters': True}

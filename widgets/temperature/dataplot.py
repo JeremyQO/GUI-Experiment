@@ -29,12 +29,14 @@ class PlotWindow(QDialog):
         plt.ion()
         self.figure = plt.figure(1)
         self.ax1 = self.figure.add_subplot(111)
+        self.arrows = [None] * 2 #len(kwargs['mark_peak'])  # Create placeholder for 2 arrows
         self.scatter = None # Placeholder
+        self.annotations = []
         self.annotations = None
-        self.arrow = None
+        self.arrows = None
         self.textBox = None
         self.lines = []
-        for i in range(4): # in principle, hold 4 places for lines. With good coding, this is not neccessary
+        for i in range(2): # in principle, hold 4 places for lines. With good coding, this is not neccessary
             line1, = self.ax1.plot([1], [1], 'r-')  # Returns a tuple of line objects, thus the comma
             self.lines.append(line1)
 
@@ -85,8 +87,8 @@ class PlotWindow(QDialog):
 
     def plot_Scope(self, x_data,y_data, autoscale = False, redraw = False, **kwargs):
         if not redraw:  # meanning - merely update data, without redrawing all.
-            for i, line in enumerate(self.lines):
-                self.lines[0].set_ydata(y_data[0])
+            for i, line in enumerate(y_data):
+                self.lines[i].set_ydata(y_data[i])
                 # self.ax1.set_ylim(min(kwargs['y_ticks']), max(kwargs['y_ticks']))
             if autoscale:
                 miny, maxy = min(y_data[0]), max(y_data[0])
@@ -98,15 +100,19 @@ class PlotWindow(QDialog):
             if 'aux_plotting_func' in kwargs:
                 kwargs['aux_plotting_func'](**kwargs)  # This is a general way of calling this function
             if 'mark_peak' in kwargs and kwargs['mark_peak'] is not None:
-                if self.arrow is None: self.annotateWithArrow(kwargs['mark_peak'][0], kwargs['mark_peak'][1])
-                self.arrow.xy =  (kwargs['mark_peak'][0],kwargs['mark_peak'][1])
+                print(kwargs['mark_peak'])
+                for i, pk in enumerate(kwargs['mark_peak']):
+                    if self.arrows[i] is None:
+                        self.arrows[i] = self.annotateWithArrow(pk[0], pk[1])   # create new arrow
+                    self.arrows[i].xy = (pk[0],pk[1])                                # update arrow location
+                    print(self.arrows)
             if 'text_box' in kwargs and kwargs['text_box'] is not None:
                 if self.textBox is None: self.addTextBox(textstr=kwargs['text_box'])
                 self.textBox.set_text(str(kwargs['text_box']))
 
             return
         print('Redrawing all')
-        self.arrow = None # reset arrow
+        self.arrows = None # reset arrow
         self.textBox = None # reset textbox
         if 'labels' not in kwargs:
             kwargs['legend'] = False
@@ -156,30 +162,42 @@ class PlotWindow(QDialog):
 
     def plot_Scatter(self, **kwargs):
         # first - check we have what we need
-        if 'scatter_x_data' and 'scatter_y_data' in kwargs and 'scatter_tags' in kwargs :
+        if 'scatter_x_data' and 'scatter_y_data' in kwargs and kwargs['scatter_x_data'] != [] and kwargs['scatter_y_data'] != []:
             x_data, y_data = kwargs['scatter_x_data'], kwargs['scatter_y_data']
-            # if not annotations exist - annotate for the first time
-            if not self.scatter:
+            #------- First, handle scatter -------
+            # if scatter don't exist - scatter for the first time
+            if not self.scatter:# or  (self.scatter is not None and len() != len(x_data) ):
                 # draw scatter + define style
-                self.scatter = self.ax1.scatter(kwargs['scatter_x_data'], kwargs['scatter_y_data'], marker="x", color="b")
-                self.annotations = []
-                for i, x in enumerate(x_data):
-                    # annotate scatter + define style
-                    self.annotations.append(self.ax1.annotate(kwargs['scatter_tags'][i], xy = (x, y_data[i]), weight='bold' ))
-            # If they exist - update location
-            else:
+                self.scatter = self.ax1.scatter(x_data, y_data, marker="x", color="b")
+            else:  # merely update location
                 self.scatter.set_offsets(np.c_[x_data, y_data])  # this seems to work.
-                if self.annotations:
-                    for i, s in enumerate(self.annotations): s.set_position((x_data[i], y_data[i]))
+
+            # --------------- annotate! ----
+            if 'scatter_tags' in kwargs and  kwargs['scatter_tags'] != []:
+                # if annotations don't exist (and there are enough tags) - annontate for the first time
+                if (self.annotations is None or self.annotations == [])and len(kwargs['scatter_tags']) == len(x_data):
+                    # draw scatter + define style
+                    self.annotations = []
+                    for i, x in enumerate(x_data):
+                        # annotate scatter + define style
+                        self.annotations.append(self.ax1.annotate(kwargs['scatter_tags'][i], xy = (x, y_data[i]), weight='bold' ))
+                # If they exist - update location
+                else:
+                    if self.annotations:
+                        for i, s in enumerate(self.annotations): s.set_position((x_data[i], y_data[i]))
+            # if annotation exists, but of different length, remove previous ones.
+            elif self.annotations is not None and len(self.annotations) != len(x_data):
+                for ann in self.annotations:
+                    ann.remove()
+                self.annotations = []
 
 
-        # for j, tag in enumerate(peak_tags):
-        #     plt.annotate(tag, (Rb_peaks[j], el[Rb_peaks[j]]))
+
     def annotateWithArrow(self, x,y):
-        self.arrow = self.ax1.annotate('', xy=(x, y),  xycoords='data',
+        return(self.ax1.annotate('', xy=(x, y),  xycoords='data',
             xytext=(0.8, 0.95), textcoords='axes fraction',
             arrowprops=dict(facecolor='black', shrink=0.05),
-            horizontalalignment='right', verticalalignment='top')
+            horizontalalignment='right', verticalalignment='top'))
     def addTextBox(self, textstr):
         props = dict(boxstyle='round', facecolor='grey', alpha=0.1)
         self.textBox = self.ax1.text(0.05, 0.95, textstr, transform=self.ax1.transAxes, fontsize=14,
