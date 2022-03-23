@@ -206,7 +206,6 @@ class Redpitaya:
     def set_outputState(self, output = 1, state = True):
         self.new_parameters['OUTPUT%d_STATE' % output] = {'value': bool(state)}
         self.new_parameters['SOUR%d_IMPEDANCE' % output] = {'value': int(1)} # set high impedance; allows for higher outputs
-        print(self.new_parameters)
 
     def set_outputFunction(self, output = 1, function = 0):
         # print('set_outputFunction',output,function)

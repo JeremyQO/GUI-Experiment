@@ -33,7 +33,6 @@ class PlotWindow(QDialog):
         self.scatter = None # Placeholder
         self.annotations = []
         self.annotations = None
-        self.arrows = None
         self.textBox = None
         self.lines = []
         for i in range(2): # in principle, hold 4 places for lines. With good coding, this is not neccessary
@@ -100,19 +99,18 @@ class PlotWindow(QDialog):
             if 'aux_plotting_func' in kwargs:
                 kwargs['aux_plotting_func'](**kwargs)  # This is a general way of calling this function
             if 'mark_peak' in kwargs and kwargs['mark_peak'] is not None:
-                print(kwargs['mark_peak'])
+                # print(kwargs['mark_peak'])
                 for i, pk in enumerate(kwargs['mark_peak']):
                     if self.arrows[i] is None:
                         self.arrows[i] = self.annotateWithArrow(pk[0], pk[1])   # create new arrow
                     self.arrows[i].xy = (pk[0],pk[1])                                # update arrow location
-                    print(self.arrows)
             if 'text_box' in kwargs and kwargs['text_box'] is not None:
                 if self.textBox is None: self.addTextBox(textstr=kwargs['text_box'])
                 self.textBox.set_text(str(kwargs['text_box']))
 
             return
         print('Redrawing all')
-        self.arrows = None # reset arrow
+        self.arrows = [None] * 2 # reset arrow
         self.textBox = None # reset textbox
         if 'labels' not in kwargs:
             kwargs['legend'] = False

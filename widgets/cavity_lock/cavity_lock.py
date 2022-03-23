@@ -4,7 +4,7 @@ import time
 from functions.od import RedPitayaWebsocket
 from scipy import optimize,spatial
 from scipy.signal import find_peaks
-import vxi11 # https://github.com/python-ivi/python-vxi11
+# import vxi11 # https://github.com/python-ivi/python-vxi11
 import os
 import sys
 import numpy as np
@@ -17,10 +17,6 @@ from widgets.worker import Worker
 import matplotlib.pyplot as plt
 from functions.stirap.calculate_Nat_stirap import NAtoms
 _CONNECTION_ATTMPTS = 2
-
-
-
-Decimation_options = [1, 8, 64, 1024, 8192, 65536]
 
 try:
     from functions.cavity_lock.cavity_lock import CavityLock
@@ -434,7 +430,7 @@ class Cavity_lock_GUI(QuantumWidget):
             errorSignal =  (self.selectedPeaksXY[1][0] - self.selectedPeaksXY[0][0]) *(errorDirection)
             # self.updatePID()
             output = self.pid(errorSignal)
-            # print('Error Signal: ', errorSignal, 'Output: ', output)
+            print('Error Signal: ', errorSignal, 'Output: ', output)
             # It's a problem with Red-Pitaya: to get 10V DC output, one has to set both Amp and Offset to 5V
             self.doubleSpinBox_ch1OutAmp.setValue(float(output) / 2)
             self.doubleSpinBox_ch1OutOffset.setValue(float(output) / 2)
