@@ -18,7 +18,7 @@ from PyQt5.QtCore import QThreadPool
 from datetime import datetime
 import os
 from widgets.worker import Worker
-import widgets.temperature.dataplot as dataplot
+import widgets.scopeWidget.dataplot as dataplot
 from pyqtconsole.console import PythonConsole
 # try:
 # from OPXcontrol.OPX_control_New_v2 import OPX
@@ -227,8 +227,6 @@ class QuantumWidget (QWidget):
                 self.print_to_dialogue("Connected to OPX")
         except NameError:
             self.print_to_dialogue("Couldn't connect to OPX")
-        #self.frame_parameters.doubleSpinBox_Update_FPGCAmp.setValue(self.OPX.PGC_final_amp)
-        #self.frame_parameters.doubleSpinBox_FinalPGCFreq.setValue(self.OPX.IF_TOP1_PGC*1e-6)
 
 
 

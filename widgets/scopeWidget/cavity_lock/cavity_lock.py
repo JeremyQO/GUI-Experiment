@@ -1,7 +1,5 @@
 
 from PyQt5 import uic
-import time
-from functions.od import RedPitayaWebsocket
 from scipy import optimize,spatial
 from scipy.signal import find_peaks
 # import vxi11 # https://github.com/python-ivi/python-vxi11
@@ -12,10 +10,7 @@ from PyQt5.QtWidgets import QApplication
 import matplotlib
 from PID import PID
 from PyQt5.QtCore import QThreadPool
-from datetime import date, datetime
-from widgets.worker import Worker
-import matplotlib.pyplot as plt
-from functions.stirap.calculate_Nat_stirap import NAtoms
+
 _CONNECTION_ATTMPTS = 2
 
 try:
@@ -25,42 +20,22 @@ except:
 if matplotlib.get_backend() != 'Qt5Agg':
     matplotlib.use('Qt5Agg')
 
-from widgets.quantumWidget import QuantumWidget
+from widgets.scopeWidget.scope import Scope_GUI
 
 
-class Cavity_lock_GUI(QuantumWidget):
+class Cavity_lock_GUI(Scope_GUI):
     def __init__(self, Parent=None, ui=None, simulation=True):
         if Parent is not None:
             self.Parent = Parent
-        ui = os.path.join(os.path.dirname(__file__), "gui.ui") if ui is None else ui
 
-        super().__init__(ui, simulation)
-        # up to here, nothing to change.
-
-        if __name__ == "__main__":
-            self.threadpool = QThreadPool()
-            print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
-
-        # Add outputs control UI
-        self.outputsFrame=self.frame_4
-        ui_outputs = os.path.join(os.path.dirname(__file__), "../scopeWidget/outputsControl.ui")
-        uic.loadUi(ui_outputs, self.frame_4) # place outputs in frame 4
-
-        self.connection_attempt = 0  # This holds connection attmeps. As long as this is < than _CONNECTION_ATTMPTS, will try to reconnect
-        self.scope_parameters = {'new_parameters': False, 'OSC_TIME_SCALE': {'value':'1'}, 'OSC_CH1_SCALE': {'value':'1'},'OSC_CH1_SCALE': {'value':'1'}, 'OSC_DATA_SIZE':{'value':1024}}
-        self.CHsUpdated = False
         self.listenForMouseClickCID = None
-        self.rp = None  # Place holder
         self.pid = PID(1, 0,0,setpoint = 0)
         self.lockOn = False
         self.changedOutputs = False # this keeps track of changes done to outputs. if this is true, no total-redraw will happen (although usually we would update scope after any change in RP)
-        self.signalLength = self.scope_parameters['OSC_DATA_SIZE']['value'] # 1024 by default
 
         # ---------- Rb Peaks ----------
         self.selectedPeaksXY = None
         self.indx_to_freq = [0]
-
-
 
         # ----------- Velocity Intrument -----------
         # try:
@@ -74,34 +49,30 @@ class Cavity_lock_GUI(QuantumWidget):
         #     self.doubleSpinBox_velocityWavelength.valueChanged.connect(self.updateVelocityWavelength)
         # except:
         #     self.print_to_dialogue('Could not connect to velocity.', color= 'red')
+        if __name__ == "__main__":
+            self.threadpool = QThreadPool()
+            print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
 
-        # -- connect --
-        self.connectButtonsAndSpinboxes()
-        self.update_plot_params()
+        super().__init__(Parent=Parent, ui=ui, simulation=simulation)
+        # up to here, nothing to change.
 
-        self.utils_connect_worker()
+        # Add outputs control UI
+        self.outputsFrame=self.frame_4
+        ui_outputs = os.path.join(os.path.dirname(__file__), "..\\outputsControl.ui")
+        uic.loadUi(ui_outputs, self.frame_4) # place outputs in frame 4
+        self.connectOutputsButtonsAndSpinboxes()
 
 
-    def connectButtonsAndSpinboxes(self):
-        self.pushButton_utils_Connect.clicked.connect(self.utils_connect_worker)
-        self.pushButton_saveCurrentData.clicked.connect(self.saveCurrentDataClicked)
-        self.pushButton_updatePlotDisplay.clicked.connect(self.updatePlotDisplay)
-        self.outputsFrame.pushButton_StartLock.clicked.connect(self.toggleLock)
-        self.outputsFrame.pushButton_selectPeak.clicked.connect(self.scopeListenForMouseClick)
-        self.checkBox_iPython.clicked.connect(self.showHideConsole)
-        self.checkBox_parameters.clicked.connect(self.showHideParametersWindow)
-        self.checkBox_Rb_lines.clicked.connect(self.chns_update)
-        self.checkBox_Cavity_transm.clicked.connect(self.chns_update)
-
-        self.checkBox_CH1Inverse.clicked.connect(self.setInverseChns)
-        self.checkBox_CH2Inverse.clicked.connect(self.setInverseChns)
-
+    def connectOutputsButtonsAndSpinboxes(self):
         # PID spniboxes
         self.outputsFrame.doubleSpinBox_P.valueChanged.connect(self.updatePID)
         self.outputsFrame.doubleSpinBox_I.valueChanged.connect(self.updatePID)
         self.outputsFrame.doubleSpinBox_D.valueChanged.connect(self.updatePID)
 
-        # Output spinboxes
+        # Output spinboxes & buttons
+        self.outputsFrame.pushButton_StartLock.clicked.connect(self.toggleLock)
+        self.outputsFrame.pushButton_selectPeak.clicked.connect(self.scopeListenForMouseClick)
+
         self.outputsFrame.comboBox_ch1OutFunction.currentIndexChanged.connect(self.updateOutputChannels)
         self.outputsFrame.comboBox_ch2OutFunction.currentIndexChanged.connect(self.updateOutputChannels)
         self.outputsFrame.doubleSpinBox_ch1OutAmp.valueChanged.connect(self.updateOutputChannels)
@@ -122,42 +93,6 @@ class Cavity_lock_GUI(QuantumWidget):
             self.doubleSpinBox_velocityWavelength.setValue(self.velocityWavelength)
         else:
             self.velocityWavelength = v
-
-    def setInverseChns(self):
-        self.rp.set_inverseChannel(ch=1, value = self.checkBox_CH1Inverse.isChecked())
-        self.rp.set_inverseChannel(ch=2, value =  self.checkBox_CH2Inverse.isChecked())
-
-    def update_plot_params(self):
-        self.Avg_num = int(self.spinBox_averaging.value())
-        self.Rb_lines_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.Cavity_Transmission_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.avg_indx = 0
-
-    def updateTriggerDelay(self):
-        t = float(self.doubleSpinBox_triggerDelay.value())  # ms
-        l = float(self.doubleSpinBox_triggerLevel.value()) # in mV
-        s = self.comboBox_triggerSource.currentText() # text
-        self.rp.set_triggerSource(s)
-        self.rp.set_triggerDelay(t)
-        self.rp.set_triggerLevel(l)
-        self.print_to_dialogue("Trigger delay changed to %f ms; Source: %s; Level: %2.f [V]" % (t,s,l))
-
-    def updateTimeScale(self):
-        t = float(self.doubleSpinBox_timeScale.text())
-        self.rp.set_timeScale(t)
-        self.print_to_dialogue("Time scale changed to %f ms" % t)
-
-    def updateAveraging(self):
-        self.Avg_num = int(self.spinBox_averaging.value())
-        self.Rb_lines_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.Cavity_Transmission_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.avg_indx = 0
-        self.print_to_dialogue("Data averaging changed to %i" % self.Avg_num)
-
-    def updatePlotDisplay(self):
-        self.updateTriggerDelay()
-        self.updateTimeScale()
-        self.updateAveraging()
 
     def updatePID(self):
         P, I, D = float(self.outputsFrame.doubleSpinBox_P.value()), float(self.outputsFrame.doubleSpinBox_I.value()), float(self.outputsFrame.doubleSpinBox_D.value())
@@ -181,70 +116,6 @@ class Cavity_lock_GUI(QuantumWidget):
         self.rp.set_outputState(output=1, state=bool(self.outputsFrame.checkBox_ch1OuputState.checkState()))
         self.rp.set_outputState(output=2, state=bool(self.outputsFrame.checkBox_ch2OuputState.checkState()))
         self.rp.updateParameters()
-
-    def chns_update(self):
-        self.scope_parameters['new_parameters'] = True
-
-    def enable_interface(self, v): #TODO ?????
-        self.frame_4.setEnabled(v)
-        self.frame_parameters.setEnabled(v)
-
-    def utils_connect_worker(self):
-        worker = Worker(self.utils_connect)
-        self.pushButton_utils_Connect.setDisabled(True)
-        worker.signals.finished.connect(self.utils_connect_finished)
-        self.threadpool.start(worker)
-
-    def utils_connect_finished(self):
-        self.enable_interface(True)
-        self.pushButton_utils_Connect.setEnabled(True)
-
-
-    def utils_connect(self, progress_callback):
-        self.print_to_dialogue("Connecting to RedPitayas...")
-        time.sleep(0.1)
-        # self.connectOPX()
-        # ---- Connect Red-Pitaya ------
-        RPworker = Worker(self.redPitayaConnect) #Trying to work on a different thread...
-        self.threadpool.start(RPworker)
-
-    def saveCurrentDataClicked(self):
-        timeScale = np.linspace(0, float(self.scope_parameters['OSC_TIME_SCALE']['value']) * 10, num=int(self.scope_parameters['OSC_DATA_SIZE']['value']))
-        now = datetime.now()
-        today = date.today()
-        datadir = os.path.join("C:\\", "Pycharm", "Expriements", "DATA", "CavityLock")
-        todayformated = today.strftime("%B-%d-%Y")
-        todaydatadir = os.path.join(datadir, todayformated)
-        nowformated = now.strftime("%Hh%Mm%Ss")
-        try:
-            os.makedirs(todaydatadir)
-            self.print_to_dialogue("Created folder DATA/CavityLock/%s" % (todayformated))
-            self.print_to_dialogue("Data Saved")
-        except FileExistsError:
-            self.print_to_dialogue("Data Saved")
-
-        self.datafile = os.path.join(todaydatadir, nowformated + ".txt")
-        meta = "Traces from the RedPitaya, obtained on %s at %s.\n" % (todayformated, nowformated)
-        # np.savez_compressed(os.path.join(todaydatadir, nowformated), CH1=self.Rb_lines_Avg_Data, CH2=self.Cavity_Transmission_Data, time=timeScale, meta=meta)
-        np.save(os.path.join(todaydatadir, nowformated), CH1=self.Rb_lines_Avg_Data,CH2=self.Cavity_Transmission_Data, time=timeScale, meta=meta)
-
-
-    def redPitayaConnect(self, progress_callback):
-        RpHost = ["rp-ffffb4.local","rp-f08c22.local", "rp-f08c36.local"]
-        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-ffffb4.local", got_data_callback=self.update_scope,dialogue_print_callback=self.print_to_dialogue)
-
-        if self.rp.connected:
-            self.connection_attempt = 0 # connection
-            self.print_to_dialogue("RedPitayas are connected.", color = 'green')
-            self.rp.run()
-        else:
-            self.print_to_dialogue("Unable to connect to RedPitaya.", color= 'red')
-            self.rp.close()
-            self.rp = None
-            if self.connection_attempt < _CONNECTION_ATTMPTS:
-                self.print_to_dialogue('Trying to reconnect... (attempt = %d out of %d)' % (self.connection_attempt + 1, _CONNECTION_ATTMPTS))
-                self.connection_attempt = self.connection_attempt + 1
-                self.redPitayaConnect(progress_callback)
 
     def scopeListenForMouseClick(self):
         def mouseClickOnScope(event): # what should do on mouse click, when listening
@@ -386,44 +257,6 @@ class Cavity_lock_GUI(QuantumWidget):
         # It's a problem with Red-Pitaya: to get 10V DC output, one has to set both Amp and Offset to 5V
         self.outputsFrame.doubleSpinBox_ch1OutAmp.setValue(float(output) / 2)
         self.outputsFrame.doubleSpinBox_ch1OutOffset.setValue(float(output) / 2)
-
-    def printPeaksInformation(self):
-        print('printPeaksInformation', str(self.indx_to_freq))
-
-    def fitMultipleLorentzians(self, xData, yData, peaks_indices, peaks_init_width):
-        # -- fit functions ---
-        def lorentzian(x, x0, a, gam):
-            return a * gam ** 2 / (gam ** 2 + (x - x0) ** 2)
-
-        def multi_lorentz_curve_fit(x, *params):
-            shift = params[0]  # Scalar shift
-            paramsRest = params[1:]  # These are the atcual parameters.
-            assert not (len(paramsRest) % 3)  # makes sure we have enough params
-            return shift + sum([lorentzian(x, *paramsRest[i: i + 3]) for i in range(0, len(paramsRest), 3)])
-
-        # -------- Begin fit: --------------
-        pub = [0.5, 1.5]  # peak_uncertain_bounds
-        startValues = []
-        for k, i in enumerate(peaks_indices):
-            startValues += [xData[i], yData[i], peaks_init_width[k] / 2]
-        lower_bounds = [-20] + [v * pub[0] for v in startValues]
-        upper_bounds = [20] + [v * pub[1] for v in startValues]
-        bounds = [lower_bounds, upper_bounds]
-        startValues = [min(yData)] + startValues  # This is the constant from which we start the Lorentzian fits - ideally, 0
-        popt, pcov = optimize.curve_fit(multi_lorentz_curve_fit, xData, yData, p0=startValues, maxfev=50000)
-        #ys = [multi_lorentz_curve_fit(x, popt) for x in xData]
-        return (popt)
-
-    def multipleLorentziansParamsToText(self, popt):
-        text = ''
-        params = popt[1:] # first param is a general shift
-        for i in range(0, len(params), 3):
-            text += 'X_0' +' = %.2f; ' % params[i]
-            text += 'I = %.2f; ' % params[i +1]
-            text += 'gamma' + ' = %.2f \n' %  params[i + 2]
-        return (text)
-
-
 
 if __name__ == "__main__":
     app = QApplication([])
