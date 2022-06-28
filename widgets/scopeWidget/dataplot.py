@@ -57,7 +57,7 @@ class PlotWindow(QDialog):
         self.widgetPlot = widget
 
     def plot_Scope(self, x_data,y_data, autoscale = False, redraw = False, **kwargs):
-        if not redraw:  # meanning - merely update data, without redrawing all.
+        if not redraw:  # meaning - merely update data, without redrawing all.
             for i, line in enumerate(y_data):
                 self.lines[i].set_ydata(y_data[i])
             if autoscale:
@@ -68,7 +68,7 @@ class PlotWindow(QDialog):
                 self.ax1.set_yticks(ticks)
                 self.ax1.set_yticklabels(['{:5.3f}'.format(t) for t in ticks])  # 10 divisions for autoscale
             if 'aux_plotting_func' in kwargs:
-                kwargs['aux_plotting_func'](**kwargs)  # This is a general way of calling this function
+                kwargs['aux_plotting_func'](redraw = redraw, **kwargs)  # This is a general way of calling this function
             if 'mark_peak' in kwargs and kwargs['mark_peak'] is not None:
                 self.markPeaks(kwargs['mark_peak'])
                 for i, pk in enumerate(kwargs['mark_peak']):
@@ -99,7 +99,7 @@ class PlotWindow(QDialog):
 
         # ------ legend ----------------
         if 'legend' in kwargs and kwargs['legend'] or 'legend' not in kwargs: # by default, legend on
-            self.ax1.legend(loc = 'lower left') # defualt
+            self.ax1.legend(loc = 'upper right') # defualt
             if 'legend_loc' in kwargs: self.ax1.legend(loc = kwargs['legend_loc'])
 
         # --------  Secondary scale ---------
@@ -124,7 +124,7 @@ class PlotWindow(QDialog):
         self.ax1.set_ylabel('Voltage [V]')
         self.ax1.set_xlabel('Time [ms]')
         if 'aux_plotting_func' in kwargs:
-            kwargs['aux_plotting_func'](**kwargs) # This is a general way of calling this function
+            kwargs['aux_plotting_func'](redraw = redraw, **kwargs) # This is a general way of calling this function
         plt.tight_layout()
 
         self.canvas.draw()
@@ -176,7 +176,14 @@ class PlotWindow(QDialog):
             xytext=(0.8, 0.95), textcoords='axes fraction',
             arrowprops=dict(facecolor='black', shrink=0.05),
             horizontalalignment='right', verticalalignment='top'))
+
     def addTextBox(self, textstr):
         props = dict(boxstyle='round', facecolor='grey', alpha=0.1)
-        self.textBox = self.ax1.text(0.05, 0.95, textstr, transform=self.ax1.transAxes, fontsize=14,
+        self.textBox = self.ax1.text(0.05, 0.95, textstr, transform=self.ax1.transAxes, fontsize=32,
         verticalalignment='top', bbox=props)
+
+    def plotVerticalLines(self, **kwargs):
+        if 'redraw' in kwargs and kwargs['redraw'] and 'verticalXs' in kwargs and type(kwargs['verticalXs']) is list:
+            style = kwargs['vLineStyle'] if 'vLineStyle' in kwargs else '-'
+            for x in kwargs['verticalXs']:
+                self.ax1.axvline(x,linestyle = style)

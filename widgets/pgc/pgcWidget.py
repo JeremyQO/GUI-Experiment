@@ -22,7 +22,7 @@ try:
     # from OPXcontrol.OPX_control_New_v1 import OPX
     from mvIMPACT import acquire
 except:
-    pass
+    print('Warning! could not import MvCamera module; in pgcWidget.py')
 import os
 
 from functions.pgc.data_analysis import image, images
@@ -74,6 +74,7 @@ class Pgc_gui (QuantumWidget):
     def PGC_connect(self, progress_callback):
         self.enable_interface(False)
         if self.simulation:
+            self.print_to_dialogue("Running on simulation mode", color='blue')
             dirname = "C:\\Users\\orelb\\Desktop\\MOT_PGC_Fall\\Images" if os.getlogin()=='orelb' else\
                 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\images'
             self.ims = images(dirname)  #, imrange=[0,5])
@@ -84,13 +85,14 @@ class Pgc_gui (QuantumWidget):
 
         self.print_to_dialogue("Connecting to Camera...")
         try:
-            self.camera = MvCamera.MvCamera()
-            self.print_to_dialogue("connected to camera")
+            self.camera = MvCamera.MvCamera(deviceSerial='FF006583')
+            self.print_to_dialogue("connected to camera", color = 'green')
         except acquire.EDeviceManager:
-            self.print_to_dialogue("Camera was already connected")
+            self.print_to_dialogue("Could not connect to camera. Camera was probably already connected.", color = 'red')
+            self.print_to_dialogue("acquire.EDeviceManager", color='red')
 
-        self.connectOPX()
-
+        #self.connectOPX()
+        self.print_to_dialogue("Note: didnt try to connect to OPX", color='red')
         self.enable_interface(True)
         self.pushButton_PGC_Connect.setEnabled(True)
 

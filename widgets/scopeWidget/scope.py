@@ -28,11 +28,12 @@ from widgets.quantumWidget import QuantumWidget
 
 
 class Scope_GUI(QuantumWidget):
-    def __init__(self, Parent=None, ui=None, simulation=True):
+    def __init__(self, Parent=None, ui=None, simulation=True, RedPitayaHost = None, debugging = False):
         if Parent is not None:
             self.Parent = Parent
         ui = os.path.join(os.path.dirname(__file__), "scopeWidgetGUI.ui") if ui is None else ui
-
+        self.host = RedPitayaHost
+        self.debugging = debugging
         super().__init__(ui, simulation)
         # up to here, nothing to change.
 
@@ -44,6 +45,7 @@ class Scope_GUI(QuantumWidget):
         self.scope_parameters = {'new_parameters': False, 'OSC_TIME_SCALE': {'value':'1'}, 'OSC_CH1_SCALE': {'value':'1'},'OSC_CH1_SCALE': {'value':'1'}, 'OSC_DATA_SIZE':{'value':1024}}
         self.CHsUpdated = False
         self.rp = None  # Place holder
+        self.isSavingNDataFiles = False
         self.signalLength = self.scope_parameters['OSC_DATA_SIZE']['value'] # 1024 by default
         self.indx_to_freq = [0]
 
@@ -84,24 +86,25 @@ class Scope_GUI(QuantumWidget):
         self.rp.set_triggerSource(s)
         self.rp.set_triggerDelay(t)
         self.rp.set_triggerLevel(l)
-        self.print_to_dialogue("Trigger delay changed to %f ms; Source: %s; Level: %2.f [V]" % (t,s,l))
+        # self.print_to_dialogue("Trigger delay changed to %f ms; Source: %s; Level: %2.f [V]" % (t,s,l))
 
     def updateTimeScale(self):
         t = float(self.doubleSpinBox_timeScale.text())
         self.rp.set_timeScale(t)
-        self.print_to_dialogue("Time scale changed to %f ms" % t)
+        # self.print_to_dialogue("Time scale changed to %f ms" % t)
 
     def updateAveraging(self):
         self.Avg_num = int(self.spinBox_averaging.value())
         self.Rb_lines_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
         self.Cavity_Transmission_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
         self.avg_indx = 0
-        self.print_to_dialogue("Data averaging changed to %i" % self.Avg_num)
+        # self.print_to_dialogue("Data averaging changed to %i" % self.Avg_num)
 
     def updatePlotDisplay(self):
         self.updateTriggerDelay()
         self.updateTimeScale()
         self.updateAveraging()
+        self.CHsUpdated = True
 
     def chns_update(self):
         self.scope_parameters['new_parameters'] = True
@@ -129,29 +132,46 @@ class Scope_GUI(QuantumWidget):
         self.threadpool.start(RPworker)
 
     def saveCurrentDataClicked(self):
+        self.isSavingNDataFiles = True
+
+    def saveCurrentData(self, extra_text = ''):
+        extra_text = str(extra_text)
+        if self.isSavingNDataFiles: # if we are saving N files
+            if self.spinBox_saveNFiles.value() > 1:
+                self.spinBox_saveNFiles.setValue(self.spinBox_saveNFiles.value() - 1)  # decrease files to save by 1
+            elif self.spinBox_saveNFiles.value() == 1:
+                self.isSavingNDataFiles = False
+
         timeScale = np.linspace(0, float(self.scope_parameters['OSC_TIME_SCALE']['value']) * 10, num=int(self.scope_parameters['OSC_DATA_SIZE']['value']))
         now = datetime.now()
         today = date.today()
-        datadir = os.path.join("C:\\", "Pycharm", "Expriements", "DATA", "CavityLock")
+        # datadir = os.path.join("C:\\", "Pycharm", "Expriements", "DATA", "CavityLock")
+        datadir = os.path.join("U:\\", "Lab_2021-2022", "Experiment_results", "Python Data")
         todayformated = today.strftime("%B-%d-%Y")
         todaydatadir = os.path.join(datadir, todayformated)
-        nowformated = now.strftime("%Hh%Mm%Ss")
+        nowformated = now.strftime("%H-%M-%S_%f")
         try:
             os.makedirs(todaydatadir)
-            self.print_to_dialogue("Created folder DATA/CavityLock/%s" % (todayformated))
-            self.print_to_dialogue("Data Saved")
+            if not self.checkBox_saveData.isChecked():
+                self.print_to_dialogue("Created folder Lab_2021-2022/Experiment_results/Python Data/%s" % (todayformated))
+                self.print_to_dialogue("Data Saved")
         except FileExistsError:
-            self.print_to_dialogue("Data Saved")
+            if not self.checkBox_saveData.isChecked():
+                self.print_to_dialogue("Data Saved")
 
         self.datafile = os.path.join(todaydatadir, nowformated + ".txt")
         meta = "Traces from the RedPitaya, obtained on %s at %s.\n" % (todayformated, nowformated)
+        cmnt = self.lineEdit_fileComment.text()
         # np.savez_compressed(os.path.join(todaydatadir, nowformated), CH1=self.Rb_lines_Avg_Data, CH2=self.Cavity_Transmission_Data, time=timeScale, meta=meta)
-        np.save(os.path.join(todaydatadir, nowformated), CH1=self.Rb_lines_Avg_Data,CH2=self.Cavity_Transmission_Data, time=timeScale, meta=meta)
-
+        np.savez_compressed(os.path.join(todaydatadir, nowformated), CH1=self.Rb_lines_Avg_Data,CH2=self.Cavity_Transmission_Avg_Data, time=timeScale, meta=meta, comment = cmnt, extra_text = extra_text)
 
     def redPitayaConnect(self, progress_callback):
         RpHost = ["rp-ffffb4.local","rp-f08c22.local", "rp-f08c36.local"]
-        self.rp = RedPitayaWebsocket.Redpitaya(host="rp-ffffb4.local", got_data_callback=self.update_scope,dialogue_print_callback=self.print_to_dialogue)
+        if self.host == None:
+            self.rp = RedPitayaWebsocket.Redpitaya(host="rp-ffffb4.local", got_data_callback=self.update_scope,dialogue_print_callback=self.print_to_dialogue, debugging= self.debugging)
+        else:
+            self.rp = RedPitayaWebsocket.Redpitaya(host=self.host, got_data_callback=self.update_scope,
+                                                   dialogue_print_callback=self.print_to_dialogue, debugging= self.debugging)
 
         if self.rp.connected:
             self.connection_attempt = 0 # connection
@@ -178,11 +198,19 @@ class Scope_GUI(QuantumWidget):
             self.chns_update()
             self.rp.firstRun = False
 
+        # ---------------- Handle duplicate data ----------------
+        # It seems RedPitaya tends to send the same data more than once. That is, although it has not been triggered,
+        # scope will send current data as fast as it can.
+        # Following lines aim to prevent unnecessary work
+        previousDataIndex = (self.avg_indx - 1) % self.Avg_num
+        if np.array_equal(self.Rb_lines_Data[previousDataIndex], data[0]) or np.array_equal(
+                self.Cavity_Transmission_Data[previousDataIndex], data[1]):
+            return
         # ---------------- Handle Redraws and data reading ----------------
         # This is true only when some parameters were changed on RP, prompting a total redraw of the plot (in other cases, updating the data suffices)
         redraw = (parameters['new_parameters'] or self.CHsUpdated)
         if redraw:
-            self.scope_parameters = parameters  # keep all the parameters. we need them.
+            self.scope_parameters.update(parameters)  # keep all the parameters. we need them.
             self.CHsUpdated = False
         self.Rb_lines_Data[self.avg_indx] = data[0]  # Insert new data
         self.Cavity_Transmission_Data[self.avg_indx] = data[1]  # Insert new data
@@ -246,8 +274,9 @@ class Scope_GUI(QuantumWidget):
                                    scatter_x_data = np.concatenate([x_axis[Rb_peaks], x_axis[Cavity_peak]]),text_box = text_box_string)
 
         # -------- Save Data  --------:
-        if self.checkBox_saveData.isChecked():
-            self.saveCurrentDataClicked()
+        if self.checkBox_saveData.isChecked() or self.isSavingNDataFiles:
+            self.saveCurrentData()
+
 
     def printPeaksInformation(self):
         print('printPeaksInformation', str(self.indx_to_freq))

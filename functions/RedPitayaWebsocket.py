@@ -8,13 +8,14 @@ import time
 class Redpitaya:
     # TODO: use timeout, get rid of port
 
-    def __init__(self, host,got_data_callback = None, timeout=None, trigger_source='EXT', dialogue_print_callback = None):
+    def __init__(self, host,got_data_callback = None, timeout=None, trigger_source='EXT', dialogue_print_callback = None, debugging = False):
         """Initialize object and open IP connection.
         Host IP should be a string in parentheses, like '192.168.1.100'.
         """
         self.time = time.time()
         # self.print("Initing Redpitayas class instance (%s)..." %host)
         self.host = host
+        self.debugging = debugging
         self.timeout = timeout
         self.new_parameters = {}
         self.received_parameters = {'new_parameters': True} # 'new_parameters' set to true, in order to redraw the plot for the first time
@@ -22,15 +23,18 @@ class Redpitaya:
         self.connected = False
         self.firstRun = True
         self.ws = None
+        self.print = dialogue_print_callback
+        if dialogue_print_callback is None:
+            self.print = self.print_data
+
 
         # TODO: delete following two lines.
         self.set_triggerSource(trigger_source)  # By default, EXT
         self.set_triggerLevel(100)
         self.set_dataSize(1024)
-
-        self.print = dialogue_print_callback
-        if dialogue_print_callback is None:
-            self.print = self.print_data
+        # By default, data coming from RP will be in Volts
+        self.set_yScale(1, 1)
+        self.set_yScale(1, 2)
 
         # Set data-callback; i.e., what to do when we get data from RP
         self.got_data_callback = got_data_callback
@@ -90,7 +94,6 @@ class Redpitaya:
         # resulting in a JSON dictionary.
         data_text = gzip.decompress(message)
         data = json.loads(data_text.decode('utf-8'))
-
         if 'signals' in data:
             ch1_values = data['signals']['ch1']['value']
             ch2_values = data['signals']['ch2']['value']
@@ -100,7 +103,7 @@ class Redpitaya:
             if 'OSC_TIME_SCALE' in data['parameters']:
                 self.received_parameters = data['parameters']
                 self.received_parameters['new_parameters'] = True
-                #print(data['parameters'])
+                if self.debugging: print(data['parameters'])
         else:
             self.print('Unexpected response from RP: \n%s' %data, color = 'red')
 
@@ -169,12 +172,13 @@ class Redpitaya:
         # Note: this is time scale per 1 division. There are 10 divisions (!)
         self.new_parameters['OSC_TIME_SCALE'] = {'value': str(t)} # note strange: this (float) is converted to string
 
-    def set_yScale(self, t, ch = 1):
-        if ch < 1 or ch > 4: return
+    def set_yScale(self, v, ch = 1):
+        if ch < 1 or ch > 2: return
         """Set time scale in mili-sec."""
         # Note: this is y-scale (volt) per 1 division. There are 10 divisions (!)
-        self.new_parameters['OSC_CH%d_SCALE' % int(ch)] = {'value': float(t)} # note strange: this (float) is converted to string
-        self.print('WARNING: keep this value 1, unless you really know what you are doing.',color='red')
+        self.new_parameters['OSC_CH%d_SCALE' % int(ch)] = {'value': float(v)} # note strange: this (float) is converted to string
+        self.print('Set Y-Scale to %2.f; Channel %d' %(v, ch),color='red')
+        if float(v) != 1: self.print('WARNING: keep this value 1, unless you really know what you are doing.',color='red')
 
     # set y scale. value is in volts (usually, <1). There are 10 division, so 10 * value gives the limits
     #{"parameters": {"OSC_CH1_SCALE": {"value": 0.1}, "OSC_CH1_OFFSET": {"value": 0},

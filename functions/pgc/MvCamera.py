@@ -47,17 +47,26 @@ class MvCamera:
     #   TimeOut_ms      - time in ms for which the function waits for image on the camera.  If timeout_ms is '-1', the function's timeout interval never elapses.
     #   NumberOfFrames  - defines the number of frames the capture image function grabs.
     #   DeviceNr - device number in the MvDeviceConfigure (for managing multipule devices)
-    def __init__(self, DeviceNr = 0):
+    def __init__(self, deviceNr = 0, deviceSerial = None):
         #acquire connection to the camera - must be deleted at the end of use , if not the access to the camera is denied
-        self.devMgr = acquire.DeviceManager()
-        self.pDev = self.devMgr.getDevice(DeviceNr)
+        self.devMgr = acquire.DeviceManager() #
+        #print(self.devMgr.getDeviceByFamily("mvBlue*",0).serial.read()) # This is how one reads the serial of the first device in the device manager
+        # Note: https://www.matrix-vision.com/manuals/SDK_PYTHON/classmvIMPACT_1_1acquire_1_1DeviceManager.html
+
+        if deviceSerial:
+            try:
+                self.pDev = self.devMgr.getDeviceBySerial(deviceSerial)
+            except:
+                raise ValueError('Could not find camera. Serial seems wrong. Should look like: FF006583')
+        else:
+            self.pDev = self.devMgr.getDevice(deviceNr)
         if self.pDev == None:
             exampleHelper.requestENTERFromUser()
             sys.exit(-1)
+            raise ValueError('Could not find camera. Serial or ID are probably wrong.')
         self.pDev.open()
 
         #other attributes
-
 
         #pixel formatting
         id = acquire.ImageDestination(self.pDev)
