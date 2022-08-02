@@ -23,7 +23,7 @@ from widgets.scopeWidget.scope import Scope_GUI
 
 
 class OD_GUI(Scope_GUI):
-    def __init__(self, Parent=None, ui=None, simulation=True, RedPitayaHost = None, debugging = False, sensitivity = (2.5e4,2.5e4)):
+    def __init__(self, Parent=None, ui=None, simulation=True, RedPitayaHost = None, debugging = False, sensitivity = (2.41e5,2.41e5)):
        # 2.24541949e+04 From second msrmnt
        # 2.8e4 From first msrmnt
        # I settle for 2.5
@@ -222,7 +222,8 @@ class OD_GUI(Scope_GUI):
         # darkCount = np.mean(d[np.where(np.logical_and(x_axis > (self.selectedXRanges[3] + self.selectedXRanges[2] - self.selectedXRanges[1]), x_axis < (self.selectedXRanges[3] + self.selectedXRanges[2] - self.selectedXRanges[0])))])
         ODMsmnt = np.mean(d[np.where(np.logical_and(x_axis > self.selectedXRanges[0], x_axis < self.selectedXRanges[1]))])
         refMsmnt = np.mean(d[np.where(np.logical_and(x_axis > self.selectedXRanges[2], x_axis < self.selectedXRanges[3]))])
-        darkCount = np.mean(d[np.where(np.logical_and(x_axis > self.selectedXRanges[4], x_axis < self.selectedXRanges[5]))])
+        # darkCount = np.mean(d[np.where(np.logical_and(x_axis > self.selectedXRanges[4], x_axis < self.selectedXRanges[5]))])
+        darkCount = np.mean(d[np.where(np.logical_or(x_axis < self.selectedXRanges[0], x_axis > self.selectedXRanges[3]))])
         N = np.log(np.abs(refMsmnt - darkCount) / np.abs(ODMsmnt - darkCount))
         return N
 

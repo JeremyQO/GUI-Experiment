@@ -51,7 +51,7 @@ class Cavity_lock_GUI(QuantumWidget):
         self.CHsUpdated = False
         self.listenForMouseClickCID = None
         self.rp = None  # Place holder
-        self.pid = PID(1, 0,0,setpoint = 0)
+        self.pid = PID(1, 0,0,setpoint = 0, output_limits=(-10, 10))
         self.lockOn = False
         self.changedOutputs = False # this keeps track of changes done to outputs. if this is true, no total-redraw will happen (although usually we would update scope after any change in RP)
         self.signalLength = self.scope_parameters['OSC_DATA_SIZE']['value'] # 1024 by default
@@ -125,7 +125,7 @@ class Cavity_lock_GUI(QuantumWidget):
 
     def setInverseChns(self):
         self.rp.set_inverseChannel(ch=1, value = self.checkBox_CH1Inverse.isChecked())
-        self.rp.set_inverseChannel(ch=2, value =  self.checkBox_CH2Inverse.isChecked())
+        self.rp.set_inverseChannel(ch=2, value = self.checkBox_CH2Inverse.isChecked())
 
     def update_plot_params(self):
         self.Avg_num = int(self.spinBox_averaging.value())
@@ -386,6 +386,7 @@ class Cavity_lock_GUI(QuantumWidget):
         # It's a problem with Red-Pitaya: to get 10V DC output, one has to set both Amp and Offset to 5V
         self.outputsFrame.doubleSpinBox_ch1OutAmp.setValue(float(output) / 2)
         self.outputsFrame.doubleSpinBox_ch1OutOffset.setValue(float(output) / 2)
+        self.updateOutputChannels()
 
     def printPeaksInformation(self):
         print('printPeaksInformation', str(self.indx_to_freq))

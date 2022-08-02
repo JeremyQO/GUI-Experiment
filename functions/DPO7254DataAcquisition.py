@@ -42,6 +42,7 @@ class DPO7254Visa():
             return
         printGreen(self.ID)
 
+
     # Following are two scriptting shortcuts
     def ask(self, s):
         return (self.scope.ask(s))
@@ -55,14 +56,14 @@ class DPO7254Visa():
             if ch not in [1, 2, 3, 4]:
                 printError('Wrong channel!')
                 return
+
             self.write('WFMOUTPRE:ENCDG ASCii')  # send back data in ascii
             self.write('DATA:SOURCE CH{}'.format(int(ch)))
             self.source = self.ask('DATA:SOURCE?')
 
             # First we get back a few acquistion parameters
             aParams = self.ask('WFMOutpre?').split(';')
-            assert aParams[8] == '"s"' and aParams[
-                -5] == '"V"'  # make sure we are working with seconds and volts scale; if this line raises an error, scope must be returning other units
+            assert aParams[8] == '"s"' and aParams[-5] == '"V"'  # make sure we are working with seconds and volts scale; if this line raises an error, scope must be returning other units
             nDataPoints, xMulti = int(aParams[6]), float(aParams[9])  # number of points in WVFM; Time scale multiplier
             yMult, yDigOff, yOffset = float(aParams[-4]), float(aParams[-3]), float(
                 aParams[-2])  # Digital (arbitrary) scale to volts. multiplier, arbitrary offset, offset in volts
@@ -127,8 +128,8 @@ class DPO7254Visa():
 
 
 # scope = DPO7254Visa(ip = '169.254.231.198')
-scope = DPO7254Visa(ip='132.77.54.241')
-accDelay = 3 * 60  # 1 minutes
+# scope = DPO7254Visa(ip='132.77.54.241')
+# accDelay = 3 * 60  # 1 minutes
 
 
 def savePlotsAndData(filename=''):
@@ -331,4 +332,22 @@ def analyzeAndPlotFiles():
 # while(True):
 #     savePlotsAndTemperatureData()
 # plt.show()
-savePlotsAndData(filename='Q6_R101_779.4_100mVpp_S')
+# savePlotsAndData(filename='Q6_R101_779.4_100mVpp_S')
+s = DPO7254Visa(ip='132.77.54.241')
+
+s.acquireData(chns=[4])
+aomPlus = s.wvfm[4]
+input('move det')
+s.acquireData(chns=[4])
+aomMinus = s.wvfm[4]
+
+plt.plot(s.timeData, aomMinus)
+plt.plot(s.timeData, aomPlus)
+
+plt.xlabel('Time [sec]')
+plt.ylabel('Voltage [V]')
+plt.grid(True)
+plt.show()
+
+a = aomPlus
+b = aomMinus * np.max(aomPlus)/np.max(aomMinus)

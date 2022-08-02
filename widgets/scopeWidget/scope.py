@@ -187,6 +187,7 @@ class Scope_GUI(QuantumWidget):
                 self.redPitayaConnect(progress_callback)
 
 
+
     # Never call this method. this is called by RedPitaya
     def update_scope(self, data, parameters):
         if self.rp.firstRun:
