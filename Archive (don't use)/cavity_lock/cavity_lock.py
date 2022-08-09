@@ -44,7 +44,7 @@ class Cavity_lock_GUI(QuantumWidget):
 
         # Add outputs control UI
         self.outputsFrame=self.frame_4
-        ui_outputs = os.path.join(os.path.dirname(__file__), "../scopeWidget/outputsControl.ui")
+        ui_outputs = os.path.join(os.path.dirname(__file__), "../../widgets/scopeWidget/outputsControl.ui")
         uic.loadUi(ui_outputs, self.frame_4) # place outputs in frame 4
 
         self.connection_attempt = 0  # This holds connection attmeps. As long as this is < than _CONNECTION_ATTMPTS, will try to reconnect

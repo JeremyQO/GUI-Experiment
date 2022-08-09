@@ -75,8 +75,7 @@ class Pgc_gui (QuantumWidget):
         self.enable_interface(False)
         if self.simulation:
             self.print_to_dialogue("Running on simulation mode", color='blue')
-            dirname = "C:\\Users\\orelb\\Desktop\\MOT_PGC_Fall\\Images" if os.getlogin()=='orelb' else\
-                'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\images'
+            dirname = "C:\\Users\\orelb\\Desktop\\MOT_PGC_Fall\\Images" if os.getlogin()=='orelb' else 'C:\\Users\\Jeremy\\Desktop\\MOT_PGC_FALL\\images'
             self.ims = images(dirname)  #, imrange=[0,5])
             self.print_to_dialogue("Images loaded successfully")
             self.enable_interface(True)

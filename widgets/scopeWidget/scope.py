@@ -74,9 +74,9 @@ class Scope_GUI(QuantumWidget):
         self.rp.set_inverseChannel(ch=2, value =  self.checkBox_CH2Inverse.isChecked())
 
     def update_plot_params(self):
-        self.Avg_num = int(self.spinBox_averaging.value())
-        self.Rb_lines_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.Cavity_Transmission_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
+        self.Avg_num = [int(self.spinBox_averaging_ch1.value()), int(self.spinBox_averaging_ch2.value())]
+        self.Rb_lines_Data = np.zeros((self.Avg_num[0], self.signalLength))  # Place holder
+        self.Cavity_Transmission_Data = np.zeros((self.Avg_num[1], self.signalLength))  # Place holder
         self.avg_indx = 0
 
     def updateTriggerDelay(self):
@@ -94,10 +94,10 @@ class Scope_GUI(QuantumWidget):
         # self.print_to_dialogue("Time scale changed to %f ms" % t)
 
     def updateAveraging(self):
-        self.Avg_num = int(self.spinBox_averaging.value())
-        self.Rb_lines_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.Cavity_Transmission_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.avg_indx = 0
+        self.Avg_num = [int(self.spinBox_averaging_ch1.value()),int(self.spinBox_averaging_ch2.value())]
+        self.Rb_lines_Data = np.zeros((self.Avg_num[0], self.signalLength))  # Place holder
+        self.Cavity_Transmission_Data = np.zeros((self.Avg_num[1], self.signalLength))  # Place holder
+        self.Avg_indx = 0
         # self.print_to_dialogue("Data averaging changed to %i" % self.Avg_num)
 
     def updatePlotDisplay(self):
@@ -203,9 +203,9 @@ class Scope_GUI(QuantumWidget):
         # It seems RedPitaya tends to send the same data more than once. That is, although it has not been triggered,
         # scope will send current data as fast as it can.
         # Following lines aim to prevent unnecessary work
-        previousDataIndex = (self.avg_indx - 1) % self.Avg_num
-        if np.array_equal(self.Rb_lines_Data[previousDataIndex], data[0]) or np.array_equal(
-                self.Cavity_Transmission_Data[previousDataIndex], data[1]):
+        previousDataIndex = self.Avg_indx - 1
+        if np.array_equal(self.Rb_lines_Data[previousDataIndex % self.Avg_num[0]], data[0]) or np.array_equal(
+                self.Cavity_Transmission_Data[previousDataIndex % self.Avg_num[1]], data[1]):
             return
         # ---------------- Handle Redraws and data reading ----------------
         # This is true only when some parameters were changed on RP, prompting a total redraw of the plot (in other cases, updating the data suffices)
@@ -213,9 +213,9 @@ class Scope_GUI(QuantumWidget):
         if redraw:
             self.scope_parameters.update(parameters)  # keep all the parameters. we need them.
             self.CHsUpdated = False
-        self.Rb_lines_Data[self.avg_indx] = data[0]  # Insert new data
-        self.Cavity_Transmission_Data[self.avg_indx] = data[1]  # Insert new data
-        self.avg_indx = (self.avg_indx + 1) % self.Avg_num
+        self.Rb_lines_Data[self.Avg_indx % self.Avg_num[0]] = data[0]  # Insert new data
+        self.Cavity_Transmission_Data[self.Avg_indx % self.Avg_num[1]] = data[1]  # Insert new data
+        self.Avg_indx = self.Avg_indx + 1
         # ---------------- Average data  ----------------
         # Calculate avarage data and find peaks position (indx) and properties:
         Avg_data = []
@@ -248,7 +248,7 @@ class Scope_GUI(QuantumWidget):
         x_axis = np.linspace(0, time_scale * 10, num=int(self.scope_parameters['OSC_DATA_SIZE']['value']))
         x_ticks = np.arange(x_axis[0], x_axis[-1], time_scale)
 
-        # Secondary axis
+        # ----------- Secondary X axis -----------
         indx_to_freq = self.indx_to_freq[0]
         def timeToFreqScale(t):
             print(indx_to_freq)
@@ -258,10 +258,12 @@ class Scope_GUI(QuantumWidget):
 
             return f / indx_to_freq + Rb_peaks[0]
 
-
-        y_scale = float(self.doubleSpinBox_VtoDiv.text())
-        y_offset = float(self.doubleSpinBox_VOffset.text())
-        y_ticks = np.arange(y_offset - y_scale * 5, y_offset + y_scale * 5, y_scale)
+        # ----------- Y scaling and offset -----------
+        y_scale = [float(self.doubleSpinBox_VtoDiv_ch1.text()), float(self.doubleSpinBox_VtoDiv_ch2.text())]
+        y_offset = [float(self.doubleSpinBox_VOffset_ch1.text()), float(self.doubleSpinBox_VOffset_ch2.text())]
+        # Create two array of ticks, for the two scales of the two channels
+        y_ticks = [np.arange(y_offset[i] - y_scale[i] * 5[i], y_offset[i] + y_scale[i] * 5, y_scale[i])
+                   for i in range(len(y_scale))]
 
         # ----------- text box -----------
         # to be printed in lower right corner
