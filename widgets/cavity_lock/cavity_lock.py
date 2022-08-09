@@ -1,6 +1,7 @@
-
+import scipy
 from PyQt5 import uic
 import time
+import math
 from functions.od import RedPitayaWebsocket
 from scipy import optimize,spatial
 from scipy.signal import find_peaks
@@ -128,10 +129,12 @@ class Cavity_lock_GUI(QuantumWidget):
         self.rp.set_inverseChannel(ch=2, value = self.checkBox_CH2Inverse.isChecked())
 
     def update_plot_params(self):
-        self.Avg_num = int(self.spinBox_averaging.value())
-        self.Rb_lines_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.Cavity_Transmission_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.avg_indx = 0
+        self.Avg_num_CH1 = int(self.spinBox_averaging_CH1.value())
+        self.Avg_num_CH2 = int(self.spinBox_averaging_CH2.value())
+        self.Rb_lines_Data = np.zeros((self.Avg_num_CH1, self.signalLength))  # Place holder
+        self.Cavity_Transmission_Data = np.zeros((self.Avg_num_CH2, self.signalLength))  # Place holder
+        self.avg_indx_CH1 = 0
+        self.avg_indx_CH2 = 0
 
     def updateTriggerDelay(self):
         t = float(self.doubleSpinBox_triggerDelay.value())  # ms
@@ -148,11 +151,13 @@ class Cavity_lock_GUI(QuantumWidget):
         self.print_to_dialogue("Time scale changed to %f ms" % t)
 
     def updateAveraging(self):
-        self.Avg_num = int(self.spinBox_averaging.value())
-        self.Rb_lines_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.Cavity_Transmission_Data = np.zeros((self.Avg_num, self.signalLength))  # Place holder
-        self.avg_indx = 0
-        self.print_to_dialogue("Data averaging changed to %i" % self.Avg_num)
+        self.Avg_num_CH1 = int(self.spinBox_averaging_CH1.value())
+        self.Avg_num_CH2 = int(self.spinBox_averaging_CH2.value())
+        self.Rb_lines_Data = np.zeros((self.Avg_num_CH1, self.signalLength))  # Place holder
+        self.Cavity_Transmission_Data = np.zeros((self.Avg_num_CH2, self.signalLength))  # Place holder
+        self.avg_indx_CH1 = 0
+        self.avg_indx_CH2 = 0
+        self.print_to_dialogue("Data averaging on CH1 changed to %i \n" %self.Avg_num_CH1 + "Data averaging on CH2 changed to %i \n" %self.Avg_num_CH2)
 
     def updatePlotDisplay(self):
         self.updateTriggerDelay()
@@ -293,29 +298,46 @@ class Cavity_lock_GUI(QuantumWidget):
         if redraw:
             self.scope_parameters = parameters  # keep all the parameters. we need them.
             self.CHsUpdated = False
-        self.Rb_lines_Data[self.avg_indx] = data[0]  # Insert new data
-        self.Cavity_Transmission_Data[self.avg_indx] = data[1]  # Insert new data
-        self.avg_indx = (self.avg_indx + 1) % self.Avg_num
+
+        RB_LINES_JUMP_THRESHOLD = 0.1  # threshold in volts for throwing rb lines data if jump occurs
+
+        # gauss7 = np.array([0.0702, 0.1311, 0.1907, 0.2161, 0.1907, 0.1311, 0.0702])
+        # Rb_lines_Data_with_conv = np.convolve(np.array(data[0]), gauss7, 'same')
+        # Squared_Rb_lines_Data = [x ** 2 for x in Rb_lines_Data_with_conv]
+        Squared_Rb_lines_Data = [x ** 2 for x in data[0]]
+
+        # Squared_Rb_lines_Data = [x ** 2 for x in data[0]]
+        if (sum(Squared_Rb_lines_Data) < RB_LINES_JUMP_THRESHOLD) & (len([x for x in np.absolute(data[0]) if x > 0.01]) > 2): #throws data when jump in channel occurs (due to turn off of the laser)
+            # print(max(np.absolute(data[0])))
+            print(sum(Squared_Rb_lines_Data))
+            self.Rb_lines_Data[self.avg_indx_CH1] = Squared_Rb_lines_Data  # Insert new data
+            self.avg_indx_CH1 = (self.avg_indx_CH1 + 1) % self.Avg_num_CH1
+        # if (max(-np.array(data[1])) > 0.01) & (sum(np.array(data[1])) > -7):
+        # print(sum(np.array(data[1])))
+        self.Cavity_Transmission_Data[self.avg_indx_CH2] = data[1]  # Insert new data
+        self.avg_indx_CH2 = (self.avg_indx_CH2 + 1) % self.Avg_num_CH2
         self.changedOutputs = False
+
         # ---------------- Average data  ----------------
         # Calculate avarage data and find peaks position (indx) and properties:
         Avg_data = []
         if self.checkBox_Rb_lines.isChecked():
-            self.Rb_lines_Avg_Data = np.average(self.Rb_lines_Data, axis=0)
+            self.Rb_lines_Avg_Data = np.sqrt(np.average(self.Rb_lines_Data, axis=0))
+            # print(self.Rb_lines_Avg_Data)
             Avg_data = Avg_data + [self.Rb_lines_Avg_Data]
         if self.checkBox_Cavity_transm.isChecked():
             self.Cavity_Transmission_Avg_Data = np.average(self.Cavity_Transmission_Data, axis=0)
             Avg_data = Avg_data + [self.Cavity_Transmission_Avg_Data]
 
         # ---------------- Handle Rb Peaks ----------------
-        Rb_peaks,Cavity_peak, Rb_properties, Cavity_properties = [], [],{},{} # by default, none
+        Rb_peaks, Cavity_peak, Rb_properties, Cavity_properties = [], [], {}, {} # by default, none
         if self.checkBox_Rb_lines.isChecked():
             Rb_peaks, Rb_properties = find_peaks(self.Rb_lines_Avg_Data,
                                                  distance=float(self.spinBox_distance_ch1.value()),
                                                  prominence=float(self.doubleSpinBox_prominence_ch1.value()),
                                                  width=float(self.spinBox_width_ch1.value()))
         if self.checkBox_Cavity_transm.isChecked():
-            Cavity_peak, Cavity_properties = find_peaks(self.Cavity_Transmission_Avg_Data,
+            Cavity_peak, Cavity_properties = find_peaks(-self.Cavity_Transmission_Avg_Data,
                                                         distance=float(self.spinBox_distance_ch2.value()),
                                                         prominence=float(self.doubleSpinBox_prominence_ch2.value()),
                                                         width=float(self.spinBox_width_ch2.value()))
@@ -356,8 +378,10 @@ class Cavity_lock_GUI(QuantumWidget):
         text_box_string = None
 
         if self.outputsFrame.checkBox_fitLorentzian.isChecked():
-            popt = self.fitMultipleLorentzians(xData=x_axis, yData=Avg_data[0], peaks_indices=Rb_peaks,
+            popt = self.fitMultipleLorentzians(xData=x_axis, yData=Avg_data[1], peaks_indices=Rb_peaks,
                                         peaks_init_width=(Rb_properties['widths'] * indx_to_time))  # just an attempt. this runs very slowly.
+            # popt2 = self.fitMultipleLorentzians(xData=x_axis, yData=Avg_data[1], peaks_indices=Cavity_peak,
+            #                             peaks_init_width=(Rb_properties['widths'] * indx_to_time))  # just an attempt. this runs very slowly.
             params_text = self.multipleLorentziansParamsToText(popt)
             text_box_string = 'Calibration: \n' + str(self.indx_to_freq) +'\n'
             text_box_string += 'Found %d Lorentzians: \n'%len(Rb_peaks) + params_text
@@ -386,45 +410,6 @@ class Cavity_lock_GUI(QuantumWidget):
         # It's a problem with Red-Pitaya: to get 10V DC output, one has to set both Amp and Offset to 5V
         self.outputsFrame.doubleSpinBox_ch1OutAmp.setValue(float(output) / 2)
         self.outputsFrame.doubleSpinBox_ch1OutOffset.setValue(float(output) / 2)
-        self.updateOutputChannels()
-
-    def printPeaksInformation(self):
-        print('printPeaksInformation', str(self.indx_to_freq))
-
-    def fitMultipleLorentzians(self, xData, yData, peaks_indices, peaks_init_width):
-        # -- fit functions ---
-        def lorentzian(x, x0, a, gam):
-            return a * gam ** 2 / (gam ** 2 + (x - x0) ** 2)
-
-        def multi_lorentz_curve_fit(x, *params):
-            shift = params[0]  # Scalar shift
-            paramsRest = params[1:]  # These are the atcual parameters.
-            assert not (len(paramsRest) % 3)  # makes sure we have enough params
-            return shift + sum([lorentzian(x, *paramsRest[i: i + 3]) for i in range(0, len(paramsRest), 3)])
-
-        # -------- Begin fit: --------------
-        pub = [0.5, 1.5]  # peak_uncertain_bounds
-        startValues = []
-        for k, i in enumerate(peaks_indices):
-            startValues += [xData[i], yData[i], peaks_init_width[k] / 2]
-        lower_bounds = [-20] + [v * pub[0] for v in startValues]
-        upper_bounds = [20] + [v * pub[1] for v in startValues]
-        bounds = [lower_bounds, upper_bounds]
-        startValues = [min(yData)] + startValues  # This is the constant from which we start the Lorentzian fits - ideally, 0
-        popt, pcov = optimize.curve_fit(multi_lorentz_curve_fit, xData, yData, p0=startValues, maxfev=50000)
-        #ys = [multi_lorentz_curve_fit(x, popt) for x in xData]
-        return (popt)
-
-    def multipleLorentziansParamsToText(self, popt):
-        text = ''
-        params = popt[1:] # first param is a general shift
-        for i in range(0, len(params), 3):
-            text += 'X_0' +' = %.2f; ' % params[i]
-            text += 'I = %.2f; ' % params[i +1]
-            text += 'gamma' + ' = %.2f \n' %  params[i + 2]
-        return (text)
-
-
 
 if __name__ == "__main__":
     app = QApplication([])

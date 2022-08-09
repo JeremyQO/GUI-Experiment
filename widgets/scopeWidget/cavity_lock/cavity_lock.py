@@ -29,7 +29,7 @@ class Cavity_lock_GUI(Scope_GUI):
             self.Parent = Parent
 
         self.listenForMouseClickCID = None
-        self.pid = PID(1, 0,0,setpoint = 0)
+        self.pid = PID(1, 0,0,setpoint = 0, output_limits=(0, 10))
         self.lockOn = False
         self.changedOutputs = False # this keeps track of changes done to outputs. if this is true, no total-redraw will happen (although usually we would update scope after any change in RP)
 
@@ -168,10 +168,33 @@ class Cavity_lock_GUI(Scope_GUI):
         self.Cavity_Transmission_Data[self.avg_indx] = data[1]  # Insert new data
         self.avg_indx = (self.avg_indx + 1) % self.Avg_num
         self.changedOutputs = False
+
+        # ---------------- Gaussian smoothing algo (Tal's)  ----------------
+        #
+        # RB_LINES_JUMP_THRESHOLD = 0.1  # threshold in volts for throwing rb lines data if jump occurs
+        #
+        # # gauss7 = np.array([0.0702, 0.1311, 0.1907, 0.2161, 0.1907, 0.1311, 0.0702])
+        # # Rb_lines_Data_with_conv = np.convolve(np.array(data[0]), gauss7, 'same')
+        # # Squared_Rb_lines_Data = [x ** 2 for x in Rb_lines_Data_with_conv]
+        # Squared_Rb_lines_Data = [x ** 2 for x in data[0]]
+        #
+        # # Squared_Rb_lines_Data = [x ** 2 for x in data[0]]
+        # if (sum(Squared_Rb_lines_Data) < RB_LINES_JUMP_THRESHOLD) & (len([x for x in np.absolute(data[0]) if x > 0.01]) > 2): #throws data when jump in channel occurs (due to turn off of the laser)
+        #     # print(max(np.absolute(data[0])))
+        #     print(sum(Squared_Rb_lines_Data))
+        #     self.Rb_lines_Data[self.avg_indx_CH1] = Squared_Rb_lines_Data  # Insert new data
+        #     self.avg_indx_CH1 = (self.avg_indx_CH1 + 1) % self.Avg_num_CH1
+        # # if (max(-np.array(data[1])) > 0.01) & (sum(np.array(data[1])) > -7):
+        # # print(sum(np.array(data[1])))
+        # self.Cavity_Transmission_Data[self.avg_indx_CH2] = data[1]  # Insert new data
+        # self.avg_indx_CH2 = (self.avg_indx_CH2 + 1) % self.Avg_num_CH2
+        # self.changedOutputs = False
+
         # ---------------- Average data  ----------------
         # Calculate avarage data and find peaks position (indx) and properties:
         Avg_data = []
         if self.checkBox_Rb_lines.isChecked():
+            # TODO: Tal put a sqrt on the avg here - why?
             self.Rb_lines_Avg_Data = np.average(self.Rb_lines_Data, axis=0)
             Avg_data = Avg_data + [self.Rb_lines_Avg_Data]
         if self.checkBox_Cavity_transm.isChecked():
@@ -179,7 +202,7 @@ class Cavity_lock_GUI(Scope_GUI):
             Avg_data = Avg_data + [self.Cavity_Transmission_Avg_Data]
 
         # ---------------- Handle Rb Peaks ----------------
-        Rb_peaks,Cavity_peak, Rb_properties, Cavity_properties = [], [],{},{} # by default, none
+        Rb_peaks, Cavity_peak, Rb_properties, Cavity_properties = [], [], {}, {} # by default, none
         if self.checkBox_Rb_lines.isChecked():
             Rb_peaks, Rb_properties = find_peaks(self.Rb_lines_Avg_Data,
                                                  distance=float(self.spinBox_distance_ch1.value()),
@@ -250,7 +273,7 @@ class Cavity_lock_GUI(Scope_GUI):
 
     def lockPeakToPeak(self):
         errorDirection = 1 if self.outputsFrame.checkBox_lockInverse.isChecked() else - 1
-        errorSignal = (self.selectedPeaksXY[1][0] - self.selectedPeaksXY[0][0]) * (errorDirection)
+        errorSignal = (self.selectedPeaksXY[1][0] - self.selectedPeaksXY[0][0] + float(self.outputsFrame.doubleSpinBox_lockOffset.value())) * (errorDirection)
         output = self.pid(errorSignal)
         print('Error Signal: ', errorSignal, 'Output: ', output)
         # ------- set output --------------
